@@ -1172,9 +1172,9 @@ class KaNovaModel(Model):
 
         DIFF 5 — GINI BUG FIX:
         Phase 1 bug: community share went into a pool, never reached
-        agent.household_income, so Gini reporter saw no change → stuck at 0.570.
+        agent.income, so Gini reporter saw no change → stuck at 0.570.
 
-        Fix: community share now distributed directly to agent.household_income
+        Fix: community share now distributed directly to agent.income
         using NumPy vectorised rank-based progressive weighting.
         Bottom 40% of income distribution gets 1.5× per-capita share.
         Top 60% gets 0.67× per-capita share.
@@ -1198,7 +1198,7 @@ class KaNovaModel(Model):
             )
             community_share = (
                 total_revenue
-                * CONSTITUTION.federal.RESOURCE_SPLIT_COMMUNITY
+                * CONSTITUTION.federal.RESOURCE_ETHNIC_DIRECT_SHARE
                 * budget_impact
             )
 
@@ -1216,7 +1216,7 @@ class KaNovaModel(Model):
 
                 # Pull incomes into NumPy array — single allocation
                 incomes = np.array(
-                    [a.household_income for a in citizen_agents],
+                    [a.income for a in citizen_agents],
                     dtype=np.float64
                 )
 
@@ -1231,8 +1231,8 @@ class KaNovaModel(Model):
 
                 # Write back — arithmetic already done above, this is O(N) assignment only
                 for agent, transfer in zip(citizen_agents, transfers):
-                    agent.household_income = max(0.0, agent.household_income + transfer)
-                    agent.income           = agent.household_income   # keep in sync
+                    agent.income = max(0.0, agent.income + transfer)
+                    agent.income           = agent.income   # keep in sync
 
     def _loop_E4_phd_economy(self):
         """E4 — PhD graduates compound knowledge capital. Unchanged."""
