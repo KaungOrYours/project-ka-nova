@@ -104,10 +104,10 @@ class MeritConfig:
     """Article 3 — The Merit System"""
 
     # 3.2 — Merit formula weights (must sum to 1.0)
-    PRODUCTIVITY_WEIGHT: float = 0.40
-    EDUCATION_WEIGHT: float = 0.30
+    PRODUCTIVITY_WEIGHT: float = 0.35
+    EDUCATION_WEIGHT: float = 0.25
     PERFORMANCE_WEIGHT: float = 0.20
-    CIVIC_WEIGHT: float = 0.10
+    CIVIC_WEIGHT: float = 0.20
 
     # Validation
     @property
@@ -234,7 +234,7 @@ class ChamberConfig:
     ETHNIC_RETURN_COOLING_OFF: int = 2  # years if election lost
 
     # 5.5-5.6 — Analysis Council
-    ANALYSIS_THRESHOLD: float = 1.00  # unanimous — highest standard
+    ANALYSIS_THRESHOLD: float = 0.75  # 75% qualified supermajority (v7) — highest standard
     ANALYSIS_MERIT_MIN: float = 0.80
     ANALYSIS_TERM: int = 6  # years rotating
     ANALYSIS_VETO_TIME_LIMIT: int = 90  # days — must decide or escalate
@@ -457,9 +457,9 @@ class FederalConfig:
     RESOURCE_IIG_OVERSIGHT: bool = True
 
     # 8.6 — Revenue split (must sum to 1.0)
-    RESOURCE_STATE_SHARE: float = 0.40
-    RESOURCE_FEDERAL_DEV_SHARE: float = 0.40
-    RESOURCE_ETHNIC_DIRECT_SHARE: float = 0.20
+    RESOURCE_STATE_SHARE: float = 0.35
+    RESOURCE_FEDERAL_DEV_SHARE: float = 0.35
+    RESOURCE_ETHNIC_DIRECT_SHARE: float = 0.30
 
     # 8.7 — State competition
     STATE_RANKING_PUBLISHED: bool = True
@@ -473,6 +473,10 @@ class FederalConfig:
     # Economic Check & Balance (Article 10.8)
     STATE_GDP_CAP: float = 0.40      # triggers if exceeded
     SECTOR_MONOPOLY_CAP: float = 0.30
+    # v7 — Trust acceleration trigger (Article VIII)
+    TRUST_ACCELERATION_MULTIPLIER: float = 1.50
+    TRUST_ACCELERATION_TRIGGER_CORRUPTION: float = 0.20
+    TRUST_ACCELERATION_TRIGGER_YEARS: int = 5
     GINI_THRESHOLD: float = 0.45
     ECB_ENFORCERS: Tuple[str, ...] = (
         "analysis_council",    # diagnoses
@@ -1286,9 +1290,9 @@ class MFUConstitution:
 
         passed = all(checks)
         if passed:
-            print(" Constitution validated — all constraints satisfied")
+            print("✅ Constitution validated — all constraints satisfied")
         else:
-            print(" Constitution validation FAILED — check parameters")
+            print("❌ Constitution validation FAILED — check parameters")
             for i, check in enumerate(checks):
                 if not check:
                     print(f"   Failed check {i+1}")
@@ -1342,7 +1346,7 @@ CONSTITUTION = MFUConstitution()
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    print("\n Project Ka-Nova — Constitution Loading...\n")
+    print("\n🚀 Project Ka-Nova — Constitution Loading...\n")
 
     # Validate all constraints
     valid = CONSTITUTION.validate()
@@ -1351,7 +1355,7 @@ if __name__ == "__main__":
     print(CONSTITUTION.summary())
 
     # Quick parameter access examples
-    print(" Sample parameter access:")
+    print("📋 Sample parameter access:")
     print(f"   Merit min office:     {CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE}")
     print(f"   IIG trigger:          {CONSTITUTION.iig.INVESTIGATION_TRIGGER}")
     print(f"   Resource split:       {CONSTITUTION.federal.RESOURCE_STATE_SHARE}/{CONSTITUTION.federal.RESOURCE_FEDERAL_DEV_SHARE}/{CONSTITUTION.federal.RESOURCE_ETHNIC_DIRECT_SHARE}")
@@ -1362,4 +1366,4 @@ if __name__ == "__main__":
     print(f"   Judge count:          {CONSTITUTION.judiciary.JUDGE_COUNT}")
     print(f"   IIG max agents:       {CONSTITUTION.iig.MAX_AGENTS}")
     print(f"   Total runs:           {CONSTITUTION.simulation.TOTAL_RUNS}")
-    print(f"\n constitution.py loaded successfully")
+    print(f"\n✅ constitution.py loaded successfully")

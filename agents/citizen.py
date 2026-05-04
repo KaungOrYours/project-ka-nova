@@ -22,11 +22,8 @@ License: MIT
 ================================================================================
 """
 
-
 from __future__ import annotations
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import random
 import math
 from collections import deque
@@ -105,9 +102,9 @@ ARCHETYPES: Dict[str, Dict] = {
         "proportion": 0.10
     },
     "rural_traditionalist": {
-        "description": "Low connectivity, traditional values, low awareness",
+        "description": "Low connectivity, traditional values, low awareness — v7: civic weight doubled, entry barrier lowered",
         "trust_score": 0.35,
-        "civic_contribution": 0.55,
+        "civic_contribution": 0.65,
         "corruption_tolerance": 0.50,
         "protest_threshold": 0.80,
         "emigration_threshold": 0.85,
@@ -118,9 +115,9 @@ ARCHETYPES: Dict[str, Dict] = {
         "proportion": 0.07
     },
     "trauma_carrier": {
-        "description": "Conflict survivor, high trauma, low trust",
+        "description": "Conflict survivor, high trauma, low trust — v7: civic weight doubled, community contribution path to office",
         "trust_score": 0.20,
-        "civic_contribution": 0.30,
+        "civic_contribution": 0.45,
         "corruption_tolerance": 0.40,
         "protest_threshold": 0.35,
         "emigration_threshold": 0.40,
@@ -512,6 +509,9 @@ class CitizenAgent(Agent):
             if random.random() < 0.30:  # not everyone acts immediately
                 self.has_emigrated = True
                 self.model.shared_data["emigrants"].append(self.unique_id)
+                self.model.shared_data["annual_emigrants"] = (
+                    self.model.shared_data.get("annual_emigrants", 0) + 1
+                )
 
     def _decide_bribery(self, perceived_corruption: float):
         """
