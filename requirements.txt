@@ -1,11 +1,49 @@
-mesa==2.3.0
-numpy==1.26.4
-pandas==2.2.1
-matplotlib==3.8.3
-seaborn==0.13.2
-networkx==3.2.1
-scipy==1.12.0
-tqdm==4.66.2
-jupyter==1.0.0
-plotly==5.20.0
-SALib==1.4.7
+# Ka-Nova — Unified Requirements (Phase 1 + Phase 2)
+# =====================================================
+# pip install -r requirements.txt
+#
+# Mac (Phase 1 local runs):
+#   cd ~/Desktop/ka-nova && source venv/bin/activate
+#   pip install -r requirements.txt
+#
+# RunPod RTX 4090 (Phase 2 full runs):
+#   pip install -r requirements.txt
+#   # Then separately: pip install vllm  (for local Llama 3)
+
+# ── Core ABM (Phase 1) ───────────────────────────────────────────────────────
+mesa==2.3.0                  # EXACT version — never brew install mesa
+numpy>=1.26.0
+pandas>=2.1.0
+scipy>=1.12.0
+matplotlib>=3.8.0
+networkx>=3.2.0
+tqdm>=4.66.0
+
+# ── Phase 2 additions ────────────────────────────────────────────────────────
+polars>=0.20.0               # Fast DataFrames for 50k agent checkpoints
+
+# LLM Elite Agents (Chancellor, President, Senior General)
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.0.20
+langchain-openai>=0.0.5      # Compatible with vLLM + Ollama + OpenAI API
+openai>=1.10.0               # OpenAI-compatible HTTP client
+
+# ── RunPod only (install separately — not needed on Mac) ─────────────────────
+# pip install vllm            # Serves Llama 3 70B locally on RTX 4090
+#
+# vLLM server launch (RunPod terminal):
+#   python -m vllm.entrypoints.openai.api_server \
+#     --model meta-llama/Meta-Llama-3-70B-Instruct \
+#     --quantization awq --max-model-len 4096 --port 8000 &
+#
+# Environment variables before running Phase 2:
+#   export ELITE_LLM_BASE_URL="http://localhost:8000/v1"
+#   export ELITE_LLM_API_KEY="EMPTY"
+#   export ELITE_LLM_MODEL="meta-llama/Meta-Llama-3-70B-Instruct"
+#
+# Ollama alternative (simpler):
+#   curl -fsSL https://ollama.com/install.sh | sh && ollama pull llama3:70b
+#   export ELITE_LLM_BASE_URL="http://localhost:11434/v1"
+#   export ELITE_LLM_API_KEY="ollama"
+#   export ELITE_LLM_MODEL="llama3:70b"
