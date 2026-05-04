@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-05-02T06:26:42.494869",
+  "timestamp": "2026-05-05T00:19:54.860096",
   "scenarios": [
     "A",
     "B",
     "C"
   ],
   "runs_per_scenario": 100,
-  "n_citizens": 2000,
+  "n_citizens": 9500,
   "n_steps": 50,
   "successful": 300,
   "failed": 0,

@@ -112,7 +112,23 @@ def get_ethnic_harmony_index(model):
     return sum(a.ethnic_cross_exposure for a in citizens) / len(citizens)
 
 def get_gini_coefficient(model):
-    return model.shared_data.get("gini_coefficient", 0.55)
+    # Calculate from citizen income distribution for realism
+    citizens = [a for a in model.schedule.agents
+                if isinstance(a, CitizenAgent) and not isinstance(a, OfficialAgent)
+                and a.income > 0 and a.is_alive and not a.has_emigrated]
+    if len(citizens) < 10:
+        return model.shared_data.get("gini_coefficient", 0.55)
+    incomes = sorted([a.income for a in citizens])
+    n = len(incomes)
+    # Gini formula
+    total = sum(incomes)
+    if total <= 0:
+        return model.shared_data.get("gini_coefficient", 0.55)
+    numerator = sum((2 * (i + 1) - n - 1) * incomes[i] for i in range(n))
+    gini = abs(numerator) / (n * total)
+    gini = max(0.0, min(1.0, gini))
+    model.shared_data["gini_coefficient"] = gini
+    return gini
 
 def get_employment_rate(model):
     citizens = [a for a in model.schedule.agents
@@ -133,9 +149,10 @@ def get_knowledge_capital(model):
     return sum(s.get("knowledge_capital", 0.0) for s in states)
 
 def get_brain_drain_rate(model):
-    emigrants = len(model.shared_data.get("emigrants", []))
+    # Annual emigration rate — not cumulative
+    annual = model.shared_data.get("annual_emigrants", 0)
     total = model.shared_data.get("total_citizens", 9500)
-    return emigrants / max(1, total)
+    return annual / max(1, total)
 
 def get_tax_compliance_rate(model):
     return model.shared_data.get("tax_compliance_rate", 0.90)
@@ -255,6 +272,9 @@ class KaNovaModel(Model):
                 "psych_probation_count": get_psych_probation_count,
             }
         )
+
+        # Apply Year Zero calibration — force starting conditions to match Myanmar baselines
+        self._apply_year_zero_calibration()
 
         # Collect Year 0 baseline
         self.datacollector.collect(self)
@@ -405,6 +425,8 @@ class KaNovaModel(Model):
             # Population
             "total_citizens": self.n_citizens,
             "emigrants": [],
+            "annual_emigrants": 0,
+            "low_corruption_streak": 0,
             "phd_graduates": 0,
             "knowledge_capital_index": 0.0,
             "employment_rate": 0.58,
@@ -479,6 +501,73 @@ class KaNovaModel(Model):
     # ══════════════════════════════════════════════════════════════════════════
     # MAIN STEP — ONE YEAR
     # ══════════════════════════════════════════════════════════════════════════
+
+    def _apply_year_zero_calibration(self):
+        """
+        Force Year Zero agent attributes to match real Myanmar baselines.
+        Calibrated from: Transparency International CPI, World Bank, V-Dem.
+        This runs ONCE after agent creation, before Year 0 data collection.
+        """
+
+        # Force official corruption scores to match TI baseline 0.72
+        for agent in self.schedule.agents:
+            if isinstance(agent, OfficialAgent):
+                # Corruption score calibrated to Myanmar baseline
+                agent.corruption_score = random.gauss(0.65, 0.08)
+                agent.corruption_score = max(0.40, min(0.90, agent.corruption_score))
+                # Low constitutional loyalty — military conditioning
+                agent.constitutional_loyalty = random.gauss(0.25, 0.08)
+                agent.constitutional_loyalty = max(0.05, min(0.50, agent.constitutional_loyalty))
+
+            if isinstance(agent, CitizenAgent) and not isinstance(agent, OfficialAgent):
+                # Trust calibrated to World Bank baseline 0.22
+                agent.trust_score = random.gauss(0.22, 0.08)
+                agent.trust_score = max(0.05, min(0.45, agent.trust_score))
+                # High grievance — post-conflict Myanmar
+                agent.grievance = random.gauss(0.62, 0.10)
+                agent.grievance = max(0.35, min(0.85, agent.grievance))
+                # Low employment — 58% Myanmar Census
+                agent.employment_status = (
+                    "employed" if random.random() < 0.58 else "unemployed"
+                )
+                # High emigration pressure — post-2021
+                agent.emigration_threshold = random.gauss(0.45, 0.10)
+                agent.emigration_threshold = max(0.20, min(0.70, agent.emigration_threshold))
+
+        # Force shared_data to Myanmar Year Zero baselines
+        self.shared_data["corruption_index"]   = 0.72
+        self.shared_data["trust_index"]         = 0.22
+        self.shared_data["gini_coefficient"]    = 0.55
+        self.shared_data["employment_rate"]     = 0.58
+        self.shared_data["ethnic_tension_index"]= 0.68
+        self.shared_data["stability_index"]     = 0.18
+        self.shared_data["iig_effectiveness"]   = 0.05
+        self.shared_data["coup_risk"]           = 0.45
+        self.shared_data["brain_drain_rate"]    = 0.35
+        self.shared_data["ethnic_harmony_index"]= 0.22
+        self.shared_data["military_loyalty"]    = 0.55
+        self.shared_data["policy_quality"]      = 0.20
+        self.shared_data["merit_system_integrity"] = 0.30
+        self.shared_data["gdp_growth_rate"]     = 0.02
+
+        # Force state-level conditions
+        state_corruption = {
+            "bamar_central":  0.75,
+            "shan_eastern":   0.78,
+            "karen_southern": 0.72,
+            "kachin_northern": 0.80
+        }
+        state_trust = {
+            "bamar_central":  0.22,
+            "shan_eastern":   0.18,
+            "karen_southern": 0.20,
+            "kachin_northern": 0.15
+        }
+        for state_id, state in self.states.items():
+            state["corruption_level"] = state_corruption.get(state_id, 0.72)
+            state["trust_index"]      = state_trust.get(state_id, 0.20)
+            state["ethnic_tension"]   = random.gauss(0.70, 0.05)
+            state["employment_rate"]  = random.gauss(0.57, 0.03)
 
     def step(self):
         """
@@ -812,10 +901,27 @@ class KaNovaModel(Model):
         self._loop_S4_shame_register()
 
     def _loop_P1_trust_legitimacy(self):
-        """P1 — Trust drives legitimacy drives stability."""
+        """P1 — Trust drives legitimacy drives stability.
+        v7: Trust acceleration when corruption < 0.20 for 5+ consecutive years.
+        Models fear-based compliance transitioning to institutional trust.
+        """
         performance = self.shared_data.get("policy_quality", 0.35)
         current_trust = self.shared_data.get("trust_index", 0.22)
         new_trust = current_trust * 0.70 + performance * 0.30
+
+        # v7 — Trust acceleration trigger (Article VIII)
+        corruption = self.shared_data.get("corruption_index", 1.0)
+        if corruption < CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_CORRUPTION:
+            streak = self.shared_data.get("low_corruption_streak", 0) + 1
+        else:
+            streak = 0
+        self.shared_data["low_corruption_streak"] = streak
+
+        if streak >= CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_YEARS:
+            growth = new_trust - current_trust
+            if growth > 0:
+                new_trust = current_trust + growth * CONSTITUTION.federal.TRUST_ACCELERATION_MULTIPLIER
+
         self.shared_data["trust_index"] = max(0.0, min(1.0, new_trust))
 
         for agent in self.schedule.agents:
@@ -1016,50 +1122,93 @@ class KaNovaModel(Model):
 
     def _scenario_b_rules(self):
         """MFU without safeguards — loopholes open."""
-        # Chancellor cooling-off NOT enforced
-        # Merit exam can be manipulated
-        # IIG director serves multiple terms
-        # Rights CAN be violated (no hard protection)
+        # Rights CAN be violated — no hard Safeguard 6
         if random.random() < 0.05:
             self.shared_data["rights_violated"] = True
 
-        # IIG effectiveness decays without Analysis Council oversight
+        # IIG effectiveness decays — no Analysis Council oversight (Safeguard 4 off)
         self.shared_data["iig_effectiveness"] = max(
             0.10,
-            self.shared_data.get("iig_effectiveness", 0.30) - 0.005
+            self.shared_data.get("iig_effectiveness", 0.30) - 0.008
         )
 
-        # Corruption grows faster — no shame register deterrence
+        # Policy quality degrades — merit exam manipulation (Safeguard 2 off)
+        self.shared_data["policy_quality"] = max(
+            0.20,
+            self.shared_data.get("policy_quality", 0.50) - 0.003
+        )
+
+        # Trust decays — no transparency (Safeguard 5 off)
+        self.shared_data["trust_index"] = max(
+            0.0,
+            self.shared_data.get("trust_index", 0.40) - 0.005
+        )
+
+        # Corruption grows faster — chancellor capture possible (Safeguard 1 off)
         for agent in self.schedule.agents:
             if isinstance(agent, OfficialAgent):
                 agent.corruption_tolerance = min(
-                    1.0, agent.corruption_tolerance + 0.01
+                    1.0, agent.corruption_tolerance + 0.015
                 )
+                # Merit subversion — appointments by loyalty not merit
+                if random.random() < 0.03:
+                    agent.corruption_score = min(
+                        1.0, agent.corruption_score + 0.02
+                    )
 
     def _scenario_c_rules(self):
         """Military baseline — no MFU constitutional rules."""
-        # No merit system
-        # No IIG
-        # No rights protection
-        # Military controls government
-        if random.random() < 0.15:
+        # Rights violated regularly — military suppression
+        if random.random() < 0.20:
             self.shared_data["rights_violated"] = True
 
+        # No IIG — fixed at baseline
         self.shared_data["iig_effectiveness"] = 0.05
+
+        # Trust collapses — military repression, no accountability
+        current_trust = self.shared_data.get("trust_index", 0.22)
+        trust_floor = 0.08  # absolute floor — some citizens always distrust
         self.shared_data["trust_index"] = max(
-            0.0,
-            self.shared_data.get("trust_index", 0.22) - 0.01
-        )
-        self.shared_data["coup_risk"] = min(
-            1.0,
-            self.shared_data.get("coup_risk", 0.25) + 0.02
+            trust_floor,
+            current_trust - 0.015  # stronger decay than B
         )
 
-        # Corruption grows unchecked
+        # Policy quality stays low — no merit appointments
+        self.shared_data["policy_quality"] = max(
+            0.10,
+            self.shared_data.get("policy_quality", 0.20) - 0.005
+        )
+
+        # Coup risk rises annually
+        self.shared_data["coup_risk"] = min(
+            0.60,  # cap — military actively suppresses counter-coups
+            self.shared_data.get("coup_risk", 0.25) + 0.015
+        )
+
+        # Ethnic tension rises — divide and rule
+        for state in self.states.values():
+            state["ethnic_tension"] = min(
+                0.90,
+                state.get("ethnic_tension", 0.68) + 0.005
+            )
+
+        # Corruption grows unchecked — no shame register
         for agent in self.schedule.agents:
             if isinstance(agent, OfficialAgent):
                 agent.corruption_score = min(
-                    1.0, agent.corruption_score + random.uniform(0.0, 0.03)
+                    0.95, agent.corruption_score + random.uniform(0.01, 0.04)
+                )
+
+        # Update citizen trust in scenario C
+        for agent in self.schedule.agents:
+            if isinstance(agent, CitizenAgent) and not isinstance(agent, OfficialAgent):
+                agent.trust_score = max(
+                    0.05,
+                    agent.trust_score - random.gauss(0.015, 0.005)
+                )
+                agent.grievance = min(
+                    1.0,
+                    agent.grievance + random.gauss(0.010, 0.003)
                 )
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -1211,6 +1360,7 @@ class KaNovaModel(Model):
         self.shared_data["total_aid_received"] = 0.0
         self.shared_data["phd_graduates"] = 0
         self.shared_data["rights_violated"] = False
+        self.shared_data["annual_emigrants"] = 0
         self.shared_data["election_year"] = False
         self.shared_data["chancellor_election_year"] = False
         self.shared_data["recertification_year"] = False

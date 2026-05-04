@@ -10,7 +10,7 @@ Nova — emergence (Latin).
 
 ## Overview
 
-Project Ka-Nova is an agent-based simulation (ABM) that stress-tests a theoretically designed governance constitution — the Meritocratic Federal Union (MFU) — over 50 simulated years of post-conflict Myanmar.
+Project Ka-Nova is an agent-based simulation (ABM) that stress-tests the Meritocratic Federal Union (MFU) constitution — a theoretically designed governance framework for post-conflict Myanmar — over 50 simulated years.
 
 The central research question:
 
@@ -26,124 +26,101 @@ Ka-Nova answers this question computationally, comparing three scenarios:
 
 ---
 
-## The Constitution as Ruleset
+## Constitution v7 — Key Parameters
 
-Every agent behavior in Ka-Nova derives directly from a constitutional clause. The MFU Constitution has 18 articles covering:
+### Merit Formula (Article III — updated v7)
 
-- Merit system (Article 3) — M = (P×0.40) + (E×0.30) + (PR×0.20) + (C×0.10)
-- Three veto chambers (Article 5) — Congress 51%, Ethnic Council 51%, Analysis Council 100%
-- Independent Intelligence Group (Article 7) — Partnership model, 9 divisions
-- Resource revenue split (Article 8) — 40% state / 40% federal / 20% ethnic communities directly
-- Rules of Engagement (Article 17) — No Gun Policy domestic, Scorched Earth external
-- Psychological Health Protocol (Article 18) — biannual screening, anti-bias anonymous review
-- Cryptographic Justice (Article 15) — blockchain evidence, zero-knowledge proofs, Total Ruin Protocol
-- Emergency Powers (Article 16) — 180-day maximum, rights untouched always
+```
+M = (Performance × 0.35) + (Education × 0.25) + (Professional Record × 0.20) + (Community Contribution × 0.20)
+```
+
+Community Contribution weight doubled from 10% to 20% to lower the entry barrier for rural and trauma-carrier archetypes.
+
+### Three Veto Chambers (Article V — updated v7)
+
+| Chamber | Threshold |
+|---|---|
+| Congress | 51% simple majority |
+| Ethnic Leaders Council | 51% simple majority |
+| Analysis Council | **75% qualified supermajority** (was 100% unanimous in v6) |
+
+Analysis Council veto then confirmed by Citizens Assembly of 320 citizens (40 per state, cryptographic lottery, 51% threshold).
+
+### Resource Revenue Split (Article VIII — updated v7)
+
+| Destination | Share |
+|---|---|
+| State governments | 35% (was 40%) |
+| Federal Development Fund | 35% (was 40%) |
+| **Direct household transfers** | **30% (was 20%)** |
+
+Community share increased from 20% to 30% as primary Gini reduction mechanism. Transfers go directly to households, bypassing state government.
+
+### Trust Acceleration Trigger (Article VIII — new in v7)
+
+When corruption index stays below 0.20 for 5+ consecutive years:
+- Trust growth rate multiplies by **1.5×**
+- Models the transition from fear-based compliance to genuine institutional trust
+
+### Other Constitutional Parameters (unchanged)
+
+| Parameter | Value |
+|---|---|
+| President term | 5 years, single term |
+| Chancellor term | 5 years, single term, 5-year cooling-off |
+| IIG entry merit | ≥ 0.85 + top 1% civil service |
+| IIG Academy | 27 months |
+| Constitutional Court | 11 judges, 10-year term, 6/11 majority |
+| Total Ruin signatures | 4 bodies, 8/11 court supermajority |
+| Constitutional review | Every 10 years, civic lottery |
+| PhD tuition | Free + civil service stipend |
+| Researcher royalty | 15% of net licensing revenue |
+| Gini ECB trigger | > 0.45 |
 
 ---
 
 ## Agent Architecture
 
-Ka-Nova uses **Heterogeneous Cognitive Agents** — rule-based agents with multi-dimensional internal states, bounded rationality, and adaptive learning — producing emergent macro-level behavior from micro-level constitutional constraints.
-
-### Agent Population (10,319 total)
+### Population (10,319 total)
 
 | Tier | Type | Count | Description |
 |---|---|---|---|
-| 1 | Citizens | 9,500 | 7 archetypes, life course modeling, bounded rationality |
+| 1 | Citizens | 9,500 | 7 archetypes, life course, bounded rationality |
 | 2 | Officials | ~80 | President, Chancellor, Ministers, Congress, Ethnic Leaders |
 | 3 | Oversight | 71 | IIG agents, Constitutional Court, Arbitration Court |
-| 4 | Foreign | 100 | Investors, neighboring states, international orgs, illicit networks |
+| 4 | Foreign | 100 | Investors, neighbors, international orgs, illicit networks |
 | 5 | Institutional | 5 | Central Bank, Dev Fund, Shame Register, Tax System, ECB |
 
-### Seven Citizen Archetypes
+### Seven Citizen Archetypes (v7 — civic weights updated)
 
 | Archetype | Proportion | Key traits |
 |---|---|---|
-| Civic Champion | 15% | High trust, low corruption tolerance, protests early |
-| Pragmatic Survivor | 30% | Adapts to any system, largest group |
-| Ethnic Loyalist | 20% | Primary identity is ethnic group over federal |
-| Ambitious Meritocrat | 15% | Believes in merit system, high achiever |
+| Civic Champion | 15% | High trust, low corruption tolerance |
+| Pragmatic Survivor | 30% | Adapts to any system |
+| Ethnic Loyalist | 20% | Primary identity is ethnic group |
+| Ambitious Meritocrat | 15% | Believes in merit, high achiever |
 | Disillusioned Youth | 10% | Educated, frustrated, emigrates easily |
-| Rural Traditionalist | 7% | Low connectivity, traditional values |
-| Trauma Carrier | 3% | Conflict survivor, high trauma, low trust |
-
-### Six Cognitive Layers per Agent
-
-1. **Perception** — bounded, local, recency-biased (political awareness determines information radius)
-2. **Decision** — satisficing, not optimizing (stops at first acceptable option)
-3. **Action** — affects environment, network, and institutions
-4. **Learning** — adaptive thresholds update from experience
-5. **Social Influence** — signals propagate through scale-free network
-6. **Life Course** — agents age, study, work, retire, and die
+| Rural Traditionalist | 7% | **v7: civic_contribution raised to 0.65** |
+| Trauma Carrier | 3% | **v7: civic_contribution raised to 0.45** |
 
 ---
 
 ## Twelve Feedback Loops
 
-| Loop | Type | Category | Primary Effect |
-|---|---|---|---|
-| P1 Trust-Legitimacy | Negative | Political | Self-correcting stability |
-| P2 IIG-Corruption | Negative | Political | Corruption suppression |
-| P3 Coup Probability | Negative | Political | Military loyalty maintenance |
-| P4 Election-Merit | Negative | Political | Leadership quality cycling |
-| E1 State Competition | Positive | Economic | Growth acceleration |
-| E2 Foreign Investment | Positive | Economic | Technology transfer |
-| E3 Resource Revenue | Negative | Economic | Inequality correction |
-| E4 PhD Economy | Positive | Economic | Knowledge compounding |
-| S1 National Service | Positive | Social | Ethnic trust building |
-| S2 Grievance-Protest | Negative | Social | Political pressure release |
-| S3 Cultural Offense | Negative | Social | Ethnic tension dampening |
-| S4 Shame Register | Negative | Social | Corruption deterrence |
-
----
-
-## KPIs (15 indicators)
-
-| KPI | Target Year 50 (Scenario A) |
-|---|---|
-| Corruption Index | < 0.20 |
-| Trust Index | > 0.70 |
-| Coup Probability | < 0.05 |
-| Ethnic Harmony | > 0.75 |
-| Gini Coefficient | < 0.35 |
-| Employment Rate | > 0.85 |
-| Knowledge Capital | Top 2 SEA |
-| Brain Drain Rate | < 0.10 (net positive) |
-| IIG Effectiveness | > 0.75 |
-| Tax Compliance | > 0.90 |
-| Shame Register Size | Growing (deterrence) |
-| Foreign Investors | > 40 active |
-| North Star Progress | > 0.80 |
-| Stability Index | > 0.75 |
-| Total Ruin Events | Peak years 5-15, decline after |
-
----
-
-## Measures of Success (8 validation criteria)
-
-| MoS | What it tests |
-|---|---|
-| Behavioral Validity | Agent behavior matches Myanmar baseline data |
-| Emergence Validity | System patterns emerge from rules, not programming |
-| Sensitivity Analysis | Results stable under ±10% parameter variation |
-| Sample Sufficiency | 100 runs achieves variance stabilization |
-| Scenario Differentiation | A vs B vs C statistically significant (p < 0.05) |
-| Internal Consistency | Feedback loops produce expected directional effects |
-| Reproducibility | Same seed = same results ±2% |
-| Calibration | Year Zero matches V-Dem, World Bank, TI baselines |
-
----
-
-## The North Star
-
-> *"We do not build this Union merely to survive. We build it to lead. Within the lifetime of our children, Myanmar will be the intellectual and economic capital of Southeast Asia — not despite our complexity, but because of it."*
-
-| Decade | Goal |
-|---|---|
-| 2025–2035 | Survive — build institutions, stop bleeding talent |
-| 2035–2045 | Compete — states racing, PhD economy emerging |
-| 2045–2055 | Lead — Myanmar exports governance models and technology |
-| 2055–2075 | Dominate — proof that post-conflict federalism works for 55 million |
+| Loop | Category | Key effect |
+|---|---|---|
+| P1 Trust-Legitimacy | Political | 0.70 inertia + **v7: 1.5× acceleration trigger** |
+| P2 IIG-Corruption | Political | Effectiveness compounds over time |
+| P3 Coup Probability | Political | Branching by scenario |
+| P4 Election-Merit | Political | 4-year recertification cycle |
+| E1 State Competition | Economic | GDP growth with corruption drag |
+| E2 Foreign Investment | Economic | Tech transfer with information lag |
+| E3 Resource Revenue | Economic | **v7: 35/35/30 split** — direct household transfers |
+| E4 PhD Economy | Economic | S-curve knowledge compounding |
+| S1 National Service | Social | Generational ethnic cross-exposure |
+| S2 Grievance-Protest | Social | Government response determines outcome |
+| S3 Cultural Offense | Social | Random events, harmony dampens over time |
+| S4 Shame Register | Social | Non-linear deterrence S-curve |
 
 ---
 
@@ -152,139 +129,162 @@ Ka-Nova uses **Heterogeneous Cognitive Agents** — rule-based agents with multi
 ```
 ka-nova/
 ├── agents/
-│   ├── citizen.py          Heterogeneous cognitive citizen agents
-│   ├── official.py         Government officials, Chancellor, President
-│   ├── oversight.py        IIG agents, Constitutional Court judges
+│   ├── citizen.py          7 archetypes, 5-layer cognitive architecture
+│   ├── official.py         Government officials
+│   ├── oversight.py        IIG agents, Constitutional Court
 │   ├── foreign.py          Investors, neighbors, international orgs
 │   └── institutional.py    Central Bank, Dev Fund, Shame Register
 ├── config/
 │   └── constitution.py     All 18 articles as computable parameters
 ├── feedback/
 │   └── loops.py            12 annual feedback loops
+├── institutions/
+│   ├── chambers.py         Three-chamber voting mechanics
+│   ├── court.py            Constitutional Court mechanics
+│   └── iig.py              IIG Partnership Council
 ├── scenarios/
 │   ├── run_a.py            Scenario A — full MFU
 │   ├── run_b.py            Scenario B — no safeguards
 │   └── run_c.py            Scenario C — military baseline
 ├── analysis/
-│   └── kpi.py              Statistical analysis and significance tests
-├── results/
-│   ├── scenario_a/         100 CSV files per run
-│   ├── scenario_b/
-│   ├── scenario_c/
-│   ├── all_results.csv     Combined 300-run dataset
-│   └── summary_statistics.csv
+│   └── kpi.py              Statistical analysis
 ├── charts/
-│   ├── kpi/                KPI trajectory charts
-│   ├── feedback/           Feedback loop visualizations
-│   └── comparison/         Scenario A vs B vs C comparison charts
+│   └── visualize.py        Dissertation charts
+├── results/                CSV outputs
 ├── model.py                Main Ka-Nova simulation model
 ├── run.py                  Simulation runner (300 runs)
-└── requirements.txt        Python dependencies
+└── requirements.txt
 ```
 
 ---
 
-## Installation
+## Installation and Setup
 
 ```bash
-# Clone repository
+# Clone
 git clone https://github.com/KaungOrYours/project-ka-nova.git
 cd project-ka-nova
 
-# Create virtual environment
+# Virtual environment — always use this
 python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Verify constitution loads correctly
+# Verify constitution loads
 python3 config/constitution.py
 ```
 
+**Every new terminal session:**
+```bash
+cd ~/Desktop/ka-nova
+source venv/bin/activate
+```
+
 ---
 
-## Usage
+## Running the Simulation
 
 ```bash
-# Quick test — 1 run per scenario, 500 citizens, 10 steps
+# Step 1 — Quick test (always run this first)
 python3 run.py --test
 
-# Single scenario
-python3 run.py --scenario A
+# Step 2 — Verify calibration and scenario differentiation
+python3 run.py --runs 3 --citizens 500 --steps 20
 
-# Custom run
-python3 run.py --runs 10 --citizens 1000 --steps 20
+# Step 3 — Full overnight run (dissertation quality)
+nohup python3 run.py --citizens 2000 --steps 50 > output.log 2>&1 &
 
-# Full dissertation run — 300 runs, 50 years
-python3 run.py
+# Step 4 — Full publication run (9500 citizens)
+nohup python3 run.py --citizens 9500 --steps 50 > output.log 2>&1 &
+
+# Monitor progress
+tail -f output.log
 ```
 
 ---
 
-## Requirements
+## After Simulation Completes
 
-```
-mesa==2.3.0
-numpy==1.26.4
-pandas==2.2.1
-matplotlib==3.8.3
-seaborn==0.13.2
-networkx==3.2.1
-scipy==1.12.0
-tqdm==4.66.2
-plotly==5.20.0
-SALib==1.4.7
-```
+```bash
+# Check result counts (should be 100 each)
+ls results/scenario_a/ | wc -l
+ls results/scenario_b/ | wc -l
+ls results/scenario_c/ | wc -l
 
-Tested on: Apple M2 MacBook Pro 8GB, macOS, Python 3.11
+# Run statistical analysis
+python3 analysis/kpi.py
+
+# Generate all charts
+python3 charts/visualize.py
+
+# Push to GitHub
+git add .
+git commit -m "feat: add simulation results and analysis"
+git push origin main --force
+```
 
 ---
 
-## Year Zero Starting Conditions
+## Runtime Estimates (M2 MacBook Pro 8GB)
 
-Calibrated from Myanmar Census 2014, V-Dem Dataset, World Bank Governance Indicators, and Transparency International CPI:
+| Citizens | Steps | Runs | Estimate | Quality |
+|---|---|---|---|---|
+| 200 | 5 | 3 | ~12 seconds | Test only |
+| 500 | 10 | 9 | ~30 seconds | Quick verify |
+| 2,000 | 50 | 300 | ~90 minutes | Dissertation quality |
+| 9,500 | 50 | 300 | ~8-10 hours | Full publication |
+
+---
+
+## Year Zero Baselines (Myanmar calibration targets)
 
 | Indicator | Value | Source |
 |---|---|---|
-| Corruption Index | 0.72 | Transparency International |
-| Trust Index | 0.22 | World Bank |
-| Gini Coefficient | 0.55 | World Bank |
+| Corruption Index | 0.72 | Transparency International CPI 2023 |
+| Trust Index | 0.22 | World Bank Governance 2022 |
+| Gini Coefficient | 0.55 | World Bank 2017 |
 | Employment Rate | 0.58 | Myanmar Census 2014 |
-| Ethnic Tension | 0.68 | V-Dem |
-| IIG Effectiveness | 0.30 | Baseline (no IIG exists yet) |
-| Military Loyalty | 0.55 | Estimated |
+| Ethnic Tension | 0.68 | V-Dem Dataset |
+| Stability Index | 0.18 | World Bank Political Stability 2022 |
+| Coup Risk | 0.45 | Post-2021 estimate |
+| Brain Drain Rate | 0.35 | Post-2021 emigration estimate |
 
 ---
 
-## Academic Context
+## Known Issues and Notes
 
-**Target journals:** JASSS (primary), Government Information Quarterly, PLOS ONE
+- Always run from project root: `cd ~/Desktop/ka-nova`
+- Always activate venv first: `source venv/bin/activate`
+- Use `pip install mesa==2.3.0` — never `brew install mesa`
+- All `__init__.py` files must exist in every folder
+- Sequential execution — no multiprocessing (M2 macOS spawn causes hanging)
 
-**Paper title:** Stress-Testing a Meritocratic Federal Governance Framework: An Agent-Based Simulation of Post-Conflict Institutional Resilience
+---
 
-**Research question:** Does the MFU constitutional framework produce the institutional conditions for Southeast Asian economic and intellectual dominance within 50 years?
+## Target Publications
 
-**Novel contributions:**
-- Constitutional rules as agent behavioral constraints (first in ABM literature)
-- Psychological health protocol as governance quality determinant
-- Cryptographic justice mechanics in simulation
-- Post-conflict multi-ethnic federal ABM for Myanmar
+- **Primary:** JASSS (Journal of Artificial Societies and Social Simulation)
+- **Secondary:** Government Information Quarterly
+- **Tertiary:** PLOS ONE
+
+---
+
+## Academic Disclaimer
+
+**This project is created strictly for academic and data science research purposes as part of an MSc Data Science dissertation at the University of Hertfordshire.**
+
+The MFU framework is a **theoretical governance model designed solely for computational simulation and academic analysis**. It is not a political manifesto, not a policy proposal, and not a call to action of any kind.
+
+- No real-world implementation intended
+- Not suitable for real-world implementation
+- Author respects Myanmar's laws and sovereignty
+- All constitutional articles exist exclusively within the Ka-Nova simulation environment
 
 ---
 
 ## Author
 
-Kaung Htet
-MSc Data Science — University of Hertfordshire
-GitHub: [KaungOrYours](https://github.com/KaungOrYours)
-
----
-
-## License
-
-MIT License — see LICENSE file for details.
-
----
-
-*Ka-Nova is not just a simulation. It is a computational argument that Myanmar can lead Southeast Asia — if the institutions are right.*
+Kaung Htet | MSc Data Science | University of Hertfordshire
+GitHub: [KaungOrYours](https://github.com/KaungOrYours/project-ka-nova)

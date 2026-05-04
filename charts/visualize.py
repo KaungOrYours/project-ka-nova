@@ -204,7 +204,7 @@ class KPITrajectoryCharts:
             ax.fill_between(
                 years,
                 np.clip(means - stds, 0, None),
-                np.clip(means + stds, None, None),
+                np.clip(means + stds, 0, 2),
                 alpha=0.15, color=color, zorder=2
             )
 
