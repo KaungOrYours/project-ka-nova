@@ -109,15 +109,8 @@ class FeedbackEngine:
     def loop_P1_trust_legitimacy(self) -> dict:
         """
         P1 — Trust drives legitimacy drives stability.
-
-        Direction: NEGATIVE (self-correcting)
-        High performance → trust rises → legitimacy → stability
-        Low performance → trust falls → grievance → protest
-
-        Key insight: Trust has inertia (0.70 weight on previous year).
-        A single bad year does not collapse trust immediately.
-        A single good year does not restore it immediately.
-        This mirrors real political psychology.
+        v7: Trust acceleration when corruption < 0.20 for 5+ consecutive years.
+        Models fear-based compliance transitioning to genuine institutional trust.
         """
 
         m = self.model
@@ -125,7 +118,6 @@ class FeedbackEngine:
         current_trust = m.shared_data.get("trust_index", 0.22)
         rights_ok = not m.shared_data.get("rights_violated", False)
 
-        # Rights violation permanently damages trust
         rights_penalty = 0.0 if rights_ok else CONSTITUTION.rights.RIGHTS_VIOLATION_TRUST_DROP
 
         # Trust update — recency-biased
@@ -134,6 +126,19 @@ class FeedbackEngine:
             performance * 0.25 +
             (0.05 if rights_ok else 0.0)
         ) - rights_penalty
+
+        # v7 — Trust acceleration trigger (Article VIII)
+        corruption = m.shared_data.get("corruption_index", 1.0)
+        if corruption < CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_CORRUPTION:
+            streak = m.shared_data.get("low_corruption_streak", 0) + 1
+        else:
+            streak = 0
+        m.shared_data["low_corruption_streak"] = streak
+
+        if streak >= CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_YEARS:
+            growth = new_trust - current_trust
+            if growth > 0:
+                new_trust = current_trust + growth * CONSTITUTION.federal.TRUST_ACCELERATION_MULTIPLIER
 
         new_trust = max(0.0, min(1.0, new_trust))
         m.shared_data["trust_index"] = new_trust
