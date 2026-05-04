@@ -2,7 +2,22 @@
 ================================================================================
 PROJECT KA-NOVA — run.py
 Sequential Simulation Runner — 300 Runs Across 3 Scenarios
-Optimized for M2 MacBook Pro. No multiprocessing overhead.
+Optimized for M2 MacBook Pro and RunPod RTX 4090.
+
+Phase 2 changes (surgical only):
+    - run_single(): added use_llm=False param → passed to KaNovaModel()
+    - KaNovaRunner.__init__(): added use_llm=False param
+    - run_all(): passes use_llm to run_single(), updated banner
+    - parse_args(): added --use-llm flag
+    - __main__: passes args.use_llm to KaNovaRunner()
+
+Usage:
+    # Mac local — rule-based elite agents (no LLM needed)
+    python3 run.py --test
+    python3 run.py --citizens 9500 --steps 50 --runs 300
+
+    # RunPod — LangChain LLM elite agents
+    python3 run.py --citizens 50000 --steps 50 --runs 100 --use-llm
 ================================================================================
 """
 
@@ -25,12 +40,18 @@ SCENARIO_DIRS = {
     "C": RESULTS_DIR / "scenario_c"
 }
 
-def run_single(run_id, scenario, n_citizens, n_steps):
+
+def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
     seed = run_id * 100 + ord(scenario)
     old_stdout = sys.stdout
     sys.stdout = io.StringIO()
     try:
-        model = KaNovaModel(scenario=scenario, seed=seed, n_citizens=n_citizens)
+        model = KaNovaModel(
+            scenario=scenario,
+            seed=seed,
+            n_citizens=n_citizens,
+            use_llm=use_llm,            # ← Phase 2: passed to EliteAgentLayer
+        )
         for _ in range(n_steps):
             model.step()
             if model.shared_data.get("simulation_failed", False):
@@ -50,11 +71,19 @@ def run_single(run_id, scenario, n_citizens, n_steps):
 
 
 class KaNovaRunner:
-    def __init__(self, runs_per_scenario=100, scenarios=None, n_citizens=None, n_steps=None):
+    def __init__(
+        self,
+        runs_per_scenario=100,
+        scenarios=None,
+        n_citizens=None,
+        n_steps=None,
+        use_llm=False,                  # ← Phase 2: False = Mac, True = RunPod
+    ):
         self.runs_per_scenario = runs_per_scenario
         self.scenarios = scenarios or ["A", "B", "C"]
         self.n_citizens = n_citizens or CONSTITUTION.simulation.CITIZEN_AGENTS
         self.n_steps = n_steps or CONSTITUTION.simulation.TIME_STEPS
+        self.use_llm = use_llm
         self.total_runs = self.runs_per_scenario * len(self.scenarios)
         self.successful = 0
         self.failed = 0
@@ -74,7 +103,8 @@ class KaNovaRunner:
         print(f"Total runs:        {self.total_runs}")
         print(f"Citizens:          {self.n_citizens:,}")
         print(f"Time steps:        {self.n_steps} years")
-        print(f"Execution:         Sequential (optimized for M2 8GB)")
+        print(f"Execution:         Sequential (M2 MacBook / RunPod RTX 4090)")
+        print(f"Elite Agents:      {'LangChain LLM' if self.use_llm else 'Rule-based (no LLM)'}")
         print(f"Start time:        {datetime.now().strftime('%H:%M:%S')}")
         print("=" * 60 + "\n")
 
@@ -84,7 +114,11 @@ class KaNovaRunner:
             for scenario in self.scenarios:
                 tqdm.write(f"\nScenario {scenario} — {self.runs_per_scenario} runs")
                 for run_id in range(self.runs_per_scenario):
-                    result = run_single(run_id, scenario, self.n_citizens, self.n_steps)
+                    result = run_single(
+                        run_id, scenario,
+                        self.n_citizens, self.n_steps,
+                        self.use_llm,               # ← Phase 2: passed through
+                    )
                     if result["status"] == "success":
                         self.successful += 1
                         df = result["df"]
@@ -93,14 +127,25 @@ class KaNovaRunner:
                         df.to_csv(filename, index=False)
                     else:
                         self.failed += 1
-                        self.errors.append({"run_id": run_id, "scenario": scenario, "error": result["error"]})
-                        tqdm.write(f"  ERROR s={scenario} r={run_id}: {result['error'][:80]}")
+                        self.errors.append({
+                            "run_id": run_id,
+                            "scenario": scenario,
+                            "error": result["error"]
+                        })
+                        tqdm.write(
+                            f"  ERROR s={scenario} r={run_id}: {result['error'][:80]}"
+                        )
 
                     elapsed = time.time() - self.start_time
                     completed = self.successful + self.failed
                     if completed > 0:
                         eta = (self.total_runs - completed) * (elapsed / completed)
-                        pbar.set_postfix({"s": scenario, "ok": self.successful, "err": self.failed, "eta": self._fmt(eta)})
+                        pbar.set_postfix({
+                            "s": scenario,
+                            "ok": self.successful,
+                            "err": self.failed,
+                            "eta": self._fmt(eta)
+                        })
                     pbar.update(1)
 
         self._finalize(all_dfs)
@@ -121,29 +166,47 @@ class KaNovaRunner:
         print(f"  Combined: {RESULTS_DIR}/all_results.csv ({len(combined):,} rows)")
         self._compute_summary(combined)
         with open(RESULTS_DIR / "run_log.json", "w") as f:
-            json.dump({"timestamp": datetime.now().isoformat(),
-                       "scenarios": self.scenarios, "runs_per_scenario": self.runs_per_scenario,
-                       "n_citizens": self.n_citizens, "n_steps": self.n_steps,
-                       "successful": self.successful, "failed": self.failed,
-                       "errors": self.errors}, f, indent=2)
+            json.dump({
+                "timestamp": datetime.now().isoformat(),
+                "scenarios": self.scenarios,
+                "runs_per_scenario": self.runs_per_scenario,
+                "n_citizens": self.n_citizens,
+                "n_steps": self.n_steps,
+                "use_llm": self.use_llm,
+                "successful": self.successful,
+                "failed": self.failed,
+                "errors": self.errors
+            }, f, indent=2)
 
     def _compute_summary(self, df):
-        kpis = [c for c in ["corruption_index","trust_index","iig_effectiveness",
-                             "coup_probability","ethnic_harmony","gini_coefficient",
-                             "employment_rate","north_star_progress","stability_index",
-                             "shame_register_size","total_ruin_events"] if c in df.columns]
+        kpis = [c for c in [
+            "corruption_index", "trust_index", "iig_effectiveness",
+            "coup_probability", "ethnic_harmony", "gini_coefficient",
+            "employment_rate", "north_star_progress", "stability_index",
+            "shame_register_size", "total_ruin_events"
+        ] if c in df.columns]
+
         final_year = df["year"].max()
         final_df = df[df["year"] == final_year]
         rows = []
+
         for scenario in self.scenarios:
             s_df = final_df[final_df["scenario"] == scenario]
             for kpi in kpis:
                 vals = s_df[kpi].dropna()
                 if vals.empty:
                     continue
-                rows.append({"scenario": scenario, "kpi": kpi, "year": final_year,
-                             "mean": round(vals.mean(), 4), "std": round(vals.std(), 4),
-                             "min": round(vals.min(), 4), "max": round(vals.max(), 4), "n": len(vals)})
+                rows.append({
+                    "scenario": scenario,
+                    "kpi": kpi,
+                    "year": final_year,
+                    "mean": round(vals.mean(), 4),
+                    "std": round(vals.std(), 4),
+                    "min": round(vals.min(), 4),
+                    "max": round(vals.max(), 4),
+                    "n": len(vals)
+                })
+
         if rows:
             summary = pd.DataFrame(rows)
             summary.to_csv(RESULTS_DIR / "summary_statistics.csv", index=False)
@@ -153,43 +216,65 @@ class KaNovaRunner:
             print("=" * 65)
             print(f"{'KPI':<28} {'Scenario A':>11} {'Scenario B':>11} {'Scenario C':>11}")
             print("-" * 65)
-            for kpi in ["corruption_index","trust_index","coup_probability",
-                        "gini_coefficient","north_star_progress","iig_effectiveness"]:
+            for kpi in [
+                "corruption_index", "trust_index", "coup_probability",
+                "gini_coefficient", "north_star_progress", "iig_effectiveness"
+            ]:
                 kpi_data = summary[summary["kpi"] == kpi]
                 if kpi_data.empty:
                     continue
                 row = f"{kpi:<28}"
                 for s in ["A", "B", "C"]:
                     sr = kpi_data[kpi_data["scenario"] == s]
-                    row += f"  {sr['mean'].values[0]:.3f}±{sr['std'].values[0]:.3f}" if not sr.empty else f"{'N/A':>11}"
+                    row += (
+                        f"  {sr['mean'].values[0]:.3f}±{sr['std'].values[0]:.3f}"
+                        if not sr.empty else f"{'N/A':>11}"
+                    )
                 print(row)
             print("=" * 65)
 
     @staticmethod
     def _fmt(s):
-        return f"{s:.0f}s" if s < 60 else f"{s/60:.1f}m" if s < 3600 else f"{s/3600:.1f}h"
+        return (
+            f"{s:.0f}s" if s < 60
+            else f"{s/60:.1f}m" if s < 3600
+            else f"{s/3600:.1f}h"
+        )
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="Ka-Nova Runner")
-    p.add_argument("--test", action="store_true", help="1 run per scenario, 200 citizens, 5 steps")
-    p.add_argument("--scenario", choices=["A","B","C"], default=None)
+    p.add_argument("--test", action="store_true",
+                   help="1 run per scenario, 200 citizens, 5 steps")
+    p.add_argument("--scenario", choices=["A", "B", "C"], default=None)
     p.add_argument("--runs", type=int, default=None)
     p.add_argument("--citizens", type=int, default=None)
     p.add_argument("--steps", type=int, default=None)
+    p.add_argument("--use-llm", dest="use_llm", action="store_true", default=False,
+                   help="Enable LangChain LLM elite agents (RunPod only). "
+                        "Requires ELITE_LLM_BASE_URL env var to be set.")
     return p.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
+
     if args.test:
-        print("TEST MODE — 1 run per scenario, 200 citizens, 5 steps")
-        runner = KaNovaRunner(runs_per_scenario=1, scenarios=["A","B","C"], n_citizens=200, n_steps=5)
+        print("TEST MODE — 1 run per scenario, 200 citizens, 5 steps, no LLM")
+        runner = KaNovaRunner(
+            runs_per_scenario=1,
+            scenarios=["A", "B", "C"],
+            n_citizens=200,
+            n_steps=5,
+            use_llm=False,
+        )
     else:
         runner = KaNovaRunner(
             runs_per_scenario=args.runs or CONSTITUTION.simulation.RUNS_PER_SCENARIO,
-            scenarios=[args.scenario] if args.scenario else ["A","B","C"],
+            scenarios=[args.scenario] if args.scenario else ["A", "B", "C"],
             n_citizens=args.citizens or CONSTITUTION.simulation.CITIZEN_AGENTS,
-            n_steps=args.steps or CONSTITUTION.simulation.TIME_STEPS
+            n_steps=args.steps or CONSTITUTION.simulation.TIME_STEPS,
+            use_llm=args.use_llm,
         )
+
     runner.run_all()
