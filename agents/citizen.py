@@ -134,10 +134,20 @@ ETHNIC_GROUPS = ["Bamar", "Shan", "Karen", "Kachin", "Chin", "Mon", "Rakhine", "
 
 # State assignments for simplified 4-state simulation
 SIMULATION_STATES = {
-    "bamar_central": ["Bamar", "Mon"],
-    "shan_eastern":  ["Shan", "Kayah"],
-    "karen_southern": ["Karen", "Rakhine"],
-    "kachin_northern": ["Kachin", "Chin"]
+    "bamar_central":   ["Bamar", "Mon"],
+    "shan_eastern":    ["Shan", "Kayah"],
+    "karen_southern":  ["Karen", "Rakhine"],
+    "kachin_northern": ["Kachin", "Chin"],
+    "mandalay":        ["Bamar", "Shan"],
+    "magway":          ["Bamar"],
+    "bago":            ["Bamar", "Karen", "Mon"],
+    "yangon":          ["Bamar", "Karen", "Mon", "Shan", "Rakhine"],
+    "ayeyarwady":      ["Bamar", "Karen", "Mon"],
+    "tanintharyi":     ["Bamar", "Karen", "Mon"],
+    "kayah":           ["Kayah", "Bamar", "Shan"],
+    "chin":            ["Chin", "Bamar"],
+    "mon":             ["Mon", "Bamar", "Karen"],
+    "rakhine":         ["Rakhine", "Bamar"],
 }
 
 
@@ -1244,25 +1254,44 @@ class CitizenPopulation:
 
     @staticmethod
     def _assign_state() -> str:
-        """Assign state based on population distribution."""
-        states = list(CONSTITUTION.simulation.SIMULATION_STATES)
-        weights = [0.40, 0.25, 0.20, 0.15]  # Bamar central largest
+        """Assign state based on GDP-proportional population distribution."""
+        states = [
+            "bamar_central", "mandalay",    "magway",        "bago",
+            "yangon",        "ayeyarwady",  "tanintharyi",   "shan_eastern",
+            "kachin_northern","kayah",      "karen_southern","chin",
+            "mon",           "rakhine",
+        ]
+        weights = [
+            0.07, 0.10, 0.05, 0.06,
+            0.18, 0.08, 0.04, 0.10,
+            0.06, 0.02, 0.05, 0.03,
+            0.06, 0.10,
+        ]
         return random.choices(states, weights=weights)[0]
 
     @staticmethod
     def _assign_ethnicity(state_id: str) -> str:
-        """Assign ethnicity based on state composition."""
-        state_ethnic_map = {
-            "bamar_central": ["Bamar"] * 75 + ["Mon"] * 25,
-            "shan_eastern": ["Shan"] * 70 + ["Kayah"] * 30,
-            "karen_southern": ["Karen"] * 65 + ["Rakhine"] * 35,
-            "kachin_northern": ["Kachin"] * 60 + ["Chin"] * 40
+        """Assign ethnicity based on Myanmar 2014 census per-state composition."""
+        # [Bamar, Shan, Karen, Kachin, Chin, Mon, Rakhine, Kayah]
+        state_ethnic_weights = {
+            "bamar_central":   [85, 3, 1, 5, 4, 1, 0, 1],
+            "mandalay":        [90, 2, 1, 2, 2, 2, 0, 1],
+            "magway":          [92, 2, 1, 1, 2, 1, 0, 1],
+            "bago":            [85, 2, 5, 2, 1, 4, 0, 1],
+            "yangon":          [75, 5, 6, 2, 2, 5, 2, 3],
+            "ayeyarwady":      [90, 2, 2, 1, 1, 3, 0, 1],
+            "tanintharyi":     [80, 3, 8, 1, 2, 5, 0, 1],
+            "shan_eastern":    [20, 60, 4, 6, 2, 2, 2, 4],
+            "kachin_northern": [30, 10, 2, 48, 4, 1, 1, 4],
+            "kayah":           [30, 10, 8, 2, 8, 2, 1, 39],
+            "karen_southern":  [30, 10, 52, 2, 2, 2, 1, 1],
+            "chin":            [30, 2, 2, 4, 56, 1, 2, 3],
+            "mon":             [50, 5, 8, 2, 1, 30, 2, 2],
+            "rakhine":         [30, 2, 3, 1, 1, 2, 60, 1],
         }
-        options = state_ethnic_map.get(
-            state_id,
-            ETHNIC_GROUPS
-        )
-        return random.choice(options)
+        groups  = ["Bamar", "Shan", "Karen", "Kachin", "Chin", "Mon", "Rakhine", "Kayah"]
+        weights = state_ethnic_weights.get(state_id, [68, 9, 7, 2, 2, 2, 4, 1])
+        return random.choices(groups, weights=weights)[0]
 
     @staticmethod
     def _assign_age() -> int:
