@@ -10,3 +10,5 @@ charts/**/*.png
 *.egg-info/
 .jupyter/
 .ipynb_checkpoints/
+auto_finish.sh
+sync_results.sh
