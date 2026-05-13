@@ -52,7 +52,7 @@ class FoundationalConfig:
     # 1.7 — Territory
     TERRITORY_BASIS: str = "negotiated_ethnic_homeland_maps"
     STATE_COUNT: int = 14
-    SIMULATION_STATE_COUNT: int = 4  # simplified for MSc
+    SIMULATION_STATE_COUNT: int = 14  # Phase 2 full expansion
 
 
 # ══════════════════════════════════════════════════════════════════════════════

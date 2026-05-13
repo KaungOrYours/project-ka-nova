@@ -93,6 +93,24 @@ class HybridKaNovaModel(Model):
         self.rng        = np.random.default_rng(seed)
         self.mods       = SCENARIO_MODS[scenario]
 
+        self.states = {
+            "bamar_central":   {"gdp": 400.0, "gdp_growth": 0.02, "resource_revenue": 50000.0, "budget": 10000.0, "corruption_level": 0.75, "employment_rate": 0.60, "trust_index": 0.22, "ethnic_tension": 0.55, "infrastructure": 0.45, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.40, "military_presence": 0.60, "ethnic_direct_fund": 0.0, "public_services": 0.40},
+            "mandalay":        {"gdp": 420.0, "gdp_growth": 0.025, "resource_revenue": 45000.0, "budget": 11000.0, "corruption_level": 0.72, "employment_rate": 0.62, "trust_index": 0.23, "ethnic_tension": 0.48, "infrastructure": 0.50, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.42, "military_presence": 0.55, "ethnic_direct_fund": 0.0, "public_services": 0.45},
+            "magway":          {"gdp": 195.0, "gdp_growth": 0.012, "resource_revenue": 28000.0, "budget": 5500.0, "corruption_level": 0.74, "employment_rate": 0.56, "trust_index": 0.19, "ethnic_tension": 0.50, "infrastructure": 0.34, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.36, "military_presence": 0.60, "ethnic_direct_fund": 0.0, "public_services": 0.33},
+            "bago":            {"gdp": 245.0, "gdp_growth": 0.018, "resource_revenue": 32000.0, "budget": 6500.0, "corruption_level": 0.73, "employment_rate": 0.59, "trust_index": 0.21, "ethnic_tension": 0.55, "infrastructure": 0.40, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.38, "military_presence": 0.58, "ethnic_direct_fund": 0.0, "public_services": 0.38},
+            "yangon":          {"gdp": 750.0, "gdp_growth": 0.040, "resource_revenue": 90000.0, "budget": 20000.0, "corruption_level": 0.68, "employment_rate": 0.68, "trust_index": 0.26, "ethnic_tension": 0.45, "infrastructure": 0.65, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.48, "military_presence": 0.45, "ethnic_direct_fund": 0.0, "public_services": 0.60},
+            "ayeyarwady":      {"gdp": 310.0, "gdp_growth": 0.016, "resource_revenue": 38000.0, "budget": 7500.0, "corruption_level": 0.75, "employment_rate": 0.58, "trust_index": 0.20, "ethnic_tension": 0.50, "infrastructure": 0.36, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.37, "military_presence": 0.58, "ethnic_direct_fund": 0.0, "public_services": 0.35},
+            "tanintharyi":     {"gdp": 155.0, "gdp_growth": 0.014, "resource_revenue": 22000.0, "budget": 4500.0, "corruption_level": 0.74, "employment_rate": 0.55, "trust_index": 0.19, "ethnic_tension": 0.58, "infrastructure": 0.30, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.35, "military_presence": 0.62, "ethnic_direct_fund": 0.0, "public_services": 0.30},
+            "shan_eastern":    {"gdp": 250.0, "gdp_growth": 0.010, "resource_revenue": 80000.0, "budget": 5000.0, "corruption_level": 0.78, "employment_rate": 0.55, "trust_index": 0.18, "ethnic_tension": 0.72, "infrastructure": 0.30, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.35, "military_presence": 0.70, "ethnic_direct_fund": 0.0, "public_services": 0.30},
+            "kachin_northern": {"gdp": 170.0, "gdp_growth": 0.010, "resource_revenue": 40000.0, "budget": 3000.0, "corruption_level": 0.80, "employment_rate": 0.53, "trust_index": 0.15, "ethnic_tension": 0.78, "infrastructure": 0.25, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.32, "military_presence": 0.75, "ethnic_direct_fund": 0.0, "public_services": 0.25},
+            "kayah":           {"gdp": 75.0,  "gdp_growth": 0.008, "resource_revenue": 12000.0, "budget": 1800.0, "corruption_level": 0.77, "employment_rate": 0.51, "trust_index": 0.14, "ethnic_tension": 0.80, "infrastructure": 0.22, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.30, "military_presence": 0.78, "ethnic_direct_fund": 0.0, "public_services": 0.22},
+            "karen_southern":  {"gdp": 180.0, "gdp_growth": 0.010, "resource_revenue": 30000.0, "budget": 4000.0, "corruption_level": 0.72, "employment_rate": 0.56, "trust_index": 0.20, "ethnic_tension": 0.68, "infrastructure": 0.28, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.38, "military_presence": 0.65, "ethnic_direct_fund": 0.0, "public_services": 0.28},
+            "chin":            {"gdp": 90.0,  "gdp_growth": 0.007, "resource_revenue": 8000.0,  "budget": 1500.0, "corruption_level": 0.76, "employment_rate": 0.50, "trust_index": 0.14, "ethnic_tension": 0.75, "infrastructure": 0.20, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.30, "military_presence": 0.72, "ethnic_direct_fund": 0.0, "public_services": 0.20},
+            "mon":             {"gdp": 230.0, "gdp_growth": 0.016, "resource_revenue": 28000.0, "budget": 5500.0, "corruption_level": 0.73, "employment_rate": 0.58, "trust_index": 0.21, "ethnic_tension": 0.62, "infrastructure": 0.38, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.38, "military_presence": 0.60, "ethnic_direct_fund": 0.0, "public_services": 0.36},
+            "rakhine":         {"gdp": 160.0, "gdp_growth": 0.008, "resource_revenue": 35000.0, "budget": 3500.0, "corruption_level": 0.82, "employment_rate": 0.50, "trust_index": 0.12, "ethnic_tension": 0.88, "infrastructure": 0.22, "knowledge_capital": 0.0, "protest_activity": 0.0, "iig_activity": 0.0, "merit_integrity": 0.28, "military_presence": 0.82, "ethnic_direct_fund": 0.0, "public_services": 0.22},
+        }
+
+
         # ── Mesa scheduler (government agents only — no citizens) ─────────────
         self.schedule = RandomActivation(self)
 
@@ -358,7 +376,7 @@ class HybridKaNovaModel(Model):
         """Push NumPy-computed KPIs into shared_data for Mesa agents to read."""
         ss = self.sim_state
         sd = self.shared_data
-        sd["trust_index"]          = ss.trust_index
+        sd["trust_index"]          = float(ss.trust_index) if ss.trust_index > 0 else float(ss.pop[:, 1].mean()) if len(ss.pop) > 0 else 0.22
         sd["gini_coefficient"]     = ss.gini_coefficient
         sd["employment_rate"]      = ss.employment_rate
         sd["brain_drain_rate"]     = ss.brain_drain_rate
@@ -368,8 +386,14 @@ class HybridKaNovaModel(Model):
         sd["gdp_growth_rate"]      = ss.gdp_growth
         # Corruption comes from Mesa officials (more accurate)
         # but use sim_state as fallback
-        if "corruption_index" not in sd or sd["corruption_index"] == 0:
+        # Compute corruption from Mesa officials (more accurate than sim_state)
+        officials = [a for a in self.schedule.agents if isinstance(a, OfficialAgent)]
+        if officials:
+            sd["corruption_index"] = min(1.0, sum(a.corruption_score for a in officials) / len(officials))
+        else:
             sd["corruption_index"] = ss.corruption_index
+        # Also sync to sim_state so feedback loops use correct value
+        ss.corruption_index = sd["corruption_index"]
 
     # ── Institutional enforcement (from Phase 1 model.py, unchanged) ──────────
 
