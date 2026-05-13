@@ -1,0 +1,16 @@
+nohup: ignoring input
+
+============================================================
+PROJECT KA-NOVA — SIMULATION RUNNER
+============================================================
+Scenarios:         ['A', 'B', 'C']
+Runs per scenario: 100
+Total runs:        300
+Citizens:          50,000
+Time steps:        50 years
+Execution:         Parallel (100 workers / Linux)
+Elite Agents:      Rule-based (no LLM)
+Start time:        16:55:17
+============================================================
+
+Progress:   0%|          | 0/300 [00:00<?, ?run/s]
