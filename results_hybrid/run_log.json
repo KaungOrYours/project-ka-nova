@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-05-06T08:41:24.831993",
+  "engine": "hybrid_numpy_mesa",
+  "n_citizens": 50000,
+  "n_steps": 50,
+  "runs_per_scenario": 100,
+  "workers": 18,
+  "use_llm": false,
+  "successful": 300,
+  "failed": 0
+}

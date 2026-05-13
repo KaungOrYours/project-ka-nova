@@ -135,7 +135,7 @@ Each year you receive a State Briefing. Decide:
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.85, "ethnic_weights": [0.9, 1.1, 1.3, 1.3, 1.4, 1.1, 1.5, 1.3], "reason": "Gini critical — peripheral states prioritised"}
+{{"budget_weight": 0.85, "ethnic_weights": [0.9, 1.1, 1.3, 1.3, 1.4, 1.1, 1.5, 1.3], "reason": "Gini critical — peripheral states prioritised"}}
 </DECISION>"""
 
 PRESIDENT_SYSTEM = """You are the President of the Meritocratic Federal Union of Myanmar.
@@ -148,7 +148,7 @@ Each year you receive a State Briefing. Decide:
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.70, "ethnic_weights": [1.0, 1.1, 1.2, 1.1, 1.3, 1.0, 1.4, 1.2], "reason": "Trust low in periphery — inclusive ethnic framing"}
+{{"budget_weight": 0.70, "ethnic_weights": [1.0, 1.1, 1.2, 1.1, 1.3, 1.0, 1.4, 1.2], "reason": "Trust low in periphery — inclusive ethnic framing"}}
 </DECISION>"""
 
 GENERAL_SYSTEM = """You are the Senior General commanding the Myanmar Armed Forces under the MFU framework.
@@ -164,7 +164,7 @@ Each year you receive a State Briefing. Decide:
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.7, 0.8, 1.0, 0.7, 0.8], "coup_signal": false, "reason": "Stability focus"}
+{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.7, 0.8, 1.0, 0.7, 0.8], "coup_signal": false, "reason": "Stability focus"}}
 </DECISION>"""
 
 
