@@ -155,171 +155,179 @@ body{cursor:none;}
 .ct-val{font-weight:600;}
 .ct-year{font-family:'Cinzel Decorative',serif;font-size:0.78rem;color:var(--gold);margin-bottom:4px;}
 
-/* ═══════════════════════════════════════════
-   MOBILE — max-width 768px
-   Desktop layout untouched above this line
-   ═══════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   MOBILE ≤ 768px
+   ══════════════════════════════════════ */
 @media (max-width: 768px) {
+  #cur,#cur-ring{display:none!important;}
+  body{cursor:auto;}
 
-  /* Hide desktop cursor */
-  #cur, #cur-ring { display: none !important; }
-  body { cursor: auto; }
-
-  /* ── HEADER ── */
-  #header { padding: 10px 12px 0; }
-  .eyebrow { font-size: 0.38rem; letter-spacing: 0.14em; }
-  .title { font-size: 0.95rem; }
-  .subtitle { display: none; }
-  #hdr-r { position: fixed; top: 10px; right: 12px; flex-direction: column; align-items: flex-end; gap: 3px; }
-  .sv { font-size: 0.75rem; }
-  .sl { font-size: 0.32rem; }
-
-  /* ── PHASE 2 BADGE ── */
-  #p2b { top: 52px; right: 12px; font-size: 0.36rem; padding: 2px 7px; }
-
-  /* ── VIEW TOGGLE ── */
-  #view-toggle {
-    top: auto;
-    bottom: 200px;
-    left: 0; right: 0;
-    transform: none;
-    width: 100%;
-    border-radius: 0;
-    border-left: none; border-right: none;
+  #header{padding:8px 12px 0;flex-direction:column;gap:0;}
+  .eyebrow{font-size:0.32rem;letter-spacing:0.09em;}
+  .title{font-size:0.84rem;}
+  .subtitle{display:none;}
+  #hdr-r{
+    display:flex!important;
+    position:static;
+    flex-direction:row;align-items:center;gap:8px;
+    margin-top:2px;flex-wrap:wrap;
   }
-  .vt-btn { flex: 1; font-size: 0.48rem; padding: 7px 0; text-align: center; }
+  #hdr-r > div{display:flex;align-items:baseline;gap:3px;}
+  .sv{font-size:0.52rem!important;line-height:1;}
+  .sl{font-size:0.28rem!important;letter-spacing:0.06em;opacity:0.7;}
+  #gh-desktop{display:none!important;}
 
-  /* ── SCENARIO BAR ── */
-  #sc-bar {
-    top: auto;
-    bottom: 158px;
-    left: 0; right: 0;
-    transform: none;
-    width: 100%;
-    border-radius: 0;
-    border-left: none; border-right: none;
-  }
-  .sc-btn { flex: 1; font-size: 0.44rem; padding: 6px 0; text-align: center; letter-spacing: 0.06em; }
+  /* Hide Phase 2 badge */
+  #p2b{display:none!important;}
 
-  /* ── KPI LEFT PANEL — hide ── */
-  #kpil { display: none !important; }
-
-  /* ── LLM PANEL — move to bottom sheet ── */
-  #llmp {
-    position: fixed;
-    left: 0; right: 0;
-    top: auto; bottom: 0;
-    transform: none;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    border-left: none; border-right: none; border-bottom: none;
-    border-top: 1px solid rgba(127,119,221,0.4);
-    border-radius: 0;
-    transition: max-height 0.4s ease;
-    z-index: 35;
-  }
-  #llmp.mob-open {
-    max-height: 45vh;
-    overflow-y: auto;
-  }
-  .ab { display: flex; gap: 10px; margin-bottom: 8px; }
-  .ar { font-size: 0.46rem; min-width: 65px; }
-  .at { font-size: 0.68rem; }
-
-  /* ── YEAR CONTROL ── */
-  #yw {
-    bottom: 44px;
-    width: 100%;
-    left: 0;
-    transform: none;
-    padding: 0 14px;
-  }
-  .ye { font-size: 0.40rem; margin-bottom: 3px; }
-  #yn { font-size: 1.75rem; }
-  .orn .ln { width: 26px; }
-  #ys { width: calc(100vw - 100px); max-width: 320px; }
-  #year-progress { width: calc(100vw - 100px); max-width: 320px; }
-
-  /* ── BOTTOM ELEMENTS ── */
-  #sc-indicator { bottom: 142px; }
-  #loop-badge { display: none; }
-  #blab { font-size: 0.32rem; bottom: 4px; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  /* ── CHART VIEW ── */
-  #chart-view { padding: 60px 10px 14px; }
-  #summary-row { grid-template-columns: 1fr !important; gap: 8px; }
-  #chart-grid { grid-template-columns: 1fr !important; gap: 12px; }
-  .chart-card { padding: 10px; }
-  .chart-title { font-size: 0.50rem; }
-  .chart-canvas { height: 108px; }
-  .chart-story-text { font-size: 0.70rem; }
-
-  /* ── MFU BAR — keep visible, just resize ── */
-  #mfu-bar { height: 40px; padding: 0 14px; bottom: 0; }
-  #mfu-bar-title { font-size: 0.42rem; letter-spacing: 0.12em; }
-  #mfu-bar-my { display: none; }
-  #mfu-bar-hint { font-size: 0.38rem; }
-
-  /* ── MFU PANEL — hidden until tapped ── */
-  #mfu-panel {
-    height: 88vh;
-    /* Push far below screen — more reliable than display:none on mobile */
-    top: 100vh;
-    bottom: auto;
-    transform: translateY(100vh) !important;
-    transition: transform 0.45s cubic-bezier(0.32,0.72,0,1);
-  }
-  #mfu-panel.open {
-    top: 12vh;
-    transform: translateY(0) !important;
+  /* ── AGENTS BUTTON — top right ── */
+  #mob-llm-btn{
+    display:flex!important;
+    position:fixed;
+    top:8px; right:10px;
+    bottom:auto; left:auto;
+    z-index:30;
+    font-size:0.34rem;padding:3px 9px;
   }
 
-  /* ── MOBILE KPI STRIP ── */
-  #mob-kpi {
-    display: flex !important;
-    position: fixed;
-    top: 72px; left: 0; right: 0;
-    z-index: 10;
-    padding: 5px 12px;
-    background: rgba(13,13,13,0.82);
-    border-bottom: 1px solid rgba(201,168,76,0.10);
-    flex-wrap: wrap; gap: 5px 14px;
-    pointer-events: none;
-    backdrop-filter: blur(8px);
+  /* ── GOLD PLAY BUTTON — just below agents button ── */
+  #mob-play-btn{
+    display:flex!important;
+    position:fixed;
+    top:40px; right:10px;
+    bottom:auto; left:auto;
+    z-index:30;
+    width:28px;height:28px;
+    background:none;
+    border:1px solid rgba(201,168,76,0.45);
+    border-radius:50%;
+    color:var(--gold);
+    font-size:10px;
+    cursor:pointer;
+    align-items:center;justify-content:center;
+    padding:0;
   }
 
-  /* ── MOBILE LLM BUTTON ── */
-  #mob-llm-btn { display: flex !important; }
+  /* Mobile KPI strip */
+  #mob-kpi{display:flex!important;top:72px;}
+
+  #kpil{display:none!important;}
+
+  /* View toggle */
+  #view-toggle{
+    position:fixed;top:auto;bottom:84px;
+    left:0;right:0;transform:none;
+    width:100%;gap:0;
+    border-left:none;border-right:none;border-radius:0;
+    z-index:25!important;pointer-events:all!important;
+  }
+  .vt-btn{flex:1;font-size:0.37rem;padding:5px 0;text-align:center;letter-spacing:0.06em;border-radius:0;pointer-events:all!important;z-index:25;}
+
+  /* Scenario bar */
+  #sc-bar{
+    position:fixed;top:auto;bottom:116px;
+    left:0;right:0;transform:none;
+    width:100%;gap:0;
+    border-left:none;border-right:none;border-radius:0;
+    z-index:25!important;pointer-events:all!important;
+  }
+  .sc-btn{flex:1;font-size:0.36rem;padding:5px 0;text-align:center;letter-spacing:0.04em;border-radius:0;pointer-events:all!important;z-index:25;}
+
+  /* Year control */
+  #yw{position:fixed;bottom:152px;left:0;right:0;width:100%;transform:none;padding:0 12px;z-index:10;}
+  .ye{font-size:0.34rem;margin-bottom:1px;}
+  #yn{font-size:1.45rem;}
+  .orn{margin-top:3px;}
+  .orn .ln{width:18px;}
+  .orn .dm{width:3px;height:3px;}
+  #ys{width:calc(100vw - 80px);max-width:340px;}
+  #year-progress{width:calc(100vw - 80px);max-width:340px;}
+  #pb{width:24px;height:24px;font-size:8px;}
+
+  /* LLM panel */
+  #llmp{
+    position:fixed;left:0;right:0;top:auto;bottom:0;
+    transform:none;width:100%;max-height:0;
+    overflow:hidden;border-radius:0;
+    border-top:1px solid rgba(127,119,221,0.5);
+    border-left:none;border-right:none;border-bottom:none;
+    z-index:40;transition:max-height 0.38s ease;padding:0;
+  }
+  #llmp.mob-open{max-height:44vh;overflow-y:auto;padding:10px 14px;}
+  #llmp-close{display:flex!important;}
+
+  #sc-indicator{bottom:208px;z-index:8;}
+  #loop-badge{display:none;}
+  #blab{display:none;}
+
+  #mfu-bar{height:36px;padding:0 12px;}
+  #mfu-bar-title{font-size:0.35rem;letter-spacing:0.08em;}
+  #mfu-bar-my{display:none;}
+  #mfu-bar-hint{font-size:0.32rem;}
+  #mfu-panel-hdr{height:40px;padding:0 10px;}
+  #mfu-panel-hdr-title{font-size:0.56rem;letter-spacing:0.05em;}
+  #mfu-panel-hdr-sub{display:none;}
+  #mfu-close{position:absolute;left:8px;padding:4px 8px;border:none;background:none;}
+  #mfu-close span{font-size:0.90rem;color:var(--muted);letter-spacing:0;font-family:sans-serif;line-height:1;}
+  #mfu-close span::before{content:"✕";}
+  #mfu-close .mfu-close-label{display:none;}
+
+  #mfu-panel{
+    height:88vh!important;position:fixed!important;
+    top:200vh!important;bottom:auto!important;
+    transform:none!important;
+    transition:top 0.45s cubic-bezier(0.32,0.72,0,1)!important;
+    overflow:hidden!important;
+  }
+  #mfu-panel.open{top:12vh!important;}
+  #mfu-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+  #chart-view{padding:52px 8px 8px;}
+  #summary-row{grid-template-columns:1fr!important;gap:7px!important;margin-bottom:8px!important;}
+  #chart-grid{grid-template-columns:1fr!important;gap:8px!important;}
+  .chart-card{padding:9px;}
+  .chart-title{font-size:0.44rem;}
+  .chart-canvas{height:98px!important;}
+  .chart-story-text{font-size:0.62rem;}
+  .sum-card{padding:10px 12px;}
+  #logic-view{padding:52px 14px 100px;}
 }
 
-/* These elements hidden on desktop, shown on mobile via media query above */
-#mob-kpi {
-  display: none;
-  position: fixed; top: 72px; left: 0; right: 0;
-  z-index: 10; padding: 5px 12px;
-  background: rgba(13,13,13,0.82);
-  border-bottom: 1px solid rgba(201,168,76,0.10);
-  flex-wrap: wrap; gap: 5px 14px;
-  pointer-events: none;
-  backdrop-filter: blur(8px);
+/* Mobile-only elements */
+#mob-kpi{
+  display:none;position:fixed;top:72px;left:0;right:0;
+  z-index:10;padding:3px 12px;
+  background:rgba(13,13,13,0.92);
+  border-bottom:1px solid rgba(201,168,76,0.09);
+  flex-wrap:wrap;gap:3px 10px;
+  pointer-events:none;backdrop-filter:blur(8px);
 }
-.mob-kpi-item { display: flex; align-items: center; gap: 5px; }
-.mob-kpi-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.mob-kpi-lbl { font-family: "Cinzel", serif; font-size: 0.38rem; letter-spacing: 0.10em; color: var(--muted); text-transform: uppercase; }
-.mob-kpi-val { font-family: "Cinzel", serif; font-size: 0.50rem; color: var(--gold); margin-left: 2px; }
+.mob-kpi-item{display:flex;align-items:center;gap:4px;}
+.mob-kpi-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.mob-kpi-lbl{font-family:"Cinzel",serif;font-size:0.31rem;letter-spacing:0.06em;color:var(--muted);text-transform:uppercase;}
+.mob-kpi-val{font-family:"Cinzel",serif;font-size:0.43rem;color:var(--gold);margin-left:1px;}
 
-#mob-llm-btn {
-  display: none;
-  position: fixed; right: 12px; bottom: 156px;
-  z-index: 20;
-  background: rgba(127,119,221,0.15);
-  border: 1px solid rgba(127,119,221,0.45);
-  color: #C39BD3;
-  font-family: "Cinzel", serif; font-size: 0.44rem;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  padding: 5px 10px; cursor: pointer;
-  align-items: center; gap: 5px;
+#mob-llm-btn{
+  display:none;
+  background:rgba(127,119,221,0.15);
+  border:1px solid rgba(127,119,221,0.45);
+  color:#C39BD3;
+  font-family:"Cinzel",serif;font-size:0.34rem;
+  letter-spacing:0.09em;text-transform:uppercase;
+  padding:3px 9px;cursor:pointer;
+  align-items:center;gap:3px;
+}
+
+#mob-play-btn{
+  display:none;
+}
+
+#llmp-close{
+  display:none;align-items:center;justify-content:flex-end;
+  font-family:"Cinzel",serif;font-size:0.36rem;
+  letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;
+  cursor:pointer;padding:0 0 7px 0;
+  border-bottom:1px solid rgba(127,119,221,0.15);margin-bottom:8px;
 }
 
 </style>
@@ -330,7 +338,6 @@ body{cursor:none;}
 <div id="grain"></div>
 <div id="flash"></div>
 
-<!-- MOBILE KPI STRIP -->
 <div id="mob-kpi">
   <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#B22222"></div><span class="mob-kpi-lbl">Corr</span><span class="mob-kpi-val" id="m-c">—</span></div>
   <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#C9A84C"></div><span class="mob-kpi-lbl">Trust</span><span class="mob-kpi-val" id="m-t">—</span></div>
@@ -338,8 +345,9 @@ body{cursor:none;}
   <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#FF4444"></div><span class="mob-kpi-lbl">Coup</span><span class="mob-kpi-val" id="m-p">—</span></div>
   <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#EF9F27"></div><span class="mob-kpi-lbl">North★</span><span class="mob-kpi-val" id="m-n">—</span></div>
 </div>
-<!-- MOBILE LLM TOGGLE -->
 <button id="mob-llm-btn" onclick="toggleMobLLM()">△ Agents</button>
+<button id="mob-play-btn" onclick="togglePlay()">&#9654;</button>
+
 <div id="cur"></div>
 <div id="cur-ring"></div>
 
@@ -350,6 +358,7 @@ body{cursor:none;}
     <div class="title">The Living Constitution</div>
     <div class="subtitle"> 10,000 Mesa Citizens &middot; 14 States &middot; 8 Ethnic Groups &middot; 300 Runs</div>
     <div class="subtitle"> The model’s constraints are calibrated using indicators inspired by the Myanmar context to ensure structural realism. &middot; </div>
+  <a href="https://github.com/KaungOrYours/project-ka-nova" target="_blank" id="gh-desktop" style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.20em;color:rgba(201,168,76,0.5);text-decoration:none;text-transform:uppercase;border:1px solid rgba(201,168,76,0.18);padding:4px 12px;transition:all 0.25s;display:inline-flex;align-items:center;gap:6px;margin-top:5px;" onmouseover="this.style.color='#C9A84C';this.style.borderColor='rgba(201,168,76,0.55)'" onmouseout="this.style.color='rgba(201,168,76,0.5)';this.style.borderColor='rgba(201,168,76,0.18)'">&#9671; GitHub Repository</a>
   </div>
   <div id="hdr-r">
     <div><div class="sv">10,000</div><div class="sl">Mesa Agents</div></div>
@@ -364,6 +373,7 @@ body{cursor:none;}
 <div id="view-toggle">
   <button class="vt-btn active" onclick="showView('3d',this)">&#9671; 3D Network</button>
   <button class="vt-btn" onclick="showView('charts',this)">&#9636; KPI Charts</button>
+  <button class="vt-btn" onclick="showView('logic',this)">&#9670; Logic</button>
 </div>
 
 <!-- 3D VIEW elements -->
@@ -383,7 +393,7 @@ body{cursor:none;}
   <div class="ki"><span class="kl">Coup Prob</span><div class="kt"><div class="kf" id="fco" style="background:#FF4444"></div></div><div class="kv"><span class="va" id="vaco">—</span><span class="vc" id="vcco">—</span></div></div>
 </div>
 
-<div id="llmp">
+<div id="llmp"><div id="llmp-close" onclick="closeMobLLM()">✕ Close</div>
   <div class="llt">&#9651; Elite Agent Reasoning</div>
   <div class="ab"><div class="ar" style="color:var(--gold)">Chancellor</div><div class="at" id="tch">Initialising...</div><div class="br"><div class="btr"><div class="bf" id="bch" style="background:var(--gold);width:70%"></div></div><div class="bv" id="bvch">0.70</div></div></div>
   <div class="ab"><div class="ar" style="color:var(--teal-l)">President</div><div class="at" id="tpr">Assessing legitimacy...</div><div class="br"><div class="btr"><div class="bf" id="bpr" style="background:var(--teal-l);width:60%"></div></div><div class="bv" id="bvpr">0.60</div></div></div>
@@ -721,12 +731,16 @@ function attachChartHover(canvasId, kpiKey){
 // ── VIEW TOGGLE ───────────────────────────────────────────────────────────────
 let currentView='3d';
 function showView(v,btn){
+  const lv=document.getElementById('logic-view');if(lv)lv.style.display='none';
   currentView=v;
   document.querySelectorAll('.vt-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const cv=document.getElementById('chart-view');
   const els3d=['sc-bar','kpil','llmp','yw'];
-  if(v==='charts'){
+  if(v==='logic'){
+    const lv=document.getElementById('logic-view');if(lv)lv.style.display='block';
+    ['sc-bar','kpil','llmp','yw'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  }else if(v==='charts'){
     cv.classList.add('active');
     els3d.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     setTimeout(()=>{
@@ -920,7 +934,7 @@ function updKPI(y,sc){
     const ea=document.getElementById(k.va),ec2=document.getElementById(k.vc);
     if(ea)ea.textContent='A:'+vA.toFixed(3);if(ec2)ec2.textContent='C:'+vC.toFixed(3);
   });
-  updLLM(y,sc); if(typeof updMobKPI==="function") updMobKPI(y,sc);
+  updLLM(y,sc);if(typeof updMobKPI==="function")updMobKPI(y,sc);
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -1169,9 +1183,7 @@ animate();
 <!-- ═══════════ MFU PANEL ═══════════ -->
 <div id="mfu-panel">
   <div id="mfu-panel-hdr">
-    <div id="mfu-close" onclick="closeMFU()">
-      <span>✕ Close</span>
-    </div>
+    <div id="mfu-close" onclick="closeMFU()"><span></span></div>
     <div id="mfu-panel-hdr-title">Meritocratic Federal Union</div>
     <div id="mfu-panel-hdr-sub">18 Articles · 7 Safeguards · v7</div>
   </div>
@@ -1185,7 +1197,7 @@ animate();
     <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.3em;color:#EF9F27;text-transform:uppercase;margin-bottom:16px;">⬥ Full Academic Disclaimer ⬥</div>
     <p style="font-family:'EB Garamond',serif;font-size:1rem;color:rgba(184,168,130,0.75);line-height:1.9;margin-bottom:16px;">
       The Meritocratic Federal Union (MFU) is an entirely fictional governance framework, created exclusively for the purposes of 
-      <strong style="color:rgba(201,168,76,0.85);">agent-based modelling (ABM), computational social science, and academic dissertation research</strong> 
+      <strong style="color:rgba(201,168,76,0.85);">generative agent-based modelling (GABM), computational social science, and academic dissertation research</strong> 
       at the University of Hertfordshire, MSc Data Science programme.
     </p>
     <p style="font-family:'EB Garamond',serif;font-size:1rem;color:rgba(184,168,130,0.75);line-height:1.9;margin-bottom:16px;">
@@ -2952,61 +2964,283 @@ function closeMFU() {
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape' && _mfuOpen) closeMFU(); });
 </script>
+<div id="logic-view" style="position:fixed;inset:0;z-index:15;background:#0D0D0D;overflow-y:auto;display:none;padding:80px 32px 100px;">
+<div style="max-width:780px;margin:0 auto;">
+
+  <!-- Title -->
+  <div style="text-align:center;margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid rgba(201,168,76,0.12);">
+    <div style="font-family:'Cinzel',serif;font-size:0.46rem;letter-spacing:0.26em;color:var(--gold);opacity:0.6;margin-bottom:7px;">MSc Data Science · University of Hertfordshire · 2026</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(1.0rem,2.2vw,1.6rem);color:var(--gold);text-shadow:0 0 22px rgba(201,168,76,0.2);margin-bottom:5px;">Project Ka-Nova — Technical Documentation</div>
+    <div style="font-family:'EB Garamond',serif;font-size:0.92rem;color:var(--muted);font-style:italic;">Generative Agent-Based Model (GABM) · 50,000 Citizens · 50 Years · 300 Monte Carlo Runs · Hybrid NumPy/Mesa</div>
+  </div>
+
+  <!-- Research Question -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Research Question</div>
+  <div style="border-left:2px solid rgba(201,168,76,0.4);padding:13px 18px;margin-bottom:24px;background:rgba(201,168,76,0.02);">
+    <div style="font-family:'EB Garamond',serif;font-size:1.0rem;color:var(--text);font-style:italic;line-height:1.7;">"If conflict ended tomorrow and the MFU constitution was implemented — what happens over 50 years?"</div>
+    <div style="font-family:'Cinzel',serif;font-size:0.38rem;letter-spacing:0.10em;color:var(--muted);margin-top:7px;opacity:0.6;">Secondary: Can MFU produce conditions for SEA economic and intellectual dominance within 50 years?</div>
+  </div>
+
+  <!-- GABM Methodology -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">GABM Methodology</div>
+  <div style="border:1px solid rgba(201,168,76,0.10);padding:16px 20px;margin-bottom:20px;background:rgba(201,168,76,0.015);">
+    <div style="font-family:'EB Garamond',serif;font-size:0.84rem;color:var(--muted);line-height:1.75;margin-bottom:13px;">Ka-Nova uses <strong style="color:var(--text);">Generative Agent-Based Modelling (GABM)</strong> — a computational methodology where autonomous agents follow local rules and macro-level governance outcomes emerge from their interactions. Unlike equation-based models, GABM captures non-linear dynamics, threshold effects, and path dependency — critical for modelling post-conflict state formation.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:5px;opacity:0.8;">FRAMEWORK</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;"><strong style="color:var(--text);">Mesa 2.3.0</strong> (Python ABM library — rule-based agent layer) + custom hybrid NumPy engine. Mesa handles agent scheduling and grid; NumPy vectorises KPI computation across 50,000 agents for RTX 4090 throughput.</div>
+      </div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:5px;opacity:0.8;">EXECUTION</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;">Sequential scheduler — all agents step once per year in randomised order. No multiprocessing (macOS M2 spawn method causes hanging). 300 runs × 50 steps = 15,000 simulation years total.</div>
+      </div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:5px;opacity:0.8;">STOCHASTICITY</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;">Each run uses a unique random seed for agent initialisation and event sampling. Monte Carlo averaging across 100 runs per scenario produces stable mean trajectories with variance bounds.</div>
+      </div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:5px;opacity:0.8;">CALIBRATION</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;">Year Zero initialised from real Myanmar data: Corruption 0.72 (TI CPI 2023), Trust 0.22 (World Bank 2022), Gini 0.55 (World Bank 2017), Brain Drain 0.35 (post-2021 estimate).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Architecture -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Agent Architecture — 5 Tiers</div>
+  <div style="border:1px solid rgba(201,168,76,0.10);padding:16px 20px;margin-bottom:20px;">
+    <div style="font-family:'EB Garamond',serif;font-size:0.82rem;color:var(--muted);line-height:1.7;margin-bottom:12px;">10,319 total agents across 5 tiers, each with distinct decision rules, information access, and constitutional authority:</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:0.62rem;min-width:400px;">
+        <tr style="border-bottom:1px solid rgba(201,168,76,0.15);">
+          <td style="padding:4px 8px 4px 0;color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;">TIER</td>
+          <td style="padding:4px 8px;color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;">TYPE</td>
+          <td style="padding:4px 8px;color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;">COUNT</td>
+          <td style="padding:4px 8px;color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;">IDs</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:3px 8px 3px 0;color:var(--muted);">T1</td>
+          <td style="padding:3px 8px;color:var(--text);">Citizens (7 archetypes)</td>
+          <td style="padding:3px 8px;color:#C9A84C;">9,500</td>
+          <td style="padding:3px 8px;color:var(--muted);">0–9499</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:3px 8px 3px 0;color:var(--muted);">T2</td>
+          <td style="padding:3px 8px;color:var(--text);">Officials (Chancellor, President, Ministers)</td>
+          <td style="padding:3px 8px;color:#C9A84C;">~80</td>
+          <td style="padding:3px 8px;color:var(--muted);">10000+</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:3px 8px 3px 0;color:var(--muted);">T3</td>
+          <td style="padding:3px 8px;color:var(--text);">Oversight (IIG, Court, Arbitration)</td>
+          <td style="padding:3px 8px;color:#C9A84C;">71</td>
+          <td style="padding:3px 8px;color:var(--muted);">20000+</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:3px 8px 3px 0;color:var(--muted);">T4</td>
+          <td style="padding:3px 8px;color:var(--text);">Foreign (Investors, Neighbours, Illicit)</td>
+          <td style="padding:3px 8px;color:#C9A84C;">100</td>
+          <td style="padding:3px 8px;color:var(--muted);">30000+</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:var(--muted);">T5</td>
+          <td style="padding:3px 8px;color:var(--text);">Institutional (Central Bank, ECB, Tax)</td>
+          <td style="padding:3px 8px;color:#C9A84C;">5</td>
+          <td style="padding:3px 8px;color:var(--muted);">40000+</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6 Cognitive Layers -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Citizen Cognitive Architecture — 6 Layers</div>
+  <div style="border:1px solid rgba(201,168,76,0.10);padding:16px 20px;margin-bottom:20px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:9px 11px;"><div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:4px;opacity:0.8;">L1 · PERCEPTION</div><div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.55;">Bounded, local, recency-biased. Political awareness = information radius. Ethnic loyalists have narrower radius than civic champions.</div></div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:9px 11px;"><div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:4px;opacity:0.8;">L2 · DECISION</div><div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.55;">Satisficing not optimising. Herbert Simon's bounded rationality — stops at first acceptable option. Trauma carriers have elevated decision thresholds.</div></div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:9px 11px;"><div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:4px;opacity:0.8;">L3 · ACTION</div><div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.55;">Vote, protest, emigrate, invest, comply, defect. Each action updates the agent's local environment and propagates through the social network.</div></div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:9px 11px;"><div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:4px;opacity:0.8;">L4 · LEARNING</div><div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.55;">Adaptive thresholds update from experience each year. Ambitious meritocrats update fastest; trauma carriers slowest (high inertia, 0.85).</div></div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:9px 11px;"><div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:4px;opacity:0.8;">L5 · SOCIAL</div><div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.55;">Scale-free network (Barabási–Albert model). Civic champions are high-degree nodes that amplify institutional trust. Ethnic loyalists cluster within ethnic subgraphs.</div></div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:9px 11px;"><div style="font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;color:var(--gold);margin-bottom:4px;opacity:0.8;">L6 · LIFE COURSE</div><div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.55;">Agents age, study, work, retire, die. Brain drain fires when disillusioned youth trust falls below 0.15 for 3+ consecutive years. PhD economy activates post Year 25.</div></div>
+    </div>
+  </div>
+
+  <!-- LLM Architecture -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">LLM Elite Agent Architecture</div>
+  <div style="border:1px solid rgba(195,155,211,0.22);padding:16px 20px;margin-bottom:20px;background:rgba(127,119,221,0.015);">
+    <div style="font-family:'EB Garamond',serif;font-size:0.84rem;color:var(--muted);line-height:1.75;margin-bottom:13px;">3 agents powered by <strong style="color:#C39BD3;">Llama 3.2 3B via LangChain</strong>, running on RunPod RTX 4090. Each simulation year, all 3 agents are called sequentially with a structured JSON prompt containing live KPI state. Their outputs — a <code style="font-family:'Share Tech Mono',monospace;font-size:0.78rem;color:var(--text);">budget_weight</code> float and reasoning text — feed back into the simulation's resource allocation and stability calculations.</div>
+    <div style="border:1px solid rgba(201,168,76,0.08);padding:12px 14px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text);line-height:1.8;background:rgba(0,0,0,0.3);">
+      <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;letter-spacing:0.10em;margin-bottom:7px;opacity:0.75;">PROMPT TEMPLATE (per agent, per year)</div>
+      You are the {role} of the Meritocratic Federal Union.<br>
+      Year: {year} | Scenario: {scenario}<br>
+      Current KPIs: corruption={c:.3f}, trust={t:.3f},<br>
+      gini={g:.3f}, iig={i:.3f}, coup_risk={p:.3f},<br>
+      stability={s:.3f}, north_star={n:.3f}, shame_reg={sh}<br><br>
+      Based on these conditions, reason about your domain.<br>
+      Output JSON: {{"budget_weight": 0.0-1.0, "reasoning": "..."}}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">
+      <div style="border:1px solid rgba(201,168,76,0.18);padding:11px 13px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.40rem;letter-spacing:0.12em;color:#C9A84C;margin-bottom:5px;">CHANCELLOR</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;">Domain: redistribution. Reads corruption + gini. budget_weight drives federal transfer allocation. High weight → more to peripheral states (Chin, Rakhine, Kayah).</div>
+      </div>
+      <div style="border:1px solid rgba(29,158,117,0.22);padding:11px 13px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.40rem;letter-spacing:0.12em;color:#5DCAA5;margin-bottom:5px;">PRESIDENT</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;">Domain: legitimacy. Reads trust + shame_register. endorsement_weight modulates how strongly the President amplifies institutional signals in the trust feedback loop.</div>
+      </div>
+      <div style="border:1px solid rgba(127,119,221,0.22);padding:11px 13px;">
+        <div style="font-family:'Cinzel',serif;font-size:0.40rem;letter-spacing:0.12em;color:#9F97EE;margin-bottom:5px;">SENIOR GENERAL</div>
+        <div style="font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.6;">Domain: stability. Reads coup_probability + corruption + trust. Coup signal activates when corruption &gt; 0.65 AND trust &lt; 0.30. support_weight feeds into military loyalty calculation.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Constitution Parameters -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Constitution v7 — Key Parameters</div>
+  <div style="border:1px solid rgba(201,168,76,0.09);padding:14px 18px;margin-bottom:20px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--text);line-height:1.9;">
+        <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;margin-bottom:5px;opacity:0.8;">MERIT FORMULA</div>
+        M = P×0.35<br>+ E×0.25<br>+ PR×0.20<br>+ C×0.20
+      </div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--text);line-height:1.9;">
+        <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;margin-bottom:5px;opacity:0.8;">RESOURCE SPLIT</div>
+        Federal: 35%<br>States: 35%<br>Direct HH: 30%
+      </div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--text);line-height:1.9;">
+        <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;margin-bottom:5px;opacity:0.8;">VETO CHAMBERS</div>
+        Congress: 51%<br>Ethnic: 51%<br>Analysis: 75%
+      </div>
+      <div style="border:1px solid rgba(201,168,76,0.08);padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--text);line-height:1.9;">
+        <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.36rem;margin-bottom:5px;opacity:0.8;">TRUST DYNAMICS</div>
+        Inertia: 0.70<br>Accel: 1.5× if<br>corr&lt;0.20 for 5yr
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistical Validation -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Statistical Validation — 8 Measures of Success</div>
+  <div style="border:1px solid rgba(201,168,76,0.09);padding:14px 18px;margin-bottom:20px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 16px;font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.75;">
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 1</span> Behavioural validity — &lt;10% error on Myanmar baselines</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 2</span> Emergence validity — coups/protests arise from rules, not code</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 3</span> Sensitivity — &lt;20% KPI change per ±10% parameter shift</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 4</span> Sample sufficiency — mean change &lt;1% at 100 runs</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 5</span> Scenario differentiation — A vs B vs C: p&lt;0.05 Mann-Whitney U</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 6</span> Internal consistency — &gt;80% feedback loops correct direction</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 7</span> Reproducibility — same seed = same results (deterministic)</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">MoS 8</span> Calibration — &gt;70% KPIs within 10% of Year 0 Myanmar data</div>
+    </div>
+  </div>
+
+  <!-- 12 Feedback Loops -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">12 Feedback Loops</div>
+  <div style="border:1px solid rgba(201,168,76,0.09);padding:14px 18px;margin-bottom:20px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-family:'EB Garamond',serif;font-size:0.76rem;color:var(--muted);line-height:1.75;">
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">P1</span> Trust-Legitimacy (inertia 0.70)</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">P2</span> IIG-Corruption compound effect</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">P3</span> Coup probability scenario branching</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">P4</span> Election-Merit 4yr recertification</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">E1</span> State competition GDP + corruption drag</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">E2</span> Foreign investment info lag 1–3yr</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">E3</span> Resource revenue ECB Gini trigger</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">E4</span> PhD economy S-curve (North Star)</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">S1</span> National service cross-ethnic exposure</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">S2</span> Grievance-Protest government response</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">S3</span> Cultural offense harmony dampening</div>
+      <div><span style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.34rem;">S4</span> Shame Register S-curve deterrence</div>
+    </div>
+  </div>
+
+  <!-- Key Findings -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Key Findings — Year 49</div>
+  <div style="border:1px solid rgba(201,168,76,0.09);padding:14px 18px;margin-bottom:20px;overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:0.66rem;">
+      <tr style="border-bottom:1px solid rgba(201,168,76,0.15);">
+        <td style="padding:4px 8px 4px 0;color:var(--muted);font-family:'Cinzel',serif;font-size:0.36rem;text-transform:uppercase;">KPI</td>
+        <td style="padding:4px 8px;color:#C9A84C;text-align:center;font-family:'Cinzel',serif;font-size:0.40rem;">A · Full MFU</td>
+        <td style="padding:4px 8px;color:#7F77DD;text-align:center;font-family:'Cinzel',serif;font-size:0.40rem;">B · No Guards</td>
+        <td style="padding:4px 8px;color:#B22222;text-align:center;font-family:'Cinzel',serif;font-size:0.40rem;">C · Military</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:3px 8px 3px 0;color:var(--muted);">Corruption</td><td style="padding:3px 8px;color:#C9A84C;text-align:center;">0.189</td><td style="padding:3px 8px;color:#7F77DD;text-align:center;">0.214</td><td style="padding:3px 8px;color:#B22222;text-align:center;">0.933</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:3px 8px 3px 0;color:var(--muted);">Trust</td><td style="padding:3px 8px;color:#C9A84C;text-align:center;">0.527</td><td style="padding:3px 8px;color:#7F77DD;text-align:center;">0.518</td><td style="padding:3px 8px;color:#B22222;text-align:center;">0.460</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:3px 8px 3px 0;color:var(--muted);">IIG Effect.</td><td style="padding:3px 8px;color:#C9A84C;text-align:center;">1.000</td><td style="padding:3px 8px;color:#7F77DD;text-align:center;">0.992</td><td style="padding:3px 8px;color:#B22222;text-align:center;">0.050</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:3px 8px 3px 0;color:var(--muted);">Coup Prob.</td><td style="padding:3px 8px;color:#C9A84C;text-align:center;">0.000</td><td style="padding:3px 8px;color:#7F77DD;text-align:center;">0.000</td><td style="padding:3px 8px;color:#B22222;text-align:center;">0.600</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:3px 8px 3px 0;color:var(--muted);">North Star</td><td style="padding:3px 8px;color:#C9A84C;text-align:center;">0.557</td><td style="padding:3px 8px;color:#7F77DD;text-align:center;">0.541</td><td style="padding:3px 8px;color:#B22222;text-align:center;">0.242</td></tr>
+      <tr><td style="padding:3px 8px 3px 0;color:var(--muted);">Shame Reg.</td><td style="padding:3px 8px;color:#C9A84C;text-align:center;">80</td><td style="padding:3px 8px;color:#7F77DD;text-align:center;">91</td><td style="padding:3px 8px;color:#B22222;text-align:center;">120</td></tr>
+    </table>
+  </div>
+
+  <!-- Phase 3 -->
+  <div style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:9px;opacity:0.75;">Phase 3 — Future Plans</div>
+  <div style="border:1px solid rgba(201,168,76,0.09);padding:14px 18px;margin-bottom:24px;font-family:'EB Garamond',serif;font-size:0.82rem;color:var(--muted);line-height:1.85;">
+    <div style="margin-bottom:7px;">&#9671; Scale to <strong style="color:var(--text);">19 LLM elite agents</strong> via LangChain: Chancellor, President, 14 Ethnic Leaders, IIG Director, Chief Justice, Central Bank Governor</div>
+    <div style="margin-bottom:7px;">&#9671; <strong style="color:var(--text);">SALib sensitivity analysis</strong> sweeping all 40+ constitutional parameters with Sobol indices</div>
+    <div style="margin-bottom:7px;">&#9671; <strong style="color:var(--text);">Article 19</strong> — Tatmadaw transition incentives (pensions, immunity, civilian roles): highest-priority constitutional gap</div>
+    <div style="margin-bottom:7px;">&#9671; <strong style="color:var(--text);">Longitudinal validation</strong> against West Germany 1949, Singapore 1965, Rwanda 1994 post-conflict trajectories</div>
+    <div style="margin-bottom:7px;">&#9671; <strong style="color:var(--text);">Citizens Assembly veto</strong> confirmation mechanic not yet in chambers.py — pending implementation</div>
+    <div>&#9671; Target: <strong style="color:var(--text);">JASSS</strong> (primary), Government Information Quarterly, PLOS ONE</div>
+  </div>
+
+  <!-- Links -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:22px;border-top:1px solid rgba(201,168,76,0.09);">
+    <a href="https://github.com/KaungOrYours/project-ka-nova" target="_blank" style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.15em;color:var(--gold);text-decoration:none;border:1px solid rgba(201,168,76,0.28);padding:8px 16px;text-transform:uppercase;" onmouseover="this.style.background='rgba(201,168,76,0.07)'" onmouseout="this.style.background='transparent'">&#9671; GitHub</a>
+    <a href="https://github.com/KaungOrYours/project-ka-nova/blob/main/README.md" target="_blank" style="font-family:'Cinzel',serif;font-size:0.44rem;letter-spacing:0.15em;color:var(--muted);text-decoration:none;border:1px solid rgba(201,168,76,0.12);padding:8px 16px;text-transform:uppercase;" onmouseover="this.style.color='var(--gold)';this.style.borderColor='rgba(201,168,76,0.28)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='rgba(201,168,76,0.12)'">&#9636; README</a>
+    <div style="width:100%;text-align:center;font-family:'Cinzel',serif;font-size:0.34rem;letter-spacing:0.09em;color:var(--muted);opacity:0.38;text-transform:uppercase;margin-top:5px;">Academic Research Only · Not a political proposal · MSc Data Science · UH · 2026</div>
+  </div>
+
+</div>
+</div>
+</div>
+</div>
 
 <script>
-// ── MOBILE FUNCTIONS ─────────────────────────────
-function toggleMobLLM() {
-  const p = document.getElementById("llmp");
-  p.classList.toggle("mob-open");
-  const btn = document.getElementById("mob-llm-btn");
-  btn.style.borderColor = p.classList.contains("mob-open")
-    ? "rgba(127,119,221,0.9)" : "rgba(127,119,221,0.45)";
+function toggleMobLLM(){
+  const p=document.getElementById('llmp');
+  p.classList.toggle('mob-open');
+  const btn=document.getElementById('mob-llm-btn');
+  if(btn)btn.textContent=p.classList.contains('mob-open')?'✕ Close':'△ Agents';
 }
-
-// Update mobile KPI strip whenever updKPI runs
-const _origUpdKPI = typeof updKPI === "function" ? updKPI : null;
-function updMobKPI(y, sc) {
-  const keys = {c:"m-c", t:"m-t", i:"m-i", p:"m-p", n:"m-n"};
-  Object.entries(keys).forEach(([k, id]) => {
-    const e = document.getElementById(id);
-    if (e && DATA[sc] && DATA[sc][k]) {
-      e.textContent = (DATA[sc][k][y] ?? 0).toFixed(2);
-    }
+function closeMobLLM(){
+  document.getElementById('llmp').classList.remove('mob-open');
+  const btn=document.getElementById('mob-llm-btn');
+  if(btn)btn.textContent='△ Agents';
+}
+function updMobKPI(y,sc){
+  const map={c:'m-c',t:'m-t',i:'m-i',p:'m-p',n:'m-n'};
+  Object.entries(map).forEach(([k,id])=>{
+    const e=document.getElementById(id);
+    if(e&&DATA[sc]&&DATA[sc][k]!=null){const v=DATA[sc][k][y];e.textContent=v!=null?v.toFixed(2):'—';}
   });
+  // Keep mob-play-btn in sync
+  const mpb=document.getElementById('mob-play-btn');
+  const opb=document.getElementById('pb');
+  if(mpb&&opb)mpb.innerHTML=opb.innerHTML;
 }
-
-// Touch orbit + pinch zoom on the Three.js canvas
-(function() {
-  const cvs = document.getElementById("three-canvas");
-  if (!cvs) return;
-  let lx=0, ly=0, lpd=0;
-  cvs.addEventListener("touchstart", e => {
-    if (e.touches.length === 1) { lx = e.touches[0].clientX; ly = e.touches[0].clientY; }
-    if (e.touches.length === 2) { lpd = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
-  }, {passive: true});
-  cvs.addEventListener("touchmove", e => {
+(function(){
+  const cvs=document.getElementById('three-canvas');
+  if(!cvs)return;
+  let lx=0,ly=0,lpd=0;
+  cvs.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){lx=e.touches[0].clientX;ly=e.touches[0].clientY;}
+    if(e.touches.length===2)lpd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  },{passive:true});
+  cvs.addEventListener('touchmove',e=>{
     e.preventDefault();
-    if (e.touches.length === 1) {
-      const dx = e.touches[0].clientX - lx;
-      const dy = e.touches[0].clientY - ly;
-      if (typeof manualThetaOffset !== "undefined") {
-        manualThetaOffset -= dx * 0.008;
-        manualPhiOffset = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, manualPhiOffset + dy * 0.008));
+    if(e.touches.length===1){
+      if(typeof manualThetaOffset!=='undefined'){
+        manualThetaOffset-=(e.touches[0].clientX-lx)*0.007;
+        manualPhiOffset=Math.max(-Math.PI/2.2,Math.min(Math.PI/2.2,manualPhiOffset+(e.touches[0].clientY-ly)*0.007));
         updateCamera();
       }
-      lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+      lx=e.touches[0].clientX;ly=e.touches[0].clientY;
     }
-    if (e.touches.length === 2) {
-      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-      if (typeof camR !== "undefined") {
-        camR = Math.max(15, Math.min(150, camR - (d - lpd) * 0.15));
-        updateCamera();
-      }
-      lpd = d;
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(typeof camR!=='undefined'){camR=Math.max(18,Math.min(150,camR-(d-lpd)*0.12));updateCamera();}
+      lpd=d;
     }
-  }, {passive: false});
+  },{passive:false});
 })();
 </script>
-
 </body>
 </html>
