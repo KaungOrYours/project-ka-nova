@@ -154,6 +154,174 @@ body{cursor:none;}
 .ct-row{display:flex;justify-content:space-between;gap:16px;font-family:'Cinzel',serif;font-size:0.55rem;color:var(--muted);margin-bottom:2px;}
 .ct-val{font-weight:600;}
 .ct-year{font-family:'Cinzel Decorative',serif;font-size:0.78rem;color:var(--gold);margin-bottom:4px;}
+
+/* ═══════════════════════════════════════════
+   MOBILE — max-width 768px
+   Desktop layout untouched above this line
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Hide desktop cursor */
+  #cur, #cur-ring { display: none !important; }
+  body { cursor: auto; }
+
+  /* ── HEADER ── */
+  #header { padding: 10px 12px 0; }
+  .eyebrow { font-size: 0.38rem; letter-spacing: 0.14em; }
+  .title { font-size: 0.95rem; }
+  .subtitle { display: none; }
+  #hdr-r { position: fixed; top: 10px; right: 12px; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .sv { font-size: 0.75rem; }
+  .sl { font-size: 0.32rem; }
+
+  /* ── PHASE 2 BADGE ── */
+  #p2b { top: 52px; right: 12px; font-size: 0.36rem; padding: 2px 7px; }
+
+  /* ── VIEW TOGGLE ── */
+  #view-toggle {
+    top: auto;
+    bottom: 200px;
+    left: 0; right: 0;
+    transform: none;
+    width: 100%;
+    border-radius: 0;
+    border-left: none; border-right: none;
+  }
+  .vt-btn { flex: 1; font-size: 0.48rem; padding: 7px 0; text-align: center; }
+
+  /* ── SCENARIO BAR ── */
+  #sc-bar {
+    top: auto;
+    bottom: 158px;
+    left: 0; right: 0;
+    transform: none;
+    width: 100%;
+    border-radius: 0;
+    border-left: none; border-right: none;
+  }
+  .sc-btn { flex: 1; font-size: 0.44rem; padding: 6px 0; text-align: center; letter-spacing: 0.06em; }
+
+  /* ── KPI LEFT PANEL — hide ── */
+  #kpil { display: none !important; }
+
+  /* ── LLM PANEL — move to bottom sheet ── */
+  #llmp {
+    position: fixed;
+    left: 0; right: 0;
+    top: auto; bottom: 0;
+    transform: none;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    border-left: none; border-right: none; border-bottom: none;
+    border-top: 1px solid rgba(127,119,221,0.4);
+    border-radius: 0;
+    transition: max-height 0.4s ease;
+    z-index: 35;
+  }
+  #llmp.mob-open {
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+  .ab { display: flex; gap: 10px; margin-bottom: 8px; }
+  .ar { font-size: 0.46rem; min-width: 65px; }
+  .at { font-size: 0.68rem; }
+
+  /* ── YEAR CONTROL ── */
+  #yw {
+    bottom: 44px;
+    width: 100%;
+    left: 0;
+    transform: none;
+    padding: 0 14px;
+  }
+  .ye { font-size: 0.40rem; margin-bottom: 3px; }
+  #yn { font-size: 1.75rem; }
+  .orn .ln { width: 26px; }
+  #ys { width: calc(100vw - 100px); max-width: 320px; }
+  #year-progress { width: calc(100vw - 100px); max-width: 320px; }
+
+  /* ── BOTTOM ELEMENTS ── */
+  #sc-indicator { bottom: 142px; }
+  #loop-badge { display: none; }
+  #blab { font-size: 0.32rem; bottom: 4px; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── CHART VIEW ── */
+  #chart-view { padding: 60px 10px 14px; }
+  #summary-row { grid-template-columns: 1fr !important; gap: 8px; }
+  #chart-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .chart-card { padding: 10px; }
+  .chart-title { font-size: 0.50rem; }
+  .chart-canvas { height: 108px; }
+  .chart-story-text { font-size: 0.70rem; }
+
+  /* ── MFU BAR — keep visible, just resize ── */
+  #mfu-bar { height: 40px; padding: 0 14px; bottom: 0; }
+  #mfu-bar-title { font-size: 0.42rem; letter-spacing: 0.12em; }
+  #mfu-bar-my { display: none; }
+  #mfu-bar-hint { font-size: 0.38rem; }
+
+  /* ── MFU PANEL — hidden until tapped ── */
+  #mfu-panel {
+    height: 88vh;
+    /* Push far below screen — more reliable than display:none on mobile */
+    top: 100vh;
+    bottom: auto;
+    transform: translateY(100vh) !important;
+    transition: transform 0.45s cubic-bezier(0.32,0.72,0,1);
+  }
+  #mfu-panel.open {
+    top: 12vh;
+    transform: translateY(0) !important;
+  }
+
+  /* ── MOBILE KPI STRIP ── */
+  #mob-kpi {
+    display: flex !important;
+    position: fixed;
+    top: 72px; left: 0; right: 0;
+    z-index: 10;
+    padding: 5px 12px;
+    background: rgba(13,13,13,0.82);
+    border-bottom: 1px solid rgba(201,168,76,0.10);
+    flex-wrap: wrap; gap: 5px 14px;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+  }
+
+  /* ── MOBILE LLM BUTTON ── */
+  #mob-llm-btn { display: flex !important; }
+}
+
+/* These elements hidden on desktop, shown on mobile via media query above */
+#mob-kpi {
+  display: none;
+  position: fixed; top: 72px; left: 0; right: 0;
+  z-index: 10; padding: 5px 12px;
+  background: rgba(13,13,13,0.82);
+  border-bottom: 1px solid rgba(201,168,76,0.10);
+  flex-wrap: wrap; gap: 5px 14px;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+.mob-kpi-item { display: flex; align-items: center; gap: 5px; }
+.mob-kpi-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.mob-kpi-lbl { font-family: "Cinzel", serif; font-size: 0.38rem; letter-spacing: 0.10em; color: var(--muted); text-transform: uppercase; }
+.mob-kpi-val { font-family: "Cinzel", serif; font-size: 0.50rem; color: var(--gold); margin-left: 2px; }
+
+#mob-llm-btn {
+  display: none;
+  position: fixed; right: 12px; bottom: 156px;
+  z-index: 20;
+  background: rgba(127,119,221,0.15);
+  border: 1px solid rgba(127,119,221,0.45);
+  color: #C39BD3;
+  font-family: "Cinzel", serif; font-size: 0.44rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 5px 10px; cursor: pointer;
+  align-items: center; gap: 5px;
+}
+
 </style>
 </head>
 <body>
@@ -161,6 +329,17 @@ body{cursor:none;}
 <div id="vignette"></div>
 <div id="grain"></div>
 <div id="flash"></div>
+
+<!-- MOBILE KPI STRIP -->
+<div id="mob-kpi">
+  <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#B22222"></div><span class="mob-kpi-lbl">Corr</span><span class="mob-kpi-val" id="m-c">—</span></div>
+  <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#C9A84C"></div><span class="mob-kpi-lbl">Trust</span><span class="mob-kpi-val" id="m-t">—</span></div>
+  <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#1D9E75"></div><span class="mob-kpi-lbl">IIG</span><span class="mob-kpi-val" id="m-i">—</span></div>
+  <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#FF4444"></div><span class="mob-kpi-lbl">Coup</span><span class="mob-kpi-val" id="m-p">—</span></div>
+  <div class="mob-kpi-item"><div class="mob-kpi-dot" style="background:#EF9F27"></div><span class="mob-kpi-lbl">North★</span><span class="mob-kpi-val" id="m-n">—</span></div>
+</div>
+<!-- MOBILE LLM TOGGLE -->
+<button id="mob-llm-btn" onclick="toggleMobLLM()">△ Agents</button>
 <div id="cur"></div>
 <div id="cur-ring"></div>
 
@@ -741,7 +920,7 @@ function updKPI(y,sc){
     const ea=document.getElementById(k.va),ec2=document.getElementById(k.vc);
     if(ea)ea.textContent='A:'+vA.toFixed(3);if(ec2)ec2.textContent='C:'+vC.toFixed(3);
   });
-  updLLM(y,sc);
+  updLLM(y,sc); if(typeof updMobKPI==="function") updMobKPI(y,sc);
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -2773,5 +2952,61 @@ function closeMFU() {
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape' && _mfuOpen) closeMFU(); });
 </script>
+
+<script>
+// ── MOBILE FUNCTIONS ─────────────────────────────
+function toggleMobLLM() {
+  const p = document.getElementById("llmp");
+  p.classList.toggle("mob-open");
+  const btn = document.getElementById("mob-llm-btn");
+  btn.style.borderColor = p.classList.contains("mob-open")
+    ? "rgba(127,119,221,0.9)" : "rgba(127,119,221,0.45)";
+}
+
+// Update mobile KPI strip whenever updKPI runs
+const _origUpdKPI = typeof updKPI === "function" ? updKPI : null;
+function updMobKPI(y, sc) {
+  const keys = {c:"m-c", t:"m-t", i:"m-i", p:"m-p", n:"m-n"};
+  Object.entries(keys).forEach(([k, id]) => {
+    const e = document.getElementById(id);
+    if (e && DATA[sc] && DATA[sc][k]) {
+      e.textContent = (DATA[sc][k][y] ?? 0).toFixed(2);
+    }
+  });
+}
+
+// Touch orbit + pinch zoom on the Three.js canvas
+(function() {
+  const cvs = document.getElementById("three-canvas");
+  if (!cvs) return;
+  let lx=0, ly=0, lpd=0;
+  cvs.addEventListener("touchstart", e => {
+    if (e.touches.length === 1) { lx = e.touches[0].clientX; ly = e.touches[0].clientY; }
+    if (e.touches.length === 2) { lpd = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+  }, {passive: true});
+  cvs.addEventListener("touchmove", e => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      const dx = e.touches[0].clientX - lx;
+      const dy = e.touches[0].clientY - ly;
+      if (typeof manualThetaOffset !== "undefined") {
+        manualThetaOffset -= dx * 0.008;
+        manualPhiOffset = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, manualPhiOffset + dy * 0.008));
+        updateCamera();
+      }
+      lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    }
+    if (e.touches.length === 2) {
+      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      if (typeof camR !== "undefined") {
+        camR = Math.max(15, Math.min(150, camR - (d - lpd) * 0.15));
+        updateCamera();
+      }
+      lpd = d;
+    }
+  }, {passive: false});
+})();
+</script>
+
 </body>
 </html>
