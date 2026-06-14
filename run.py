@@ -85,7 +85,7 @@ class KaNovaRunner:
         workers=None,
     ):
         self.runs_per_scenario = runs_per_scenario
-        self.scenarios = scenarios or ["A", "B", "C"]
+        self.scenarios = scenarios or ["A", "C"]
         self.n_citizens = n_citizens or CONSTITUTION.simulation.CITIZEN_AGENTS
         self.n_steps = n_steps or CONSTITUTION.simulation.TIME_STEPS
         self.use_llm = use_llm
@@ -283,7 +283,7 @@ class KaNovaRunner:
             print("\n" + "=" * 65)
             print(f"RESULTS — KEY KPIs AT YEAR {final_year}")
             print("=" * 65)
-            print(f"{'KPI':<28} {'Scenario A':>11} {'Scenario B':>11} {'Scenario C':>11}")
+            print(f"{'KPI':<28} {'Scenario A':>11} {'Scenario C':>11}")
             print("-" * 65)
             for kpi in [
                 "corruption_index", "trust_index", "coup_probability",
@@ -315,7 +315,7 @@ def parse_args():
     p = argparse.ArgumentParser(description="Ka-Nova Runner")
     p.add_argument("--test",     action="store_true",
                    help="1 run per scenario, 200 citizens, 5 steps")
-    p.add_argument("--scenario", choices=["A", "B", "C"], default=None)
+    p.add_argument("--scenario", choices=["A", "C"], default=None)
     p.add_argument("--runs",     type=int, default=None)
     p.add_argument("--citizens", type=int, default=None)
     p.add_argument("--steps",    type=int, default=None)
@@ -337,7 +337,7 @@ if __name__ == "__main__":
         print("TEST MODE — 1 run per scenario, 200 citizens, 5 steps")
         runner = KaNovaRunner(
             runs_per_scenario=1,
-            scenarios=["A", "B", "C"],
+            scenarios=["A", "C"],
             n_citizens=200,
             n_steps=5,
             use_llm=False,
