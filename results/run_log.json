@@ -1,15 +1,16 @@
 {
-  "timestamp": "2026-05-07T15:25:08.037034",
-  "platform": "Linux",
+  "timestamp": "2026-06-14T17:13:14.643531",
+  "platform": "Darwin",
   "scenarios": [
-    "B"
+    "A",
+    "C"
   ],
-  "runs_per_scenario": 100,
-  "n_citizens": 10000,
-  "n_steps": 50,
+  "runs_per_scenario": 1,
+  "n_citizens": 200,
+  "n_steps": 5,
   "workers": 1,
-  "use_llm": true,
-  "successful": 100,
+  "use_llm": false,
+  "successful": 2,
   "failed": 0,
   "errors": []
 }
