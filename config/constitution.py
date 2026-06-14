@@ -138,7 +138,7 @@ class MeritConfig:
     RECERTIFICATION_VACATE_DAYS: int = 90  # days to leave office if failed
 
     # Ka-Nova: merit score formula
-    # M = (P * 0.40) + (E * 0.30) + (PR * 0.20) + (C * 0.10)
+    # M = (P * 0.35) + (E * 0.25) + (PR * 0.20) + (C * 0.20)
     # All components: 0.0 to 1.0
     # Final score: 0.0 to 1.0
 
@@ -699,7 +699,7 @@ class AmendmentConfig:
 
     # 12.3 — Mandatory ten-year review
     REVIEW_INTERVAL: int = 10  # years — mandatory not optional
-    CITIZENS_ASSEMBLY_SIZE: int = 500
+    CITIZENS_ASSEMBLY_SIZE: int = 320
     CITIZENS_ASSEMBLY_METHOD: str = "civic_lottery"  # not election
     REVIEW_MECHANISM_REMOVABLE: bool = False  # cannot be removed by review
 
@@ -1316,7 +1316,7 @@ class MFUConstitution:
 ║ VETO THRESHOLDS                                      ║
 ║  Congress:      {self.chambers.CONGRESS_THRESHOLD:.0%}                                   ║
 ║  Ethnic:        {self.chambers.ETHNIC_THRESHOLD:.0%}                                   ║
-║  Analysis:      {self.chambers.ANALYSIS_THRESHOLD:.0%} (unanimous)                      ║
+║  Analysis:      {self.chambers.ANALYSIS_THRESHOLD:.0%} (qualified supermajority)                      ║
 ╠══════════════════════════════════════════════════════╣
 ║ RESOURCE SPLIT                                       ║
 ║  State:         {self.federal.RESOURCE_STATE_SHARE:.0%}                                   ║

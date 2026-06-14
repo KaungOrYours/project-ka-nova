@@ -191,8 +191,8 @@ class ThreeChamberSystem:
 
     def _tally_analysis(self, members: List, policy: Policy) -> float:
         """
-        Analysis Council vote — unanimous (1.00) required.
-        Article 5.7 — 100% threshold.
+        Analysis Council vote — 0.75 qualified supermajority required (v7).
+        Article 5.7 — 75% qualified supermajority threshold.
         Safeguard 5 — methodology published 14 days before veto.
         """
         if not members:
