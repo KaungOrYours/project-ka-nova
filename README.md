@@ -1,231 +1,129 @@
 # Project Ka-Nova
 
-**An Agent-Based Simulation of Post-Conflict Governance in Myanmar**
+An Agent-Based Simulation of Post-Conflict Governance in Myanmar
 
 Ka (က) — first letter of the Burmese alphabet, meaning beginning.
 Nova — emergence (Latin).
-*The emergence of a beginning.*
+The emergence of a beginning.
 
-> **Academic Disclaimer:** This project is created strictly for academic and data science research purposes as part of an MSc Data Science dissertation at the University of Hertfordshire. The MFU framework is a theoretical governance model designed solely for computational simulation and academic analysis. It is not a political manifesto, not a policy proposal, and not a call to action of any kind. No real-world implementation intended. Author respects Myanmar's laws and sovereignty.
+> Academic Disclaimer: This project is created strictly for academic and data science research purposes as part of an MSc Data Science dissertation at the University of Hertfordshire. The MFU framework is a theoretical governance model designed solely for computational simulation and academic analysis. It is not a political manifesto, not a policy proposal, and not a call to action of any kind. No real-world implementation intended. Author respects Myanmar's laws and sovereignty.
 
 ---
 
-## Overview
+## What This Project Is
 
-Project Ka-Nova is an Agent-Based Model (ABM) that stress-tests the **Meritocratic Federal Union (MFU)** constitution — a theoretically designed governance framework for post-conflict Myanmar — over 50 simulated years.
+Project Ka-Nova is a Generative Agent-Based Model (GABM) that stress-tests two constitutional frameworks over 50 simulated years:
+
+- Scenario A: The Meritocratic Federal Union (MFU) — a theoretically designed post-conflict constitution for Myanmar
+- Scenario C: The 2008 Myanmar Military Constitution — the real constitutional baseline
 
 The central research question:
 
-> *If Myanmar's conflict ended tomorrow and the MFU constitution was implemented — what happens over 50 years?*
+> If Myanmar's conflict ended tomorrow and the MFU constitution was implemented — what happens over 50 years, compared against the 2008 military constitution?
 
-Ka-Nova answers this question computationally, comparing three scenarios:
-
-| Scenario | Description |
-|---|---|
-| **A** | Full MFU — all 18 constitutional articles and 7 safeguards active |
-| **B** | MFU without safeguards — loopholes open, institutions vulnerable |
-| **C** | Military baseline — current Myanmar trajectory, no MFU rules |
+Ka-Nova answers this computationally. The same simulation engine runs both scenarios. The same external geopolitical shocks hit both scenarios. The difference is entirely constitutional design.
 
 ---
 
-## Phase 1 — What We Built (Complete ✅)
+## Research Context
 
-Phase 1 ran on an **M2 MacBook Pro 8GB** using **Mesa 2.3.0**.
+This is Paper 1 of a two-paper IEEE Access strategy co-authored with Dr. Md Saifullah Razali (Program Head, PSB Academy Singapore / University of Hertfordshire).
 
-### Scale
-- **9,500 citizen agents** across 4 simplified states
-- **300 runs** (100 per scenario), 50 years each
-- **47.4 hours** total runtime, 0 failures
-- Sequential execution only — M2 macOS multiprocessing causes hanging
+Paper 1 (October 2026): Hybrid GABM architecture and constitutional encoding methodology.
+Paper 2 (April 2027): West Germany Basic Law 1949 historical backtesting — validates the methodology against real post-conflict outcomes.
 
-### Architecture
-- All agents implemented as standard Mesa agents
-- 10,319 total agents across 5 tiers
-- 12 feedback loops (P1–P4, E1–E4, S1–S4)
-- 23 KPI reporters via Mesa DataCollector
-- Constitution v7 parameters in `config/constitution.py`
+The broader doctoral vision is GUPS (Generative Universal Policy Simulator) — a framework where any policy document can be automatically encoded as computable simulation parameters, run through the Ka-Nova engine, and produce a validated 50-year governance trajectory.
 
-### Phase 1 Results (Final — Do Not Re-Run)
+---
 
-| KPI | Scenario A | Scenario B | Scenario C |
-|---|---|---|---|
-| Corruption Index | **0.186** ± 0.009 | 0.213 ± 0.010 | 0.946 ± 0.001 |
-| Trust Index | **0.523** ± 0.019 | 0.514 ± 0.020 | 0.461 ± 0.016 |
-| Coup Probability | **0.000** ± 0.000 | 0.000 ± 0.000 | 0.200 ± 0.000 |
-| IIG Effectiveness | **1.000** ± 0.000 | 0.992 ± 0.000 | 0.050 ± 0.000 |
-| North Star Progress | **0.487** ± 0.005 | 0.475 ± 0.005 | 0.290 ± 0.004 |
-| Gini Coefficient | 0.570 ± 0.010 | 0.567 ± 0.009 | 0.571 ± 0.010 ⚠️ |
+## Architecture
 
-### Phase 1 Known Bugs (Fixed in Phase 2)
+Ka-Nova combines three layers:
 
-| Bug | Symptom | Root Cause |
+**Layer 1 — Mesa citizen agents (rule-based)**
+11,000 agents at 1:5000 Myanmar population ratio. 56 behavioral combinations: 8 ethnic groups (census-proportional) x 7 archetypes. Each citizen has a 6-layer cognitive architecture: perception, decision, action, learning, social influence, and life course.
+
+**Layer 2 — LLM elite agents (generative)**
+7 LLM agents per scenario powered by Ollama Llama 3.2 3B. In Scenario A: Chancellor, President, Senior General, Chief Justice, IIG Director, Finance Minister, CB Governor — operating under civilian supremacy chain of command. In Scenario C: military equivalents with inverted objectives, derived from the 2008 constitution's chain of command. Elite agents deliberate before Mesa agents step each year.
+
+**Layer 3 — External world (NumPy)**
+17 evolving country and institution vectors (China, India, USA, EU, ASEAN, UN, IMF, illicit networks, etc.) calibrated from real sanctions and FDI data. 10 stochastic shock types (pandemic, regional conflict, sanctions, oil price shock, etc.) fire with historically calibrated probabilities. Same shock sequence hits both scenarios — no bias. Shocks cascade through the social media amplifier into citizen agents.
+
+**Social media channel**
+Regime openness is decided by LLM elite agents, not hardcoded. In Scenario C, internet suppression triggers a VPN floor mechanic: the more the military suppresses, the more citizens learn VPN usage, and the higher the floor rises. Suppression is self-defeating over time — historically accurate for Myanmar post-2021.
+
+**CVES — Constitutional Validation and Error-Suppression**
+A 4-layer runtime pipeline that validates every LLM elite decision before it enters the simulation: L1 schema integrity, L2 constitutional constraint mapping, L3 theory alignment against governance benchmarks, L4 statistical plausibility. All violations logged to JSONL. This is the primary methodological contribution for the IEEE paper.
+
+---
+
+## Current State
+
+### Phase 1 — Complete
+
+Rule-based Mesa agents only. 9,500 citizens, 4 simplified states, 300 runs, 50 steps. Run on M2 MacBook Pro. Results archived in `results_phase2/`.
+
+### Phase 2 — Complete
+
+Added LangChain LLM elite agents (Llama 3.2 3B). Scaled to 10,000 citizens, 14 states. Run on RunPod RTX 4090. Results archived in `results_phase2/`.
+
+Key Phase 2 results at Year 50 (mean, 100 runs per scenario):
+
+| KPI | Scenario A | Scenario C |
 |---|---|---|
-| Gini deadlock | Stuck at ~0.570 across all scenarios | Community share never reached `agent.household_income` |
-| Trust A/B too similar | Gap only 0.009 (small effect) | Safeguards not mechanically wired to trust |
-| Ethnic harmony locked | 0.315 identical across all scenarios | S3 loop not wired to reporter |
-| Brain drain dead | 0.000 all scenarios | Emigration trigger never fired |
-| Stability Year 0 off | Real=0.18, Sim=0.33 | Starting baseline too optimistic |
+| Corruption | 0.189 | 0.933 |
+| Coup probability | 0.000 | 0.600 |
+| IIG effectiveness | 1.000 | 0.050 |
+| North Star progress | 0.557 | 0.242 |
 
-### Phase 1 Measures of Success
+Statistical differentiation A vs C: p < 0.001, Cohen's d >= 1.21 across all primary KPIs.
 
-| MoS | Result |
-|---|---|
-| MoS 4 Sample Sufficiency | PASS — 93.8% stable at 100 runs |
-| MoS 5 Scenario Differentiation | PASS — 72.9% significant (p<0.05) |
-| MoS 7 Reproducibility | PASS — deterministic seeding |
-| MoS 1 Behavioral Validity | PARTIAL — 55.6% KPIs within 10% |
-| MoS 6 Internal Consistency | PARTIAL — 79.2% correct direction |
-| MoS 8 Calibration | PARTIAL — 55.6% within threshold |
+### Phase 3 — In Progress
 
----
+Architecture upgrades complete. RunPod run pending Sam's elite_agents_v3.py and D's constitution_2008.py.
 
-## Phase 2 — What's New 
+What changed in Phase 3:
 
-Phase 2 runs on **RunPod RTX 4090 (24GB VRAM)** via Remote SSH from VSCode.
-
-### What Changed — Surgical Upgrades Only
-
-Phase 2 does **not** rewrite Phase 1. Every existing Mesa agent, feedback loop, and institution is preserved. Only 5 targeted changes were made:
-
-#### 1. Three LLM Elite Agents (`engine/elite_agents.py`)
-
-The **Chancellor**, **President**, and **Senior General** are now driven by **LangChain + Llama 3** instead of Mesa step logic.
-
-Every year, before any Mesa agent steps:
-```
-Status Report → Chancellor LLM → budget_weight + ethnic_weights
-Status Report → President LLM  → budget_weight + ethnic_weights
-Status Report → General LLM    → budget_weight + coup_signal (hidden threshold)
-         ↓
-Weighted combination (50% Chancellor / 30% President / 20% General)
-         ↓
-Writes to shared_data → all Mesa agents read as environment
-```
-
-The **Senior General has a hidden coup threshold**: if `corruption > 0.65 AND trust < 0.30`, he signals `coup_signal=True`. Under Scenario A, institutional checks suppress it. Under Scenario C, they may not.
-
-#### 2. 14 Myanmar States (was 4)
-
-Expanded from 4 simplified states to all 14 actual Myanmar states/regions:
-
-| States | Regions |
-|---|---|
-| Shan, Kachin, Kayah, Karen, Chin, Mon, Rakhine | Sagaing, Mandalay, Magway, Bago, Yangon, Ayeyarwady, Tanintharyi |
-
-Original 4 Phase 1 states preserved as first entries — all existing agent `state_id` assignments still work.
-
-#### 3. Gini Bug Fix — Article VIII Direct Household Transfer
-
-The Phase 1 community share went into a pool but never reached `agent.household_income`. Fixed using **NumPy vectorised progressive transfer**:
-
-```python
-# Bottom 40% of wealth distribution → 1.5× per-capita share
-# Top 60%                           → 0.67× per-capita share
-# Zero Python loops — O(N log N) vectorised rank-based weighting
-incomes     = np.array([a.household_income for a in citizen_agents])
-ranks       = np.argsort(np.argsort(incomes))
-percentiles = ranks / n
-weights     = np.where(percentiles < 0.40, 1.5, 0.67)
-transfers   = (weights / weights.sum()) * community_share
-```
-
-This is the mechanism designed to bring Gini from 0.570 toward the target of 0.35 over 50 years.
-
-#### 4. Scale: 50,000 Citizens
-
-Citizens scaled from 9,500 to 50,000. Assigned to 14 states proportionally by GDP weight, with ethnic groups assigned per state using Myanmar 2014 census proportions.
-
-#### 5. ChancellorAgent and PresidentAgent Removed from Mesa Scheduler
-
-Class shells preserved in `agents/official.py` so all imports still work, but they are **not added to the Mesa scheduler**. Their `step()` methods are no-ops. `EliteAgentLayer` handles them via LLM.
-
-`cast_tiebreaker_vote()` on `PresidentAgent` is preserved — `chambers.py` still calls it directly on deadlock.
-
-### Phase 2 Architecture
-
-```
-run.py --use-llm
-    │
-    └── KaNovaModel.step() called each year
-          │
-          ├── 0. EliteAgentLayer.step()          ← NEW (fires before Mesa)
-          │     ├── Chancellor LLM  (Llama 3)
-          │     ├── President LLM   (Llama 3)
-          │     └── Senior General  (Llama 3, hidden coup threshold)
-          │     └── Writes decisions to shared_data
-          │
-          ├── 1. _broadcast_environment()        ← unchanged
-          ├── 2. schedule.step()                 ← unchanged
-          │     ├── Ministers, Congress          ← Mesa (unchanged)
-          │     ├── Ethnic Leaders               ← Mesa (unchanged)
-          │     ├── IIG agents, Court judges     ← Mesa (unchanged)
-          │     ├── Foreign investors            ← Mesa (unchanged)
-          │     └── Institutional agents         ← Mesa (unchanged)
-          ├── 3. _propagate_network_effects()    ← unchanged
-          ├── 4. _enforce_institutional_rules()  ← unchanged
-          ├── 5. _run_feedback_loops()           ← E3 fixed (Gini bug)
-          ├── 6. _apply_scenario_rules()         ← unchanged
-          ├── 7. _update_state_environments()    ← unchanged
-          └── 8. _check_special_events()         ← unchanged
-```
-
-### Files Changed in Phase 2
-
-| File | Change |
-|---|---|
-| `engine/elite_agents.py` | **NEW** — LangChain LLM elite agent layer |
-| `engine/__init__.py` | **NEW** — package init |
-| `model.py` | 5 surgical diffs — import, `__init__`, shared_data keys, 14 states, `step()` + E3 Gini fix |
-| `agents/official.py` | Chancellor + President: `PHASE2_LLM_CONTROLLED=True`, `step()` no-op, removed from scheduler |
-| `run.py` | Added `--use-llm` flag, passed to `KaNovaModel()` |
-| `requirements.txt` | Added LangChain, openai, polars |
-
-### Files Untouched in Phase 2
-
-`agents/citizen.py`, `agents/oversight.py`, `agents/foreign.py`, `agents/institutional.py`, `config/constitution.py`, `feedback/loops.py`, `institutions/chambers.py`, `institutions/court.py`, `institutions/iig.py`, `scenarios/run_a.py`, `scenarios/run_b.py`, `scenarios/run_c.py`, `analysis/kpi.py`, `charts/visualize.py`
+- Scenario B dropped (A vs C is the meaningful comparison)
+- Citizens scaled to 11,000 (1:5000 Myanmar ratio)
+- 56 ethnic-archetype combinations replacing universal proportions
+- 7 LLM elite agents per scenario (was 3) with chain reasoning
+- External layer: 17 evolving vectors + 10 stochastic shock types
+- Social media channel: VPN floor, LLM-controlled openness, ethnic word-of-mouth
+- Constitution import switch: Scenario A reads MFU v7, Scenario C reads 2008 Myanmar constitution
+- CVES framework replacing FAIR evaluation
+- Pod split strategy: Scenario A on Pod 1, Scenario C on Pod 2 simultaneously
 
 ---
 
-## Constitution v7 — Key Parameters
+## Constitution v7 — Canonical Parameters
 
-### Merit Formula (Article III)
-```
-M = (Performance × 0.35) + (Education × 0.25) + (Professional Record × 0.20) + (Community Contribution × 0.20)
-```
-Community Contribution doubled from 10% → 20% to lower entry barrier for rural and trauma-carrier archetypes.
+All parameters in `config/constitution.py`. v7 is canonical — ignore any v6 references in older documentation.
 
-### Three Veto Chambers (Article V)
+Merit formula (Article III):
+```
+M = (Performance x 0.35) + (Education x 0.25) + (Professional Record x 0.20) + (Community x 0.20)
+```
+
+Three veto chambers (Article V):
 
 | Chamber | Threshold |
 |---|---|
-| Congress | 51% simple majority |
-| Ethnic Leaders Council | 51% simple majority |
-| Analysis Council | 75% qualified supermajority (was 100% in v6) |
+| Congress | 51% |
+| Ethnic Leaders Council | 51% |
+| Analysis Council | 75% qualified supermajority |
 
-Analysis Council veto confirmed by Citizens Assembly: 320 citizens, 40 per state, cryptographic lottery, 51% threshold.
+Analysis Council veto confirmed by Citizens Assembly: 320 randomly sampled Mesa citizen agents, 51% threshold.
 
-### Resource Revenue Split (Article VIII)
+Resource split (Article VIII):
 
 | Destination | Share |
 |---|---|
 | State governments | 35% |
 | Federal Development Fund | 35% |
-| **Direct household transfers** | **30%** ← primary Gini reduction mechanism |
+| Direct household transfers | 30% |
 
-### Trust Acceleration (Article VIII)
-When `corruption_index < 0.20` for 5+ consecutive years → trust growth rate × **1.5×**
-
-### Other Parameters
-
-| Parameter | Value |
-|---|---|
-| President term | 5 years, single term |
-| Chancellor term | 5 years, single term, 5-year cooling-off |
-| IIG entry merit | ≥ 0.85, top 1% civil service, 27-month academy |
-| Constitutional Court | 11 judges, 10-year term, 6/11 majority |
-| Gini ECB trigger | > 0.45 |
-| PhD tuition | Free + civil service stipend |
-| Researcher royalty | 15% net licensing revenue |
+Article 19 — Tatmadaw transition: Senior General serves 5 years mandatory, active during 2nd quarter of each presidential term. No blanket immunity — war crimes go to law if proven.
 
 ---
 
@@ -233,42 +131,47 @@ When `corruption_index < 0.20` for 5+ consecutive years → trust growth rate ×
 
 ```
 ka-nova/
-├── engine/                      ← NEW in Phase 2
-│   ├── __init__.py
-│   └── elite_agents.py          ← LangChain LLM Chancellor/President/General
 ├── agents/
-│   ├── citizen.py               7 archetypes, 5-layer cognitive architecture
-│   ├── official.py              Officials (Chancellor/President shells → LLM)
-│   ├── oversight.py             IIG agents, Constitutional Court
-│   ├── foreign.py               Investors, neighbors, international orgs
-│   └── institutional.py         Central Bank, Dev Fund, Shame Register
+│   ├── citizen.py               56 ethnic-archetype combinations, 6-layer cognitive architecture
+│   ├── official.py              Officials, Chancellor, President (LLM-controlled in Phase 3)
+│   ├── oversight.py             IIG agents, Constitutional Court, Arbitration Court
+│   ├── foreign.py               Foreign investors, neighboring states, illicit networks
+│   └── institutional.py         Central Bank, Dev Fund, Shame Register, Tax, ECB
 ├── config/
-│   └── constitution.py          All 18 articles as computable parameters (v7)
+│   ├── constitution.py          MFU v7 — 19 articles, 40+ parameters
+│   ├── constitution_2008.py     2008 Myanmar Military Constitution (Scenario C)
+│   └── constitution_2008_encoding/   D's workspace for encoding
+├── engine/
+│   ├── elite_agents.py          Phase 2 LLM layer (fallback)
+│   ├── elite_agents_v3.py       Phase 3 — Sam's file (pending)
+│   ├── cves.py                  CVES 4-layer validation pipeline (pending)
+│   ├── external_layer.py        17 evolving vectors, 10 shock types
+│   ├── social_media.py          VPN floor, suppression backfire, ethnic networks
+│   └── hybrid_engine.py         NumPy vectorised citizen operations
 ├── feedback/
-│   └── loops.py                 12 annual feedback loops
+│   └── loops.py                 12 annual feedback loops (P1-P4, E1-E4, S1-S4)
 ├── institutions/
-│   ├── chambers.py              Three-chamber voting mechanics
+│   ├── chambers.py              Three-chamber voting + Citizens Assembly veto
 │   ├── court.py                 Constitutional Court mechanics
 │   └── iig.py                   IIG Partnership Council
 ├── scenarios/
-│   ├── run_a.py                 Scenario A — full MFU
-│   ├── run_b.py                 Scenario B — no safeguards
-│   └── run_c.py                 Scenario C — military baseline
+│   ├── run_a.py                 Scenario A runner
+│   └── run_c.py                 Scenario C runner
 ├── analysis/
-│   └── kpi.py                   Statistical analysis
+│   └── kpi.py                   Statistical analysis, MoS validation
 ├── charts/
-│   └── visualize.py             Dissertation charts
-├── results/                     CSV outputs
-├── model.py                     Main simulation model (Phase 2 updated)
-├── run.py                       Simulation runner (Phase 2 updated)
-└── requirements.txt             Unified Phase 1 + Phase 2 dependencies
+│   └── visualize.py             All dissertation charts
+├── results/                     Phase 3 CSV outputs
+├── results_phase2/              Phase 2 archived results
+├── model.py                     Phase 2 model (reference)
+├── model_phase3.py              Phase 3 model (active)
+├── run.py                       Phase 2 runner (reference)
+└── run_phase3.py                Phase 3 runner (active)
 ```
 
 ---
 
-## Installation and Setup
-
-### Mac (Phase 1 / rule-based Phase 2)
+## Setup
 
 ```bash
 git clone https://github.com/KaungOrYours/project-ka-nova.git
@@ -277,105 +180,75 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Verify
-python3 -c "import mesa; print(mesa.__version__)"  # must be 2.3.0
+python3 -c "import mesa; print(mesa.__version__)"
 python3 config/constitution.py
 ```
 
-**Every new terminal:**
+Every new terminal:
 ```bash
 cd ~/Desktop/ka-nova && source venv/bin/activate
 ```
 
-### RunPod (Phase 2 LLM — RTX 4090)
-
-```bash
-# 1. Connect via VSCode Remote SSH
-# Extensions → Remote-SSH → Connect to Host → runpod-ka-nova
-
-# 2. Clone repo on RunPod
-cd /workspace
-git clone https://github.com/KaungOrYours/project-ka-nova.git ka-nova
-cd ka-nova
-pip install -r requirements.txt
-
-# 3. Start LLM server — Option A: Ollama (simpler)
-curl -fsSL https://ollama.com/install.sh | sh
-ollama serve &
-ollama pull llama3:8b
-export ELITE_LLM_BASE_URL="http://localhost:11434/v1"
-export ELITE_LLM_API_KEY="ollama"
-export ELITE_LLM_MODEL="llama3:8b"
-
-# 3. Start LLM server — Option B: vLLM (faster for large runs)
-pip install vllm
-python -m vllm.entrypoints.openai.api_server \
-  --model meta-llama/Meta-Llama-3-8B-Instruct \
-  --port 8000 &
-export ELITE_LLM_BASE_URL="http://localhost:8000/v1"
-export ELITE_LLM_API_KEY="EMPTY"
-export ELITE_LLM_MODEL="meta-llama/Meta-Llama-3-8B-Instruct"
-```
+Note: Mesa 2.3.0 via pip only. Never use brew install mesa — that installs a 3D graphics library, not the agent-based modeling framework.
 
 ---
 
-## Running the Simulation
+## Running Phase 3
 
 ```bash
-# Always activate venv first
 source venv/bin/activate
 
-# Mac — quick test (no LLM, always run this first)
-python3 run.py --test
+python3 run_phase3.py --test --scenario A
+python3 run_phase3.py --test --scenario C
 
-# Mac — Phase 1 style (rule-based elite agents)
-python3 run.py --citizens 9500 --steps 50 --runs 300
+python3 run_phase3.py --scenario A --runs 5 --citizens 500 --steps 10
 
-# Mac — Phase 2 scale, rule-based overnight
-nohup python3 run.py --citizens 50000 --steps 50 --runs 100 > output.log 2>&1 &
-
-# RunPod — Phase 2 full with LLM (statistical runs)
-nohup python3 run.py --citizens 50000 --steps 50 --runs 100 --use-llm > output.log 2>&1 &
-
-# RunPod — LLM probe run (for dissertation dialogue examples)
-python3 run.py --citizens 50000 --steps 50 --runs 10 --use-llm
-
-# Monitor
-tail -f output.log
+python3 run_phase3.py --scenario A --runs 100 --citizens 11000 --steps 50 --use-llm
+python3 run_phase3.py --scenario C --runs 100 --citizens 11000 --steps 50 --use-llm
 ```
 
----
+RunPod pod strategy: Pod 1 runs Scenario A, Pod 2 runs Scenario C simultaneously. Same external shock seed per run_id ensures both scenarios face identical geopolitical events.
 
-## After Simulation Completes
-
-```bash
-ls results/scenario_a/ | wc -l   # should be 100
-python3 analysis/kpi.py
-python3 charts/visualize.py
-git add . && git commit -m "feat: phase 2 results" && git push origin main --force
-```
+Estimated runtime per pod (RTX 4090, 100 runs, 11,000 citizens, 50 steps, 7 LLM elites):
+- Approximately 24-30 hours per pod
+- Budget: approximately S$12-18 per pod at $0.34-0.50/hr
 
 ---
 
 ## Runtime Estimates
 
-### Mac M2 8GB (no LLM)
+| Platform | Citizens | Steps | Runs | LLM | Estimate |
+|---|---|---|---|---|---|
+| M2 MacBook Pro | 200 | 5 | 1 | No | Under 1 second |
+| M2 MacBook Pro | 500 | 10 | 3 | No | Under 5 seconds |
+| RunPod RTX 4090 | 11,000 | 50 | 100 | Yes (7 agents) | 24-30 hours |
 
-| Citizens | Steps | Runs | Estimate |
-|---|---|---|---|
-| 200 | 5 | 3 | ~12 seconds (test) |
-| 9,500 | 50 | 300 | ~47 hours (Phase 1) |
-| 50,000 | 50 | 100 | ~12 hours (Phase 2 rule-based) |
+---
 
-### RunPod RTX 4090
+## Team
 
-| Citizens | Steps | Runs | LLM | Estimate |
-|---|---|---|---|---|
-| 50,000 | 50 | 100 | No | ~2 hours |
-| 50,000 | 50 | 10 | Yes (8B) | ~1 hour (probe run) |
-| 50,000 | 50 | 100 | Yes (8B) | ~6 hours |
+| Role | Person | Responsibility |
+|---|---|---|
+| First Author / Architect | Kaung Htet | Simulation architecture, codebase, constitution, results, lead writing |
+| Senior Author | Dr. Md Saifullah Razali | LLM evaluation oversight, IEEE Access submission strategy, doctoral co-supervision |
+| Third Author | Samsul Jahith S | CVES framework — elite_agents_v3.py, all 4 layers, JSONL logging, Section 4.3 |
+| Fourth Author | Patil Devyani Anil | Literature review, Sections 2-3, 2008 constitution encoding, empirical calibration |
 
-> **Dissertation recommendation:** 100 runs `--no-llm` for statistical power. 10 runs `--use-llm` separately for LLM dialogue examples in dissertation write-up.
+---
+
+## Seven Citizen Archetypes
+
+| Archetype | Universal Proportion | Behavioral Profile |
+|---|---|---|
+| civic_champion | 15% | High trust, low corruption tolerance, protests early |
+| pragmatic_survivor | 30% | Adapts to any system, largest group |
+| ethnic_loyalist | 20% | Primary identity is ethnic group over federal |
+| ambitious_meritocrat | 15% | Believes in merit, high achiever |
+| disillusioned_youth | 10% | Educated, frustrated, emigrates easily |
+| rural_traditionalist | 7% | Low connectivity, traditional values |
+| trauma_carrier | 3% | Conflict survivor, high trauma, low trust |
+
+In Phase 3, each ethnic group has its own archetype proportions calibrated from V-Dem, ACLED, and Human Rights Watch data — 56 combinations total. Kayah ethnic group (~55 agents at 1:5000 ratio) is acknowledged as statistically thin in the paper limitations section.
 
 ---
 
@@ -389,47 +262,20 @@ git add . && git commit -m "feat: phase 2 results" && git push origin main --for
 | Employment Rate | 0.58 | Myanmar Census 2014 |
 | Ethnic Tension | 0.68 | V-Dem Dataset |
 | Stability Index | 0.18 | World Bank Political Stability 2022 |
-| Coup Risk | 0.45 | Post-2021 estimate |
+| Coup Risk | 0.25 | Post-2021 estimate |
 | Brain Drain Rate | 0.35 | Post-2021 emigration estimate |
 
 ---
 
-## Seven Constitutional Safeguards
+## Publication Target
 
-| Safeguard | Description |
-|---|---|
-| S.1 | Chancellor 5-year cooling-off before re-eligibility |
-| S.2 | Merit exam independence — rotating Analysis Council panel |
-| S.3 | Ethnic Council youth mandate — at least one member under 40 |
-| S.4 | IIG single term + data sovereignty — Court holds all data |
-| S.5 | Analysis Council transparency — publish methodology 14 days before veto |
-| S.6 | Rights absolute — `rights_suspendable = False`, no mechanism exists |
-| S.7 | Generational renewal — mandatory 10-year Citizens Assembly review |
-
----
-
-## Known Issues
-
-| Issue | Status |
-|---|---|
-| `mesa==2.3.0` via pip only — never `brew install mesa` | ⚠️ Always check |
-| All `__init__.py` files must exist in every folder | ⚠️ Required |
-| Sequential execution on Mac — no multiprocessing | By design |
-| Article 19 (Tatmadaw transition) not yet written | Pending |
-| Citizens Assembly veto confirmation not wired in chambers.py | Pending |
-
----
-
-## Target Publications
-
-- **Primary:** JASSS (Journal of Artificial Societies and Social Simulation)
-- **Secondary:** Government Information Quarterly
-- **Tertiary:** PLOS ONE
+Primary: IEEE Access (Submit October 1, 2026)
+Secondary: IEEE Transactions on Computational Social Systems
 
 ---
 
 ## Author
 
-Kaung Htet | MSc Data Science | University of Hertfordshire
-GitHub: [KaungOrYours](https://github.com/KaungOrYours/project-ka-nova)
-Deadline: December 2026
+Kaung Htet | MSc Data Science | University of Hertfordshire | PSB Academy Singapore
+GitHub: https://github.com/KaungOrYours/project-ka-nova
+Dissertation deadline: December 2026
