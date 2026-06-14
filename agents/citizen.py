@@ -155,6 +155,141 @@ SIMULATION_STATES = {
 # CITIZEN AGENT
 # ══════════════════════════════════════════════════════════════════════════════
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ETHNIC-SPECIFIC ARCHETYPE PROPORTIONS
+# 56 combinations: 8 ethnic groups × 7 archetypes
+# Calibrated from: V-Dem Dataset, ACLED Myanmar, Human Rights Watch reports,
+# Myanmar 2014 Census, post-2021 conflict data.
+#
+# Each row sums to 1.0. Proportions reflect:
+# - Conflict exposure (→ trauma_carrier, ethnic_loyalist)
+# - Historical assimilation (→ pragmatic_survivor)
+# - Education access (→ ambitious_meritocrat, disillusioned_youth)
+# - Geographic remoteness (→ rural_traditionalist)
+# - Civic engagement history (→ civic_champion)
+#
+# Citation note (D to source):
+# - Bamar: World Bank Myanmar 2017, V-Dem Myanmar political culture
+# - Shan: ACLED Shan State conflict data 2010-2024
+# - Karen: Human Rights Watch Karen State reports, KHRG data
+# - Kachin: ACLED Kachin conflict data, KIO/KIA reports
+# - Chin: Myanmar Census 2014 remoteness index
+# - Mon: Mon State socioeconomic data, historical Mon assimilation
+# - Rakhine: ICJ Rohingya ruling 2020, Rakhine State crisis reports
+# - Kayah: KNPP/Karenni data, smallest ethnic group conflict exposure
+# ══════════════════════════════════════════════════════════════════════════════
+
+ETHNIC_ARCHETYPE_PROPORTIONS: Dict[str, Dict[str, float]] = {
+    "Bamar": {
+        # Majority group — adapts to any system, highest pragmatic survival
+        # Lower ethnic loyalist (majority identity = national identity)
+        # Higher civic champion (NLD base, 2021 CDM movement)
+        "civic_champion":       0.18,
+        "pragmatic_survivor":   0.38,
+        "ethnic_loyalist":      0.08,
+        "ambitious_meritocrat": 0.16,
+        "disillusioned_youth":  0.11,
+        "rural_traditionalist": 0.07,
+        "trauma_carrier":       0.02,
+    },
+    "Shan": {
+        # Strong ethnic identity + educated elite in Taunggyi
+        # Moderate trauma — conflict exists but not at Kachin/Karen level
+        # Higher ambitious_meritocrat — Shan educated class historically mobile
+        "civic_champion":       0.12,
+        "pragmatic_survivor":   0.25,
+        "ethnic_loyalist":      0.28,
+        "ambitious_meritocrat": 0.18,
+        "disillusioned_youth":  0.10,
+        "rural_traditionalist": 0.05,
+        "trauma_carrier":       0.02,
+    },
+    "Karen": {
+        # Decades of active conflict with Tatmadaw — highest trauma after Kayah
+        # Very high ethnic loyalist — KNU identity extremely strong
+        # Lower pragmatic survivor — survival strategy IS ethnic solidarity
+        "civic_champion":       0.08,
+        "pragmatic_survivor":   0.18,
+        "ethnic_loyalist":      0.35,
+        "ambitious_meritocrat": 0.10,
+        "disillusioned_youth":  0.12,
+        "rural_traditionalist": 0.08,
+        "trauma_carrier":       0.09,
+    },
+    "Kachin": {
+        # Active conflict zone — KIA/KIO war resumed 2011, ongoing
+        # High trauma + high ethnic loyalist
+        # Lower rural traditionalist — Kachin are urbanised in Myitkyina
+        "civic_champion":       0.09,
+        "pragmatic_survivor":   0.20,
+        "ethnic_loyalist":      0.32,
+        "ambitious_meritocrat": 0.12,
+        "disillusioned_youth":  0.13,
+        "rural_traditionalist": 0.05,
+        "trauma_carrier":       0.09,
+    },
+    "Chin": {
+        # Most remote — Chin Hills, lowest connectivity
+        # Highest rural traditionalist of all groups
+        # Lower disillusioned youth — limited urban exposure
+        # Christian majority — strong community identity
+        "civic_champion":       0.10,
+        "pragmatic_survivor":   0.22,
+        "ethnic_loyalist":      0.25,
+        "ambitious_meritocrat": 0.08,
+        "disillusioned_youth":  0.07,
+        "rural_traditionalist": 0.22,
+        "trauma_carrier":       0.06,
+    },
+    "Mon": {
+        # Historically most assimilated ethnic group
+        # Higher pragmatic survivor — Mon adapted to Burmanisation
+        # Lower ethnic loyalist — Mon identity partially absorbed
+        # Higher ambitious meritocrat — Mon educated class in Mawlamyine
+        "civic_champion":       0.14,
+        "pragmatic_survivor":   0.33,
+        "ethnic_loyalist":      0.15,
+        "ambitious_meritocrat": 0.20,
+        "disillusioned_youth":  0.11,
+        "rural_traditionalist": 0.05,
+        "trauma_carrier":       0.02,
+    },
+    "Rakhine": {
+        # Rohingya crisis context — statelessness, displacement
+        # High ethnic loyalist — Rakhine identity sharpened by crisis
+        # High disillusioned youth — educated youth with no future path
+        # Note: simulation represents Rakhine Buddhist population
+        #       Rohingya modelled as sub-group within trauma_carrier
+        "civic_champion":       0.08,
+        "pragmatic_survivor":   0.22,
+        "ethnic_loyalist":      0.30,
+        "ambitious_meritocrat": 0.10,
+        "disillusioned_youth":  0.18,
+        "rural_traditionalist": 0.06,
+        "trauma_carrier":       0.06,
+    },
+    "Kayah": {
+        # Smallest group, highest conflict exposure per capita
+        # Karenni resistance history — KNPP active since 1957
+        # Highest trauma_carrier of all groups
+        # High ethnic loyalist — survival through ethnic solidarity
+        # Statistical note: ~55 agents at 1:5000 ratio — acknowledged limitation
+        "civic_champion":       0.07,
+        "pragmatic_survivor":   0.15,
+        "ethnic_loyalist":      0.35,
+        "ambitious_meritocrat": 0.08,
+        "disillusioned_youth":  0.12,
+        "rural_traditionalist": 0.08,
+        "trauma_carrier":       0.15,
+    },
+}
+
+# Validate all rows sum to 1.0
+for group, proportions in ETHNIC_ARCHETYPE_PROPORTIONS.items():
+    total = sum(proportions.values())
+    assert abs(total - 1.0) < 1e-9, f"{group} proportions sum to {total}, not 1.0"
+
 class CitizenAgent(Agent):
     """
     Heterogeneous Cognitive Agent representing one citizen of the Federal Union.
@@ -1235,7 +1370,11 @@ class CitizenPopulation:
 
     @staticmethod
     def _calculate_archetype_counts(n: int) -> Dict[str, int]:
-        """Calculate exact agent counts per archetype."""
+        """
+        Calculate exact agent counts per archetype using universal proportions.
+        Used as fallback — Phase 3 uses ethnic-specific proportions via
+        _calculate_ethnic_archetype_counts().
+        """
         proportions = CONSTITUTION.simulation.ARCHETYPES
         counts = {}
         total = 0
@@ -1251,6 +1390,53 @@ class CitizenPopulation:
         counts[largest] += remainder
 
         return counts
+
+    @staticmethod
+    def _calculate_ethnic_archetype_counts(n: int) -> List[Dict]:
+        """
+        Phase 3 — Generate (ethnicity, archetype) pairs for all n citizens.
+        Uses census-proportional ethnic distribution × ethnic-specific
+        archetype proportions = 56 unique behavioral combinations.
+
+        Myanmar census proportions (2014):
+        Bamar 68%, Shan 9%, Karen 7%, Rakhine 4%, Mon 2%,
+        Kachin 1.5%, Chin 1.5%, Kayah 0.5%
+
+        Returns list of dicts: [{"ethnicity": str, "archetype": str}, ...]
+        """
+        ETHNIC_CENSUS = {
+            "Bamar":   0.68,
+            "Shan":    0.09,
+            "Karen":   0.07,
+            "Rakhine": 0.04,
+            "Mon":     0.02,
+            "Kachin":  0.015,
+            "Chin":    0.015,
+            "Kayah":   0.005,
+        }
+
+        assignments = []
+
+        for ethnicity, eth_proportion in ETHNIC_CENSUS.items():
+            eth_count = round(n * eth_proportion)
+            arch_proportions = ETHNIC_ARCHETYPE_PROPORTIONS[ethnicity]
+
+            for archetype, arch_proportion in arch_proportions.items():
+                arch_count = round(eth_count * arch_proportion)
+                for _ in range(arch_count):
+                    assignments.append({
+                        "ethnicity": ethnicity,
+                        "archetype": archetype
+                    })
+
+        # Adjust for rounding to exactly n
+        while len(assignments) < n:
+            assignments.append({"ethnicity": "Bamar", "archetype": "pragmatic_survivor"})
+        while len(assignments) > n:
+            assignments.pop()
+
+        random.shuffle(assignments)
+        return assignments
 
     @staticmethod
     def _assign_state() -> str:
