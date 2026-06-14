@@ -1258,12 +1258,12 @@ class SimulationConfig:
     YEAR_ZERO_EMPLOYMENT: float = 0.58
     YEAR_ZERO_ETHNIC_TENSION: float = 0.68
 
-    # States (simplified to 4 for MSc)
+    # States — 14 states matching model_phase3.py runtime
     SIMULATION_STATES: Tuple[str, ...] = (
-        "bamar_central",
-        "shan_eastern",
-        "karen_southern",
-        "kachin_northern"
+        "bamar_central", "mandalay", "magway", "bago",
+        "yangon", "ayeyarwady", "tanintharyi", "shan_eastern",
+        "kachin_northern", "kayah", "karen_southern", "chin",
+        "mon", "rakhine",
     )
 
     # Agent archetypes distribution
