@@ -193,7 +193,7 @@ class IIGSystem:
                 self.model.shared_data.setdefault(
                     "active_investigations", []
                 ).append({
-                    "case_id": f"IIG_{year}_{case.get('official_id')}",
+                    "case_id": f"IIG_{self.model.current_year}_{case.get('official_id')}",
                     "target_id": case.get("official_id"),
                     "corruption_score": evidence_score,
                     "year_opened": self.model.current_year
