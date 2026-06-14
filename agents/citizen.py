@@ -134,10 +134,10 @@ ETHNIC_GROUPS = ["Bamar", "Shan", "Karen", "Kachin", "Chin", "Mon", "Rakhine", "
 
 # State assignments for simplified 4-state simulation
 SIMULATION_STATES = {
-    "bamar_central":   ["Bamar", "Mon"],
-    "shan_eastern":    ["Shan", "Kayah"],
-    "karen_southern":  ["Karen", "Rakhine"],
-    "kachin_northern": ["Kachin", "Chin"],
+    "sagaing":   ["Bamar", "Mon"],
+    "shan":    ["Shan", "Kayah"],
+    "kayin":  ["Karen", "Rakhine"],
+    "kachin": ["Kachin", "Chin"],
     "mandalay":        ["Bamar", "Shan"],
     "magway":          ["Bamar"],
     "bago":            ["Bamar", "Karen", "Mon"],
@@ -1442,9 +1442,9 @@ class CitizenPopulation:
     def _assign_state() -> str:
         """Assign state based on GDP-proportional population distribution."""
         states = [
-            "bamar_central", "mandalay",    "magway",        "bago",
-            "yangon",        "ayeyarwady",  "tanintharyi",   "shan_eastern",
-            "kachin_northern","kayah",      "karen_southern","chin",
+            "sagaing", "mandalay",    "magway",        "bago",
+            "yangon",        "ayeyarwady",  "tanintharyi",   "shan",
+            "kachin","kayah",      "kayin","chin",
             "mon",           "rakhine",
         ]
         weights = [
@@ -1460,17 +1460,17 @@ class CitizenPopulation:
         """Assign ethnicity based on Myanmar 2014 census per-state composition."""
         # [Bamar, Shan, Karen, Kachin, Chin, Mon, Rakhine, Kayah]
         state_ethnic_weights = {
-            "bamar_central":   [85, 3, 1, 5, 4, 1, 0, 1],
+            "sagaing":   [85, 3, 1, 5, 4, 1, 0, 1],
             "mandalay":        [90, 2, 1, 2, 2, 2, 0, 1],
             "magway":          [92, 2, 1, 1, 2, 1, 0, 1],
             "bago":            [85, 2, 5, 2, 1, 4, 0, 1],
             "yangon":          [75, 5, 6, 2, 2, 5, 2, 3],
             "ayeyarwady":      [90, 2, 2, 1, 1, 3, 0, 1],
             "tanintharyi":     [80, 3, 8, 1, 2, 5, 0, 1],
-            "shan_eastern":    [20, 60, 4, 6, 2, 2, 2, 4],
-            "kachin_northern": [30, 10, 2, 48, 4, 1, 1, 4],
+            "shan":    [20, 60, 4, 6, 2, 2, 2, 4],
+            "kachin": [30, 10, 2, 48, 4, 1, 1, 4],
             "kayah":           [30, 10, 8, 2, 8, 2, 1, 39],
-            "karen_southern":  [30, 10, 52, 2, 2, 2, 1, 1],
+            "kayin":  [30, 10, 52, 2, 2, 2, 1, 1],
             "chin":            [30, 2, 2, 4, 56, 1, 2, 3],
             "mon":             [50, 5, 8, 2, 1, 30, 2, 2],
             "rakhine":         [30, 2, 3, 1, 1, 2, 60, 1],
@@ -1519,7 +1519,7 @@ if __name__ == "__main__":
         def __init__(self):
             self.current_year = 0
             self.states = {
-                "bamar_central": {
+                "sagaing": {
                     "corruption_level": 0.72,
                     "employment_rate": 0.58,
                     "trust_index": 0.22,
@@ -1558,7 +1558,7 @@ if __name__ == "__main__":
             unique_id=0,
             model=mock,
             archetype=archetype,
-            state_id="bamar_central",
+            state_id="sagaing",
             ethnicity="Bamar",
             age=30
         )
@@ -1590,7 +1590,7 @@ if __name__ == "__main__":
 
     # Test merit formula
     print("\nMerit formula validation:")
-    agent = CitizenAgent(0, mock, "ambitious_meritocrat", "bamar_central", "Bamar", 30)
+    agent = CitizenAgent(0, mock, "ambitious_meritocrat", "sagaing", "Bamar", 30)
     agent.productivity = 0.80
     agent.education_level = 0.70
     agent.performance = 0.75
