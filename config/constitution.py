@@ -1260,9 +1260,9 @@ class SimulationConfig:
 
     # States — 14 states matching model_phase3.py runtime
     SIMULATION_STATES: Tuple[str, ...] = (
-        "bamar_central", "mandalay", "magway", "bago",
-        "yangon", "ayeyarwady", "tanintharyi", "shan_eastern",
-        "kachin_northern", "kayah", "karen_southern", "chin",
+        "sagaing", "mandalay", "magway", "bago",
+        "yangon", "ayeyarwady", "tanintharyi", "shan",
+        "kachin", "kayah", "kayin", "chin",
         "mon", "rakhine",
     )
 
