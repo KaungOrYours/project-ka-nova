@@ -1,16 +1,0 @@
-nohup: ignoring input
-
-============================================================
-PROJECT KA-NOVA — SIMULATION RUNNER
-============================================================
-Scenarios:         ['A', 'B', 'C']
-Runs per scenario: 3
-Total runs:        9
-Citizens:          50,000
-Time steps:        5 years
-Execution:         Sequential (M2 MacBook / RunPod RTX 4090)
-Elite Agents:      Rule-based (no LLM)
-Start time:        15:28:33
-============================================================
-
-Progress:   0%|          | 0/9 [00:00<?, ?run/s]                                                Progress:   0%|          | 0/9 [00:00<?, ?run/s]
