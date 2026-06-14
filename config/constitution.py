@@ -1230,8 +1230,8 @@ class SimulationConfig:
     """Ka-Nova Simulation Parameters"""
 
     # Agent counts
-    TOTAL_AGENTS: int = 10_319
-    CITIZEN_AGENTS: int = 9_500
+    TOTAL_AGENTS: int = 11_819
+    CITIZEN_AGENTS: int = 11_000
     OFFICIAL_AGENTS: int = 500
     OVERSIGHT_AGENTS: int = 200
     FOREIGN_AGENTS: int = 100
