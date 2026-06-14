@@ -130,7 +130,7 @@ class ThreeChamberSystem:
                 ethnic_leaders, policy, "ethnic"
             )
 
-            # Analysis Council vote (unanimous required)
+            # Analysis Council vote (0.75 qualified supermajority + Citizens Assembly)
             analysis_result = self._tally_analysis(
                 analysis_members, policy
             )
@@ -198,6 +198,7 @@ class ThreeChamberSystem:
         if not members:
             return 1.0  # no council = passes by default
 
+        yes_votes = 0
         for member in members:
             if hasattr(member, "cast_analysis_vote"):
                 vote = member.cast_analysis_vote({
@@ -212,21 +213,94 @@ class ThreeChamberSystem:
                          (1.0 - policy.risk_score) * 0.20)
                 vote = "yes" if score >= 0.70 else "no"
 
-            if vote != "yes":
-                # One dissent = policy blocked (unanimous required)
-                # Check 90-day time limit
-                policy.veto_time_days += 365
-                if policy.veto_time_days >= (
-                    CONSTITUTION.chambers.ANALYSIS_VETO_TIME_LIMIT * 365 / 90
-                ):
-                    # Time limit expired — escalate to Constitutional Court
-                    self.model.shared_data.setdefault(
-                        "analysis_veto_escalations", []
-                    ).append({"policy_id": policy.id,
-                              "year": self.model.current_year})
+            if vote == "yes":
+                yes_votes += 1
+
+        ratio = yes_votes / len(members) if members else 1.0
+
+        if ratio < CONSTITUTION.chambers.ANALYSIS_THRESHOLD:
+            # Analysis Council vetoed — Citizens Assembly must confirm at 51%
+            policy.veto_time_days += 365
+            if policy.veto_time_days >= CONSTITUTION.chambers.ANALYSIS_VETO_TIME_LIMIT:
+                # Time limit expired — escalate to Constitutional Court
+                self.model.shared_data.setdefault(
+                    "analysis_veto_escalations", []
+                ).append({"policy_id": policy.id,
+                          "year": self.model.current_year})
                 return 0.0
 
-        return 1.0  # unanimous
+            # Citizens Assembly confirmation vote
+            assembly_result = self._citizens_assembly_veto_confirmation(policy)
+            if assembly_result >= 0.51:
+                # Assembly confirms veto — policy blocked
+                self.model.shared_data.setdefault(
+                    "citizens_assembly_vetoes", []
+                ).append({
+                    "policy_id": policy.id,
+                    "year": self.model.current_year,
+                    "assembly_support": assembly_result,
+                    "analysis_ratio": ratio
+                })
+                return 0.0
+            else:
+                # Assembly rejects veto — policy passes
+                self.model.shared_data.setdefault(
+                    "citizens_assembly_overrides", []
+                ).append({
+                    "policy_id": policy.id,
+                    "year": self.model.current_year,
+                    "assembly_support": assembly_result,
+                    "analysis_ratio": ratio
+                })
+                return 1.0
+
+        return ratio  # qualified supermajority passed
+
+    def _citizens_assembly_veto_confirmation(self, policy: Policy) -> float:
+        """
+        Citizens Assembly veto confirmation.
+        MFU Constitution v7 — 320 randomly sampled Mesa citizen agents vote
+        on whether to confirm the Analysis Council veto at 51% threshold.
+
+        Citizens vote based on trust, grievance, and policy benefit score.
+        Emergence — real Mesa agents deciding, not statistical approximation.
+        """
+        from agents.citizen import CitizenAgent
+
+        all_citizens = [
+            a for a in self.model.schedule.agents
+            if isinstance(a, CitizenAgent)
+        ]
+
+        if not all_citizens:
+            return 0.0
+
+        # Randomly sample 320 citizens (v7 canonical)
+        assembly_size = CONSTITUTION.simulation.CITIZENS_ASSEMBLY_SIZE  # 320
+        sample = random.sample(all_citizens, min(assembly_size, len(all_citizens)))
+
+        yes_votes = 0
+        for citizen in sample:
+            trust = getattr(citizen, "trust", 0.50)
+            grievance = getattr(citizen, "grievance", 0.30)
+            # Higher grievance + lower trust = more likely to confirm veto
+            veto_support = (grievance * 0.60) + ((1.0 - trust) * 0.40)
+            # Direct policy benefit reduces veto support
+            veto_support -= policy.benefit_score * 0.30
+            if veto_support > 0.50:
+                yes_votes += 1
+
+        result = yes_votes / len(sample)
+
+        # Log to shared_data for KPI tracking
+        self.model.shared_data["last_assembly_vote"] = {
+            "policy_id": policy.id,
+            "year": self.model.current_year,
+            "sample_size": len(sample),
+            "veto_support": result
+        }
+
+        return result
 
     def _check_deadlock(self):
         """
