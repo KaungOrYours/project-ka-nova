@@ -238,9 +238,9 @@ class KaNovaModelPhase3(Model):
         """14 states with year-zero conditions."""
         states = {}
         state_list = [
-            "bamar_central", "mandalay", "magway", "bago",
-            "yangon", "ayeyarwady", "tanintharyi", "shan_eastern",
-            "kachin_northern", "kayah", "karen_southern", "chin",
+            "sagaing", "mandalay", "magway", "bago",
+            "yangon", "ayeyarwady", "tanintharyi", "shan",
+            "kachin", "kayah", "kayin", "chin",
             "mon", "rakhine",
         ]
         for state_id in state_list:
