@@ -817,7 +817,7 @@ class KaNovaModel(Model):
                     0.0, self.shared_data.get("coup_risk", 0.25) - 0.05
                 )
             else:
-                # Scenario B/C — no full safeguards, coup risk escalates
+                # Scenario C — no safeguards, coup risk escalates
                 self.shared_data["coup_risk"] = min(
                     1.0, self.shared_data.get("coup_risk", 0.25) + 0.05
                 )
@@ -1014,12 +1014,6 @@ class KaNovaModel(Model):
             self.shared_data["trust_index"] = max(
                 0.0, self.shared_data.get("trust_index", 0.30) - 0.10
             )
-        elif self.scenario == "B":
-            if random.random() < 0.40:
-                self.shared_data["coup_succeeded"]    = True
-                self.shared_data["simulation_failed"] = True
-                self.shared_data["failure_year"]      = self.current_year
-                self.shared_data["failure_reason"]    = "coup_succeeded_no_safeguards"
         elif self.scenario == "C":
             if random.random() < 0.70:
                 self.shared_data["coup_succeeded"]    = True
@@ -1122,7 +1116,6 @@ class KaNovaModel(Model):
         base_loyalty = 0.55
         constitutional_commitment = (
             1.0 if self.scenario == "A" else
-            0.70 if self.scenario == "B" else
             0.30
         )
         trust = self.shared_data.get("trust_index", 0.22)
@@ -1191,7 +1184,7 @@ class KaNovaModel(Model):
                 )
 
         # ── PHASE 2 GINI FIX: NumPy vectorised direct household transfer ─────
-        if self.scenario in ("A", "B"):
+        if self.scenario == "A":
             budget_impact = self.shared_data.get("elite_budget_impact", 0.07)
             total_revenue = sum(
                 s.get("resource_revenue", 0.0) for s in self.states.values()
@@ -1308,8 +1301,6 @@ class KaNovaModel(Model):
     def _apply_scenario_rules(self):
         if self.scenario == "A":
             self._scenario_a_rules()
-        elif self.scenario == "B":
-            self._scenario_b_rules()
         elif self.scenario == "C":
             self._scenario_c_rules()
 
@@ -1327,29 +1318,6 @@ class KaNovaModel(Model):
                 if isinstance(agent, OfficialAgent):
                     agent.corruption_tolerance = max(
                         0.0, agent.corruption_tolerance - 0.005
-                    )
-
-    def _scenario_b_rules(self):
-        """MFU without safeguards — loopholes open."""
-        if random.random() < 0.05:
-            self.shared_data["rights_violated"] = True
-        self.shared_data["iig_effectiveness"] = max(
-            0.10, self.shared_data.get("iig_effectiveness", 0.30) - 0.008
-        )
-        self.shared_data["policy_quality"] = max(
-            0.20, self.shared_data.get("policy_quality", 0.50) - 0.003
-        )
-        self.shared_data["trust_index"] = max(
-            0.0, self.shared_data.get("trust_index", 0.40) - 0.005
-        )
-        for agent in self.schedule.agents:
-            if isinstance(agent, OfficialAgent):
-                agent.corruption_tolerance = min(
-                    1.0, agent.corruption_tolerance + 0.015
-                )
-                if random.random() < 0.03:
-                    agent.corruption_score = min(
-                        1.0, agent.corruption_score + 0.02
                     )
 
     def _scenario_c_rules(self):
