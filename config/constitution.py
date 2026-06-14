@@ -1092,6 +1092,76 @@ class PsychConfig:
     STABLE_DISTORTION: float = 0.02  # minimal when addressed
 
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PART XIX — TATMADAW TRANSITION INCENTIVES (Article 19)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@dataclass(frozen=True)
+class TatmadawTransitionConfig:
+    """
+    Article 19 — Tatmadaw Transition Incentives
+
+    The MFU does not grant blanket amnesty. Senior military personnel
+    transition into a constitutionally defined civilian role for a mandatory
+    service period. War crimes go to law — no immunity for proven offences.
+
+    Design principles:
+    - Mandatory 5-year transition service (not retirement)
+    - Senior General anchored to 2nd quarter of each presidential term
+    - No blanket immunity — war crimes prosecuted if proven
+    - Unproven allegations = civilian reintegration proceeds normally
+    - Standard civil service terms — no special pension multiplier
+    """
+
+    # ── Mandatory transition service ─────────────────────────────────────────
+    SENIOR_GENERAL_SERVICE_YEARS: int = 5          # Mandatory post-transition service
+    SENIOR_GENERAL_ROLE: str = "head_of_military_under_civilian_supremacy"
+    CIVILIAN_SUPREMACY: bool = True                 # President > Chancellor > Senior General
+
+    # ── Presidential term anchor ─────────────────────────────────────────────
+    # Senior General is active during 2nd quarter of every presidential term
+    # Presidential term = 5 years → 2nd quarter = years 2–3
+    PRESIDENTIAL_TERM_YEARS: int = 5
+    ACTIVE_QUARTER: int = 2                         # 2nd quarter of each presidential term
+    ACTIVE_YEARS_PER_TERM: Tuple[int, int] = (2, 3) # Years 2 and 3 of each 5-year term
+    ELECTIONS_SERVED: int = 2                       # Active during 2 presidential elections minimum
+
+    # ── War crimes — no blanket immunity ─────────────────────────────────────
+    BLANKET_IMMUNITY: bool = False                  # Absolute — no immunity granted
+    WAR_CRIMES_PROVEN_TRIGGER: str = "full_prosecution_under_article_15"
+    WAR_CRIMES_UNPROVEN: str = "civilian_reintegration_proceeds_normally"
+    PROSECUTION_BODY: str = "constitutional_court_article_15_total_ruin"
+    EVIDENCE_STANDARD: str = "beyond_reasonable_doubt"
+
+    # ── Civilian reintegration ────────────────────────────────────────────────
+    CIVILIAN_ROLE_ELIGIBLE: bool = True             # Military can take civilian posts
+    CIVILIAN_ROLE_REQUIRES_MERIT: bool = True       # Must pass merit exam (Article 3)
+    PENSION_MULTIPLIER: float = 1.0                 # Standard civil service — no bonus
+    PENSION_BASIS: str = "standard_civil_service_terms"
+    SPECIAL_PRIVILEGES: bool = False                # No special privileges post-transition
+
+    # ── Coup risk mechanics in Ka-Nova simulation ─────────────────────────────
+    # Early years: higher coup risk because military has legal exposure
+    # Later years: coup risk declines as transition incentives take hold
+    COUP_RISK_EARLY_YEARS: float = 0.15            # Years 1–10: residual risk
+    COUP_RISK_DECAY_RATE: float = 0.02             # Annual decay once transition embeds
+    COUP_RISK_FLOOR: float = 0.02                  # Minimum floor after full transition
+    TRANSITION_EMBED_YEAR: int = 10                # Year at which transition is fully embedded
+
+    # ── Trust dynamics ────────────────────────────────────────────────────────
+    # Citizens trust increases when transition proceeds without coup
+    TRUST_GAIN_PER_CLEAN_YEAR: float = 0.01        # Annual trust gain if no coup
+    TRUST_LOSS_IF_COUP_ATTEMPTED: float = 0.25     # Sharp drop if coup attempted
+    ETHNIC_TRUST_MULTIPLIER: float = 1.20          # Ethnic minorities gain trust faster
+                                                    # when military visibly under civilian control
+
+    # ── Simulation trigger conditions ─────────────────────────────────────────
+    TRANSITION_TRIGGERED_BY: str = "mfu_constitution_adoption"
+    TRANSITION_YEAR_ZERO: int = 0                  # Begins at simulation start
+    REVIEW_INTERVAL_YEARS: int = 5                 # Review every presidential term
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # NORTH STAR — THE HIDDEN AGENDA
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1256,6 +1326,7 @@ class MFUConstitution:
         self.emergency = EmergencyConfig()
         self.roe = ROEConfig()
         self.psychology = PsychConfig()
+        self.tatmadaw_transition = TatmadawTransitionConfig()
         self.north_star = NorthStarConfig()
         self.simulation = SimulationConfig()
 
@@ -1290,7 +1361,7 @@ class MFUConstitution:
 
         passed = all(checks)
         if passed:
-            print("✅ Constitution validated — all constraints satisfied")
+            print("Constitution validated — all constraints satisfied")
         else:
             print("❌ Constitution validation FAILED — check parameters")
             for i, check in enumerate(checks):
@@ -1305,7 +1376,7 @@ class MFUConstitution:
 ║         PROJECT KA-NOVA — CONSTITUTION SUMMARY       ║
 ╠══════════════════════════════════════════════════════╣
 ║ State:          {self.foundational.STATE_NAME:<37}║
-║ Articles:       18                                   ║
+║ Articles:       19                                   ║
 ║ Parameters:     {len(self.__dict__):<37}║
 ╠══════════════════════════════════════════════════════╣
 ║ MERIT FORMULA                                        ║
@@ -1346,7 +1417,7 @@ CONSTITUTION = MFUConstitution()
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    print("\n🚀 Project Ka-Nova — Constitution Loading...\n")
+    print("\nProject Ka-Nova — Constitution Loading...\n")
 
     # Validate all constraints
     valid = CONSTITUTION.validate()
@@ -1355,7 +1426,7 @@ if __name__ == "__main__":
     print(CONSTITUTION.summary())
 
     # Quick parameter access examples
-    print("📋 Sample parameter access:")
+    print("Sample parameter access:")
     print(f"   Merit min office:     {CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE}")
     print(f"   IIG trigger:          {CONSTITUTION.iig.INVESTIGATION_TRIGGER}")
     print(f"   Resource split:       {CONSTITUTION.federal.RESOURCE_STATE_SHARE}/{CONSTITUTION.federal.RESOURCE_FEDERAL_DEV_SHARE}/{CONSTITUTION.federal.RESOURCE_ETHNIC_DIRECT_SHARE}")
@@ -1366,4 +1437,4 @@ if __name__ == "__main__":
     print(f"   Judge count:          {CONSTITUTION.judiciary.JUDGE_COUNT}")
     print(f"   IIG max agents:       {CONSTITUTION.iig.MAX_AGENTS}")
     print(f"   Total runs:           {CONSTITUTION.simulation.TOTAL_RUNS}")
-    print(f"\n✅ constitution.py loaded successfully")
+    print(f"\nconstitution.py loaded successfully")
