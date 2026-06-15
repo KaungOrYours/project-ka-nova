@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'Dockerfile'
-      - 'docker/**'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
