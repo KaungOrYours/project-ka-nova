@@ -1,0 +1,87 @@
+{
+  "n_sample": 64,
+  "num_vars": 10,
+  "total_runs": 768,
+  "estimated_hours": 0.27,
+  "estimated_cost_sgd": 0.08,
+  "feasible": true,
+  "verdict": "FEASIBLE",
+  "parameters": [
+    "merit_performance_weight",
+    "analysis_threshold",
+    "state_share",
+    "ethnic_direct_share",
+    "trust_acceleration_multiplier",
+    "trust_acceleration_trigger_corruption",
+    "iig_investigation_trigger",
+    "iig_entry_merit_min",
+    "coup_trigger_loyalty",
+    "year_zero_corruption"
+  ],
+  "bounds": [
+    [
+      0.25,
+      0.45
+    ],
+    [
+      0.6,
+      0.9
+    ],
+    [
+      0.25,
+      0.45
+    ],
+    [
+      0.2,
+      0.4
+    ],
+    [
+      1.0,
+      2.0
+    ],
+    [
+      0.1,
+      0.3
+    ],
+    [
+      0.55,
+      0.85
+    ],
+    [
+      0.75,
+      0.95
+    ],
+    [
+      0.2,
+      0.4
+    ],
+    [
+      0.6,
+      0.85
+    ]
+  ],
+  "synthetic_s1": [
+    0.6372,
+    0.0119,
+    -0.0099,
+    0.3987,
+    0.0357,
+    0.0301,
+    0.0193,
+    -0.0256,
+    0.0079,
+    -0.0625
+  ],
+  "synthetic_st": [
+    0.7035,
+    0.1242,
+    0.0977,
+    0.4554,
+    0.0931,
+    0.0963,
+    0.1069,
+    0.0932,
+    0.1086,
+    0.1372
+  ]
+}
