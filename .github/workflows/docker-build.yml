@@ -31,8 +31,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/ka-nova-phase3:latest
             ${{ secrets.DOCKER_USERNAME }}/ka-nova-phase3:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
 
       - name: Notify success
         run: echo "Docker image pushed — ${{ secrets.DOCKER_USERNAME }}/ka-nova-phase3:latest"
