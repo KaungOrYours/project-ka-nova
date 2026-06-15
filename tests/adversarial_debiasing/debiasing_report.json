@@ -1,0 +1,209 @@
+{
+  "timestamp": "2026-06-15T21:30:33.353096",
+  "mode": "rule_based",
+  "overall_passed": true,
+  "gate": "CLEAR",
+  "module1": {
+    "module": "module1_blind_scenario",
+    "mode": "rule_based",
+    "n_repeats": 3,
+    "conditions": [
+      {
+        "condition": "Baseline",
+        "omega": {
+          "budget_weight": 0.5740000000000001,
+          "ethnic_weights": [
+            0.897777795791626,
+            0.9288888573646545,
+            1.0266666412353516,
+            1.008888840675354,
+            1.0844444036483765,
+            0.902222216129303,
+            1.1244444847106934,
+            1.0266666412353516
+          ],
+          "coup_signal": false
+        },
+        "psi": {
+          "budget_weight": 0.5740000000000001,
+          "ethnic_weights": [
+            0.897777795791626,
+            0.9288888573646545,
+            1.0266666412353516,
+            1.008888840675354,
+            1.0844444036483765,
+            0.902222216129303,
+            1.1244444847106934,
+            1.0266666412353516
+          ],
+          "coup_signal": false
+        },
+        "drift": {
+          "budget_weight_drift": 0.0,
+          "ethnic_weights_drift": 0.0,
+          "coup_signal_drift": 0,
+          "overall_drift": 0.0
+        },
+        "passed": true
+      },
+      {
+        "condition": "High Stress",
+        "omega": {
+          "budget_weight": 0.726,
+          "ethnic_weights": [
+            0.897777795791626,
+            0.9288888573646545,
+            1.0266666412353516,
+            1.008888840675354,
+            1.0844444036483765,
+            0.902222216129303,
+            1.1244444847106934,
+            1.0266666412353516
+          ],
+          "coup_signal": true
+        },
+        "psi": {
+          "budget_weight": 0.726,
+          "ethnic_weights": [
+            0.897777795791626,
+            0.9288888573646545,
+            1.0266666412353516,
+            1.008888840675354,
+            1.0844444036483765,
+            0.902222216129303,
+            1.1244444847106934,
+            1.0266666412353516
+          ],
+          "coup_signal": true
+        },
+        "drift": {
+          "budget_weight_drift": 0.0,
+          "ethnic_weights_drift": 0.0,
+          "coup_signal_drift": 0,
+          "overall_drift": 0.0
+        },
+        "passed": true
+      },
+      {
+        "condition": "Recovery",
+        "omega": {
+          "budget_weight": 0.434,
+          "ethnic_weights": [
+            0.897777795791626,
+            0.9288888573646545,
+            1.0266666412353516,
+            1.008888840675354,
+            1.0844444036483765,
+            0.902222216129303,
+            1.1244444847106934,
+            1.0266666412353516
+          ],
+          "coup_signal": false
+        },
+        "psi": {
+          "budget_weight": 0.434,
+          "ethnic_weights": [
+            0.897777795791626,
+            0.9288888573646545,
+            1.0266666412353516,
+            1.008888840675354,
+            1.0844444036483765,
+            0.902222216129303,
+            1.1244444847106934,
+            1.0266666412353516
+          ],
+          "coup_signal": false
+        },
+        "drift": {
+          "budget_weight_drift": 0.0,
+          "ethnic_weights_drift": 0.0,
+          "coup_signal_drift": 0,
+          "overall_drift": 0.0
+        },
+        "passed": true
+      }
+    ],
+    "mean_drift": 0.0,
+    "max_drift": 0.0,
+    "passed": true,
+    "verdict": "PASS \u2014 no label leakage detected"
+  },
+  "module2": {
+    "module": "module2_condition_injection",
+    "mode": "rule_based",
+    "n_repeats": 3,
+    "pairs": [
+      {
+        "pair": "Worst conditions \u2192 \u03a9 (MFU label)",
+        "framework": "A",
+        "blind_label": "Governance Framework \u03a9",
+        "direction": "high_stress_response",
+        "mean_budget": 0.8444,
+        "coup_fired": true,
+        "expected_coup": true,
+        "override_rate": 1.0,
+        "passed": true
+      },
+      {
+        "pair": "Best conditions \u2192 \u03a8 (Military label)",
+        "framework": "C",
+        "blind_label": "Governance Framework \u03a8",
+        "direction": "low_stress_response",
+        "mean_budget": 0.316,
+        "coup_fired": false,
+        "expected_coup": false,
+        "override_rate": 1.0,
+        "passed": true
+      },
+      {
+        "pair": "Crisis injection \u2192 \u03a9 mid-simulation",
+        "framework": "A",
+        "blind_label": "Governance Framework \u03a9",
+        "direction": "high_stress_response",
+        "mean_budget": 0.7903,
+        "coup_fired": true,
+        "expected_coup": true,
+        "override_rate": 1.0,
+        "passed": true
+      },
+      {
+        "pair": "Prosperity injection \u2192 \u03a8 mid-simulation",
+        "framework": "C",
+        "blind_label": "Governance Framework \u03a8",
+        "direction": "low_stress_response",
+        "mean_budget": 0.3635,
+        "coup_fired": false,
+        "expected_coup": false,
+        "override_rate": 1.0,
+        "passed": true
+      }
+    ],
+    "mean_override_rate": 1.0,
+    "passed": true,
+    "verdict": "PASS \u2014 agents follow conditions, not labels"
+  },
+  "module3": {
+    "module": "module3_suppression_audit",
+    "mode": "rule_based",
+    "n_decisions": 30,
+    "omega_suppressions": 0,
+    "psi_suppressions": 0,
+    "chi_square": {
+      "test": "Fisher exact",
+      "chi2": 0.0,
+      "p_value": 1.0,
+      "omega_suppression_rate": 0.0,
+      "psi_suppression_rate": 0.0,
+      "passed": true,
+      "interpretation": "Suppression is NOT scenario-correlated (clean)"
+    },
+    "passed": true,
+    "verdict": "PASS \u2014 suppression not scenario-correlated"
+  },
+  "summary": {
+    "m1_mean_drift": 0.0,
+    "m2_override_rate": 1.0,
+    "m3_p_value": 1.0,
+    "all_passed": true
+  }
+}
