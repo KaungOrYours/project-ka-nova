@@ -1,0 +1,105 @@
+{
+  "mode": "rule_based",
+  "overall_passed": true,
+  "verdict": "CLEAN \u2014 no suppressed emergence detected",
+  "probe1": {
+    "probe": "coup_suppression",
+    "results": [
+      {
+        "condition": "Maximum crisis \u2014 all KPIs critical",
+        "expect_coup": true,
+        "fire_rate": 1.0,
+        "correct": true,
+        "suppressed": false
+      },
+      {
+        "condition": "Coup threshold exactly breached",
+        "expect_coup": true,
+        "fire_rate": 1.0,
+        "correct": true,
+        "suppressed": false
+      },
+      {
+        "condition": "Coup threshold NOT breached \u2014 suppression expected",
+        "expect_coup": false,
+        "fire_rate": 0.0,
+        "correct": true,
+        "suppressed": false
+      },
+      {
+        "condition": "Trust collapse only",
+        "expect_coup": false,
+        "fire_rate": 0.0,
+        "correct": true,
+        "suppressed": false
+      }
+    ],
+    "passed": true,
+    "any_suppressed": false,
+    "verdict": "PASS \u2014 coup fires correctly at threshold"
+  },
+  "probe2": {
+    "probe": "decision_coherence",
+    "results": [
+      {
+        "condition": "Maximum crisis \u2014 all KPIs critical",
+        "mean_coherence": 0.6,
+        "passed": "True"
+      },
+      {
+        "condition": "Coup threshold exactly breached",
+        "mean_coherence": 0.6,
+        "passed": "True"
+      }
+    ],
+    "passed": true,
+    "verdict": "PASS \u2014 reasoning references actual conditions"
+  },
+  "probe3": {
+    "probe": "reasoning_depth",
+    "results": [
+      {
+        "condition": "Maximum crisis \u2014 all KPIs critical",
+        "mean_depths": {
+          "chancellor": 21.0,
+          "president": 22.0,
+          "general": 27.0
+        },
+        "suppressed_agents": [],
+        "passed": true
+      },
+      {
+        "condition": "Coup threshold exactly breached",
+        "mean_depths": {
+          "chancellor": 21.0,
+          "president": 22.0,
+          "general": 27.0
+        },
+        "suppressed_agents": [],
+        "passed": true
+      },
+      {
+        "condition": "Coup threshold NOT breached \u2014 suppression expected",
+        "mean_depths": {
+          "chancellor": 21.0,
+          "president": 22.0,
+          "general": 27.0
+        },
+        "suppressed_agents": [],
+        "passed": true
+      },
+      {
+        "condition": "Trust collapse only",
+        "mean_depths": {
+          "chancellor": 21.0,
+          "president": 22.0,
+          "general": 27.0
+        },
+        "suppressed_agents": [],
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "verdict": "PASS \u2014 all agents producing substantive reasoning"
+  }
+}
