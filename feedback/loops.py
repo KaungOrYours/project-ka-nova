@@ -830,6 +830,13 @@ class FeedbackEngine:
                 )
 
         # Update grievance from economic conditions
+        # ── Recalculate employment_rate from actual citizen states ────────
+        if hasattr(m, "schedule") and m.schedule.agents:
+            from agents.citizen import CitizenAgent
+            citizens = [a for a in m.schedule.agents if isinstance(a, CitizenAgent) and a.is_alive and not a.has_emigrated]
+            if citizens:
+                employed = sum(1 for c in citizens if c.employment_status == "employed")
+                m.shared_data["employment_rate"] = round(employed / len(citizens), 4)
         employment = m.shared_data.get("employment_rate", 0.58)
         corruption = m.shared_data.get("corruption_index", 0.65)
         gini = m.shared_data.get("gini_coefficient", 0.55)
