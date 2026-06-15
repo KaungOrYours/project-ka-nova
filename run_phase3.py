@@ -238,6 +238,57 @@ class KaNovaPhase3Runner:
             tqdm.write(
                 f"  ERROR r={result['run_id']}: {result['error'][:80]}"
             )
+        self._write_progress(result)
+
+    def _write_progress(self, result):
+        """Write progress.json after every run — read by Telegram monitor bot."""
+        try:
+            elapsed = time.time() - self.start_time
+            completed = self.successful + self.failed
+            eta_minutes = 0
+            if completed > 0 and completed < self.runs:
+                eta_seconds = (self.runs - completed) * (elapsed / completed)
+                eta_minutes = round(eta_seconds / 60)
+
+            # Pull latest KPIs from result if available
+            latest = {}
+            if result.get("status") == "success" and result.get("df") is not None:
+                df = result["df"]
+                last = df.iloc[-1] if len(df) > 0 else None
+                if last is not None:
+                    latest = {
+                        "latest_corruption": round(float(last.get("corruption_index", 0)), 4),
+                        "latest_trust":      round(float(last.get("trust_index", 0)), 4),
+                        "latest_coup":       round(float(last.get("coup_probability", 0)), 4),
+                        "latest_step":       int(last.get("year", 0)),
+                    }
+
+            # Count suppressions
+            suppression_log = RESULTS_DIR / "suppression_log.jsonl"
+            suppression_count = 0
+            if suppression_log.exists():
+                with open(suppression_log) as f:
+                    suppression_count = sum(1 for line in f if line.strip())
+
+            progress = {
+                "scenario":          self.scenario,
+                "current_run":       completed,
+                "total_runs":        self.runs,
+                "current_step":      latest.get("latest_step", 0),
+                "total_steps":       self.n_steps,
+                "eta_minutes":       eta_minutes,
+                "ok":                self.successful,
+                "err":               self.failed,
+                "suppression_count": suppression_count,
+                "updated_at":        datetime.now().isoformat(),
+                **latest,
+            }
+
+            with open(RESULTS_DIR / "progress.json", "w") as f:
+                json.dump(progress, f, indent=2)
+
+        except Exception as e:
+            pass  # Never crash the simulation for monitoring
 
     def _finalize(self, all_dfs):
         if not all_dfs:
