@@ -82,8 +82,8 @@ class FoundationalConfig:
         "both_parents_citizens",      # Section 345(a) — born of parents both citizens
         "existing_citizen_on_commencement"  # Section 345(b) — already citizen when constitution adopted
     )
-    NATURALIZATION_YEARS: int = ???   # Section 346 — "shall be as prescribed by law" — use 10 as proxy
-    NATURALIZATION_MERIT_MIN: float = ???  # Not specified — use 0.0 (no merit exam, just loyalty)
+    NATURALIZATION_YEARS: int = 10   # Section 346 — "shall be as prescribed by law" — proxy from Myanmar Citizenship Law 1982
+    NATURALIZATION_MERIT_MIN: float = 0.0  # Not specified — no merit exam, just loyalty
 
     # Section 5 — Territory
     TERRITORY_BASIS: str = "existing_territory_on_adoption_day"
@@ -120,8 +120,8 @@ class RightsConfig:
 
     # Section 386 — Citizens must undergo military training
     NATIONAL_SERVICE_MANDATORY: bool = True   # Section 386
-    NATIONAL_SERVICE_AGE: int = ???            # Not specified in text — use 18 as proxy
-    NATIONAL_SERVICE_DURATION_MONTHS: int = ???  # Not specified — use 24 as proxy (military-controlled)
+    NATIONAL_SERVICE_AGE: int = 18            # Not specified in text — proxy
+    NATIONAL_SERVICE_DURATION_MONTHS: int = 24  # Not specified — proxy (military-controlled)
 
     # Section 382 — Defence personnel rights can be restricted by law
     MILITARY_RIGHTS_OVERRIDE: bool = True  # Section 382 — rights can be revoked for Defence Forces
@@ -161,7 +161,7 @@ class MeritConfig:
 
     # Section 342 — Commander-in-Chief proposes, National Defence Security Council approves
     EXAM_ADMINISTRATOR: str = "commander_in_chief"
-    EXAM_MAX_CONSECUTIVE_TERMS: int = ???  # No term limit on military commanders — use 0 (unlimited)
+    EXAM_MAX_CONSECUTIVE_TERMS: int = 0  # No term limit on military commanders — 0 = unlimited
     EXAM_RESULTS_PUBLISH_DAYS: int = 0     # No publication requirement
 
     # Disqualification: disloyalty to military, not corruption
@@ -211,7 +211,7 @@ class ExecutiveConfig:
     CHANCELLOR_ELECTION_YEAR: int = 0  # No Chancellor
 
     # Section 202 — Union Ministers appointed by President
-    MINISTER_COUNT: int = ???   # Section 202 — number not fixed in constitution; use 20 as proxy
+    MINISTER_COUNT: int = 20   # Section 202 — number not fixed in constitution; proxy from real SPDC count
     MINISTER_MERIT_MIN: float = 0.0    # No merit minimum — presidential/military appointment
     MINISTER_CONFIRMATION: str = "president_appointment_pyidaungsu_approval"  # Section 202
 
@@ -264,15 +264,14 @@ class ChamberConfig:
     MILITARY_SEAT_PERCENTAGE: float = 0.25        # 25% across both chambers
     MILITARY_SEATS_APPOINTED_BY: str = "commander_in_chief"
 
-    ETHNIC_SEATS: int = ???   # Section 141 — Amyotha Hluttaw: 168 elected (12 per Region/State)
-                               # Fill with 168 (elected ethnic/regional seats, not military)
+    ETHNIC_SEATS: int = 168   # Section 141 — Amyotha Hluttaw: 12 elected per Region/State × 14
     ETHNIC_THRESHOLD: float = 0.51
     ETHNIC_TERM: int = 5
 
     # No Analysis Council equivalent
     # Map ANALYSIS fields to Constitutional Tribunal (Chapter VI, Section 320)
     ANALYSIS_THRESHOLD: float = 1.00   # Constitutional Tribunal — unanimous (9 members, all must agree per Section 320)
-    ANALYSIS_VETO_TIME_LIMIT: int = ???  # Section 335 — Tribunal term = Hluttaw term (5 yrs); use 90 days per ruling
+    ANALYSIS_VETO_TIME_LIMIT: int = 90  # Section 335 — Tribunal term = Hluttaw term (5 yrs); 90 days per ruling
 
     # Ka-Nova simulation — military bloc controls legislative outcomes
     MILITARY_BLOC_VOTE_DISCIPLINE: float = 1.0  # Military nominees vote as a bloc (100%)
@@ -290,9 +289,9 @@ class JudiciaryConfig:
 
     # Section 293 — Courts-Martial separate from civilian courts
     COURT_INDEPENDENCE: bool = False    # Section 293(b) — military justice is final and conclusive
-    COURT_JUDGES_COUNT: int = ???       # Section 300 — Supreme Court: Chief Justice + number set by law; use 11
-    COURT_TERM_YEARS: int = ???         # Section 301 — serve until age 70; use 70 as age cap
-    RULING_THRESHOLD: int = ???         # Not specified — use 6 of 11 (simple majority)
+    COURT_JUDGES_COUNT: int = 11       # Section 300 — Supreme Court: Chief Justice + number set by law; proxy
+    COURT_TERM_YEARS: int = 70         # Section 301 — serve until age 70; age cap not fixed term
+    RULING_THRESHOLD: int = 6          # Not specified — simple majority of 11 judges
 
     # Section 293(b) — Commander-in-Chief decision is final on military matters
     MILITARY_JUSTICE_FINAL: bool = True
