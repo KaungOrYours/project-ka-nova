@@ -829,6 +829,21 @@ class CitizenAgent(Agent):
             # Slight productivity growth through experience
             self.productivity = min(1.0, self.productivity + 0.005)
 
+            # ── Elite redistribution transfer (Article VIII) ──────────────
+            # Reads elite_budget_impact and elite_ethnic_weights from noticeboard
+            # This is the direct household transfer mechanic (30% share)
+            budget_impact  = self.model.shared_data.get("elite_budget_impact", 0.07)
+            ethnic_weights = self.model.shared_data.get("elite_ethnic_weights", [1.0] * 8)
+
+            # Map ethnicity to weight index
+            ethnic_group_names = ["bamar", "shan", "karen", "kachin", "chin", "mon", "rakhine", "kayah"]
+            eth_idx = ethnic_group_names.index(self.ethnicity) if self.ethnicity in ethnic_group_names else 0
+            eth_weight = ethnic_weights[eth_idx] if eth_idx < len(ethnic_weights) else 1.0
+
+            # Apply transfer — scaled by budget_impact and ethnic weight
+            transfer = self.income * budget_impact * eth_weight * 0.30
+            self.income += transfer
+
     def _progress_phd(self):
         """
         Annual PhD progress. Graduate and boost knowledge capital.
