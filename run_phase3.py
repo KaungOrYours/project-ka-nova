@@ -43,6 +43,13 @@ from tqdm import tqdm
 
 from model_phase3 import KaNovaModelPhase3
 
+# W&B experiment tracking
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+
 RESULTS_DIR = Path("results_phase3")
 SCENARIO_DIRS = {
     "A": RESULTS_DIR / "scenario_a",
@@ -87,6 +94,43 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
         df["total_shutdowns"]  = sm_summary.get("total_shutdowns", 0)
         df["final_vpn_floor"]  = sm_summary.get("final_vpn_floor", 0.35)
         df["mean_sm_openness"] = sm_summary.get("mean_openness", 1.0)
+
+        # W&B logging
+        if WANDB_AVAILABLE:
+            try:
+                run = wandb.init(
+                    project="ka-nova-phase3",
+                    name=f"scenario_{scenario}_run_{str(run_id).zfill(3)}",
+                    group=f"scenario_{scenario}",
+                    config={
+                        "scenario":   scenario,
+                        "run_id":     run_id,
+                        "seed":       seed,
+                        "n_citizens": n_citizens,
+                        "n_steps":    n_steps,
+                        "use_llm":    use_llm,
+                    },
+                    reinit='finish_previous',
+                    mode="online",
+                )
+                last = df.iloc[-1]
+                wandb.log({
+                    "corruption_index":    float(last.get("corruption_index", 0)),
+                    "trust_index":         float(last.get("trust_index", 0)),
+                    "coup_probability":    float(last.get("coup_probability", 0)),
+                    "gini_coefficient":    float(last.get("gini_coefficient", 0)),
+                    "north_star_progress": float(last.get("north_star_progress", 0)),
+                    "iig_effectiveness":   float(last.get("iig_effectiveness", 0)),
+                    "vpn_floor":           float(last.get("vpn_floor", 0)),
+                    "social_media_openness": float(last.get("social_media_openness", 1)),
+                    "china_influence":     float(last.get("china_influence", 0)),
+                    "total_shocks_fired":  int(df["total_shocks_fired"].iloc[-1]),
+                    "total_shutdowns":     int(df["total_shutdowns"].iloc[-1]),
+                    "final_vpn_floor":     float(df["final_vpn_floor"].iloc[-1]),
+                })
+                wandb.finish()
+            except Exception:
+                pass  # Never crash simulation for W&B
 
         return {"status": "success", "run_id": run_id, "scenario": scenario, "df": df}
 
