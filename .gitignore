@@ -14,3 +14,4 @@ auto_finish.sh
 sync_results.sh
 results_phase2/
 results_phase2.zip
+.env
