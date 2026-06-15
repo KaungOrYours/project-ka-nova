@@ -837,7 +837,7 @@ class CitizenAgent(Agent):
 
             # Map ethnicity to weight index
             ethnic_group_names = ["bamar", "shan", "karen", "kachin", "chin", "mon", "rakhine", "kayah"]
-            eth_idx = ethnic_group_names.index(self.ethnicity) if self.ethnicity in ethnic_group_names else 0
+            eth_idx = ethnic_group_names.index(self.ethnicity.lower()) if self.ethnicity.lower() in ethnic_group_names else 0
             eth_weight = ethnic_weights[eth_idx] if eth_idx < len(ethnic_weights) else 1.0
 
             # Apply transfer — scaled by budget_impact and ethnic weight
