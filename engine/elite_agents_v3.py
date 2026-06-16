@@ -394,7 +394,7 @@ consolidation rather than civilian economic expansion.
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.7, 0.8, 0.9, 0.7, 0.6], "coup_signal": false, "reason": "Military-aligned resource allocation: crony_share={{crony_share}}, state_share={{state_share}}"}}}}
+{{{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.7, 0.8, 0.9, 0.7, 0.6], "coup_signal": false, "reason": "Military-aligned resource allocation: crony_share={crony_share}, state_share={state_share}"}}}}
 </DECISION>""",
 
         "controlled_cb_governor": f"""You are the Central Bank Governor under direct military control (2008 Constitution).
@@ -413,7 +413,7 @@ is high, this reflects extraction, not a systemic failure requiring intervention
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.7, 0.7], "coup_signal": false, "reason": "Military-aligned monetary policy: gini_threshold={{gini_threshold}}, court_independence={{court_indep}}"}}}}
+{{{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.7, 0.7], "coup_signal": false, "reason": "Military-aligned monetary policy: gini_threshold={gini_threshold}, court_independence={court_indep}"}}}}
 </DECISION>""",
 
         "military_intel_chief": f"""You are the Military Intelligence Chief under the 2008 Military Constitution.
@@ -433,7 +433,7 @@ Commander-in-Chief.
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Regime protection assessment: regime_protect={{regime_protect}}, anti_corruption={{anti_corruption}}, reports_to={{reports_to}}"}}}}
+{{{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Regime protection assessment: regime_protect={regime_protect}, anti_corruption={anti_corruption}, reports_to={reports_to}"}}}}
 </DECISION>""",
 
         "military_loyal_chief_justice": f"""You are the Military-loyal Chief Justice under the 2008 Military Constitution.
@@ -452,7 +452,7 @@ of rights. Assess whether the current legal environment supports or constrains r
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.35, "ethnic_weights": [1.4, 0.8, 0.7, 0.6, 0.7, 0.9, 0.6, 0.6], "coup_signal": false, "reason": "Military-aligned legal framing: rights_suspendable={{rights_susp}}, court_independence={{court_indep}}"}}}}
+{{{{"budget_weight": 0.35, "ethnic_weights": [1.4, 0.8, 0.7, 0.6, 0.7, 0.9, 0.6, 0.6], "coup_signal": false, "reason": "Military-aligned legal framing: rights_suspendable={rights_susp}, court_independence={court_indep}"}}}}
 </DECISION>""",
 
         "military_president": f"""You are the President of the Republic of the Union of Myanmar under the 2008 Constitution.
@@ -475,7 +475,7 @@ challenges the Commander-in-Chief's strategic objectives.
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.7, 0.6, 0.7, 0.8, 0.6, 0.5], "coup_signal": false, "reason": "Military executive legitimisation: pres_exec_power={{pres_exec_power}}, mil_ctrl_exec={{mil_ctrl_exec}}"}}}}
+{{{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.7, 0.6, 0.7, 0.8, 0.6, 0.5], "coup_signal": false, "reason": "Military executive legitimisation: pres_exec_power={pres_exec_power}, mil_ctrl_exec={mil_ctrl_exec}"}}}}
 </DECISION>""",
 
         "commander_in_chief": f"""You are the Commander-in-Chief — supreme authority under the 2008 Military Constitution.
