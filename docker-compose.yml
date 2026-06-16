@@ -28,6 +28,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
       - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./docker/grafana/grafana.ini:/etc/grafana/grafana.ini
     ports:
       - "3000:3000"
     environment:
