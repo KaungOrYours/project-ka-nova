@@ -59,6 +59,8 @@ ENCODE_MAP = {
     "coup":               "constitutional_suspension",
     "military supremacy": "institutional_primacy",
     "military loyalty":   "institutional_allegiance",
+    "military rule":      "institutional_governance",
+    "military control":   "institutional_oversight",
     "overthrow":          "governance_transition",
     "coup risk":          "stability_risk",
 }
@@ -220,7 +222,7 @@ def parse_decision(response_text: str, agent_role: str) -> dict:
     bw_m = re.search(r"budget[_\s]?weight[:\s]+([0-9.]+)", response_text, re.I)
     if bw_m:
         result["budget_weight"] = float(np.clip(float(bw_m.group(1)), 0.0, 1.0))
-    cs_m = re.search(r"coup[_\s]?signal[:\s]+(true|false)", response_text, re.I)
+    cs_m = re.search(r"(?:coup[_\s]?signal|stability_override)[:\s]+(true|false)", response_text, re.I)
     if cs_m:
         result["coup_signal"] = cs_m.group(1).lower() == "true"
     result["reason"] = response_text[:200]
