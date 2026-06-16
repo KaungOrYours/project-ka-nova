@@ -32,6 +32,8 @@ echo "[2/5] Writing .env..."
 cat > /workspace/project-ka-nova/.env << EOF
 TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 WANDB_API_KEY=${WANDB_API_KEY}
+GRAFANA_URL=${GRAFANA_URL:-http://localhost:3000}
+ELITE_LLM_MODEL=${LLM_MODEL:-llama3.2:3b}
 EOF
 echo ".env written."
 
@@ -42,8 +44,8 @@ ollama serve &
 OLLAMA_PID=$!
 sleep 5
 
-echo "Pulling Llama 3.2 3B..."
-ollama pull llama3.2:3b
+echo "Pulling model: ${LLM_MODEL:-llama3.2:3b}..."
+ollama pull ${LLM_MODEL:-llama3.2:3b}
 echo "Ollama ready."
 
 # ── 4. Start Prometheus metrics exporter ─────────────────────────────────────
@@ -71,6 +73,7 @@ python3 run_phase3.py \
     --runs ${RUNS:-100} \
     --citizens ${CITIZENS:-11000} \
     --steps ${STEPS:-50} \
+    --model ${LLM_MODEL:-llama3.2:3b} \
     --use-llm
 
 echo ""
