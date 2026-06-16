@@ -122,20 +122,36 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
                     reinit='finish_previous',
                     mode="online",
                 )
+                # Step-level time series logging
+                for _, row in df.iterrows():
+                    wandb.log({
+                        "year":                int(row.get("year", 0)),
+                        "corruption_index":    float(row.get("corruption_index", 0)),
+                        "trust_index":         float(row.get("trust_index", 0)),
+                        "coup_probability":    float(row.get("coup_probability", 0)),
+                        "gini_coefficient":    float(row.get("gini_coefficient", 0)),
+                        "north_star_progress": float(row.get("north_star_progress", 0)),
+                        "iig_effectiveness":   float(row.get("iig_effectiveness", 0)),
+                        "vpn_floor":           float(row.get("vpn_floor", 0)),
+                        "social_media_openness": float(row.get("social_media_openness", 1)),
+                        "china_influence":     float(row.get("china_influence", 0)),
+                        "ethnic_harmony":      float(row.get("ethnic_harmony", 0)),
+                        "stability_index":     float(row.get("stability_index", 0)),
+                        "grievance_index":     float(row.get("grievance_index", 0)),
+                    }, step=int(row.get("year", 0)))
+
+                # Final summary metrics
                 last = df.iloc[-1]
                 wandb.log({
-                    "corruption_index":    float(last.get("corruption_index", 0)),
-                    "trust_index":         float(last.get("trust_index", 0)),
-                    "coup_probability":    float(last.get("coup_probability", 0)),
-                    "gini_coefficient":    float(last.get("gini_coefficient", 0)),
-                    "north_star_progress": float(last.get("north_star_progress", 0)),
-                    "iig_effectiveness":   float(last.get("iig_effectiveness", 0)),
-                    "vpn_floor":           float(last.get("vpn_floor", 0)),
-                    "social_media_openness": float(last.get("social_media_openness", 1)),
-                    "china_influence":     float(last.get("china_influence", 0)),
-                    "total_shocks_fired":  int(df["total_shocks_fired"].iloc[-1]),
-                    "total_shutdowns":     int(df["total_shutdowns"].iloc[-1]),
-                    "final_vpn_floor":     float(df["final_vpn_floor"].iloc[-1]),
+                    "final/corruption_index":    float(last.get("corruption_index", 0)),
+                    "final/trust_index":         float(last.get("trust_index", 0)),
+                    "final/coup_probability":    float(last.get("coup_probability", 0)),
+                    "final/gini_coefficient":    float(last.get("gini_coefficient", 0)),
+                    "final/north_star_progress": float(last.get("north_star_progress", 0)),
+                    "final/iig_effectiveness":   float(last.get("iig_effectiveness", 0)),
+                    "final/total_shocks_fired":  int(df["total_shocks_fired"].iloc[-1]),
+                    "final/total_shutdowns":     int(df["total_shutdowns"].iloc[-1]),
+                    "final/vpn_floor":           float(df["final_vpn_floor"].iloc[-1]),
                 })
                 wandb.finish()
             except Exception:
