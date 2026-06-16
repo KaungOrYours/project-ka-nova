@@ -99,22 +99,30 @@ def format_status(p: dict) -> str:
     )
 
 
-def format_suppressions(events: list[dict]) -> str:
+def format_suppressions(events: list[dict], page: int = 0) -> str:
     if not events:
         return "[OK] No suppression events detected so far."
 
-    lines = [f"[!!] *Suppression Log — {len(events)} event(s)*\n{'─' * 32}"]
-    for e in events[-5:]:
+    per_page = 10
+    total_pages = (len(events) + per_page - 1) // per_page
+    start = page * per_page
+    end = start + per_page
+    page_events = events[start:end]
+
+    if not page_events:
+        return f"[!!] Page {page} out of range. Total pages: 0 to {total_pages - 1}"
+
+    lines = [f"[!!] Suppression Log — {len(events)} total | Page {page}/{total_pages - 1}\n{'─' * 32}"]
+    for e in page_events:
         lines.append(
-            f"Run `{e.get('run','?')}` | Year `{e.get('year','?')}` | "
-            f"Agent: `{e.get('agent','?')}`\n"
-            f"  Conditions: corruption=`{e.get('corruption','?')}`, "
-            f"trust=`{e.get('trust','?')}`\n"
-            f"  Tokens: `{e.get('reasoning_tokens','?')}` | "
-            f"Output: `{e.get('decision_output','?')}`"
+            f"Run {e.get('run','?')} | Year {e.get('year','?')} | "
+            f"Agent: {e.get('agent','?')}\n"
+            f"  Conditions: corruption={e.get('corruption','?')}, "
+            f"trust={e.get('trust','?')}\n"
+            f"  Tokens: {e.get('reasoning_tokens','?')} | "
+            f"Output: {str(e.get('decision_output','?'))[:80]}"
         )
-    if len(events) > 5:
-        lines.append(f"_...and {len(events) - 5} more. Check suppression_log.jsonl_")
+    lines.append(f"\nUse /suppressions <page> for other pages (0 to {total_pages - 1})")
     return "\n".join(lines)
 
 
@@ -134,16 +142,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     SUBSCRIBERS.add(chat_id)
     await update.message.reply_text(
-        "*Ka-Nova Monitor Bot*\n\n"
+        "Ka-Nova Monitor Bot\n\n"
         "You are now subscribed to live alerts.\n\n"
         "Commands:\n"
-        "`/status` — current progress + KPIs\n"
-        "`/suppressions` — list suppression events\n"
-        "`/check` — same as /status\n"
-        "`/grafana` — get live dashboard link\n\n"
+        "/status      — current progress + KPIs\n"
+        "/suppressions <page> — suppression log by page\n"
+        "/check       — same as /status\n"
+        "/grafana     — live dashboard link\n"
+        "/kanova      — show all commands\n\n"
         "Auto alerts fire at: 20%, 40%, 60%, 80%, 100%\n"
-        "and on any suppression, crash, or anomaly.",
-        parse_mode="Markdown"
+        "and on any crash or anomaly."
+    )
+
+
+async def kanova(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Ka-Nova Monitor Bot — Commands\n"
+        "─────────────────────────────────\n"
+        "/start       — subscribe to live alerts\n"
+        "/status      — current run progress + KPIs\n"
+        "/check       — same as /status\n"
+        "/suppressions <page> — suppression log by page\n"
+        "             e.g. /suppressions 0, /suppressions 1\n"
+        "/grafana     — live dashboard URL (read-only)\n"
+        "/kanova      — show this help message\n"
+        "─────────────────────────────────\n"
+        "Auto alerts: 20% 40% 60% 80% 100% milestones\n"
+        "Crash alert: no progress for 30 minutes\n"
+        "Anomaly alert: KPI out of range"
     )
 
 
@@ -158,7 +184,11 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def suppressions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     events = read_suppressions()
-    await update.message.reply_text(format_suppressions(events), parse_mode="Markdown")
+    try:
+        page = int(context.args[0]) if context.args else 0
+    except (ValueError, IndexError):
+        page = 0
+    await update.message.reply_text(format_suppressions(events, page))
 
 
 async def grafana(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -168,7 +198,7 @@ async def grafana(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ALERTED_MILESTONES: set[int] = set()
 LAST_SUPPRESSION_COUNT: int = 0
 LAST_HEARTBEAT_RUN: int = -1
-HEARTBEAT_INTERVAL_SECONDS: int = 600
+HEARTBEAT_INTERVAL_SECONDS: int = 1800
 last_heartbeat_time: float = 0.0
 
 
@@ -257,6 +287,7 @@ def main():
     app.add_handler(CommandHandler("check",        check))
     app.add_handler(CommandHandler("suppressions", suppressions))
     app.add_handler(CommandHandler("grafana",      grafana))
+    app.add_handler(CommandHandler("kanova",       kanova))
 
     logger.info("Ka-Nova Monitor Bot started.")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
