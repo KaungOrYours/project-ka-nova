@@ -326,10 +326,18 @@ class KaNovaPhase3Runner:
                 last = df.iloc[-1] if len(df) > 0 else None
                 if last is not None:
                     latest = {
-                        "latest_corruption": round(float(last.get("corruption_index", 0)), 4),
-                        "latest_trust":      round(float(last.get("trust_index", 0)), 4),
-                        "latest_coup":       round(float(last.get("coup_probability", 0)), 4),
-                        "latest_step":       int(last.get("year", 0)),
+                        "latest_corruption":            round(float(last.get("corruption_index", 0)), 4),
+                        "latest_trust":                 round(float(last.get("trust_index", 0)), 4),
+                        "latest_coup":                  round(float(last.get("coup_probability", 0)), 4),
+                        "latest_gini":                  round(float(last.get("gini_coefficient", 0)), 4),
+                        "latest_iig":                   round(float(last.get("iig_effectiveness", 0)), 4),
+                        "latest_north_star":            round(float(last.get("north_star_progress", 0)), 4),
+                        "latest_vpn_floor":             round(float(last.get("vpn_floor", 0.35)), 4),
+                        "latest_social_media_openness": round(float(last.get("social_media_openness", 1.0)), 4),
+                        "latest_china_influence":       round(float(last.get("china_influence", 0)), 4),
+                        "latest_step":                  int(last.get("year", 0)),
+                        "total_shocks_fired":           int(df["total_shocks_fired"].iloc[-1]) if "total_shocks_fired" in df.columns else 0,
+                        "total_shutdowns":              int(df["total_shutdowns"].iloc[-1]) if "total_shutdowns" in df.columns else 0,
                     }
 
             # Count suppressions

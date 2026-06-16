@@ -1,37 +1,40 @@
-# Ka-Nova Phase 3 — Core Dependencies
-# Minimal — works on Python 3.9+ and 3.11+
+# Ka-Nova Phase 3 — Pod Dependencies
+# Python 3.10+ recommended (RunPod default is 3.10/3.11)
+#
+# OLLAMA — installed separately (not via pip):
+#   curl -fsSL https://ollama.com/install.sh | sh
+#   OLLAMA_KEEP_ALIVE=-1 ollama serve &
+#   ollama pull llama3.2:3b
 
 # Simulation
 mesa==2.3.0
 
 # LLM + LangChain
-langchain
-langchain-core
-langchain-openai
-langchain-community
-langchain-text-splitters
+langchain==0.3.25
+langchain-core==0.3.58
+langchain-openai==0.3.16
+langchain-community==0.3.23
+langchain-text-splitters==0.3.8
 
 # Data + Analysis
-numpy
-pandas
-polars
-scipy
-scikit-learn
-matplotlib
-seaborn
-SALib
-
-# Validation + Testing
-pydantic
-deepeval
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.13.1
+scikit-learn==1.5.2
+matplotlib==3.9.4
+seaborn==0.13.2
+SALib==1.5.1
 
 # Monitoring + Logging
-wandb
-python-telegram-bot
-python-dotenv
-prometheus-client
+wandb==0.18.7
+python-telegram-bot==21.10
+python-dotenv==1.0.1
+prometheus-client==0.21.1
+
+# Validation
+pydantic==2.10.6
 
 # Utils
-tqdm
-requests
-tiktoken
+tqdm==4.67.1
+requests==2.32.3
+tiktoken==0.9.0
