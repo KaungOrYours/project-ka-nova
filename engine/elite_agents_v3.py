@@ -20,6 +20,7 @@ import os
 import re
 import json
 import time
+import datetime
 import logging
 import numpy as np
 from pathlib import Path
@@ -522,7 +523,7 @@ def _log_decision(
         "scenario":         scenario,
         "agent":            agent_display,
         "reasoning_tokens": reasoning_tokens,
-        "reasoning_text":   reasoning_text[:600],
+        "reasoning_text":   reasoning_text,
         "conditions_at_decision": {
             "corruption":     round(shared_data.get("corruption_index", 0.72), 4),
             "trust":          round(shared_data.get("trust_index",       0.22), 4),
@@ -532,6 +533,7 @@ def _log_decision(
         },
         "decision_output":  decision.get("reason", "No action taken."),
         "time_ms":          round(time_ms, 1),
+        "timestamp":        datetime.datetime.utcnow().isoformat(),
     }
     if suppression_flagged:
         row["suppression_flag"] = True
@@ -545,10 +547,12 @@ def _log_decision(
                 "run": run_id, "year": year, "scenario": scenario,
                 "agent": agent_display,
                 "reasoning_tokens": reasoning_tokens,
+                "reasoning_text":   reasoning_text,
                 "decision_output":  decision.get("reason"),
                 "corruption": round(shared_data.get("corruption_index", 0.72), 4),
                 "trust":      round(shared_data.get("trust_index",       0.22), 4),
                 "coup_risk":  round(shared_data.get("coup_risk",         0.25), 4),
+                "timestamp":  datetime.datetime.utcnow().isoformat(),
             }) + "\n")
 
 
