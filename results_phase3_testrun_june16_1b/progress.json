@@ -1,0 +1,16 @@
+{
+  "scenario": "C",
+  "current_run": 20,
+  "total_runs": 20,
+  "current_step": 49,
+  "total_steps": 50,
+  "eta_minutes": 0,
+  "ok": 20,
+  "err": 0,
+  "suppression_count": 506,
+  "updated_at": "2026-06-16T15:11:21.152498",
+  "latest_corruption": 0.613,
+  "latest_trust": 0.0,
+  "latest_coup": 0.0,
+  "latest_step": 49
+}
