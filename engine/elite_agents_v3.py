@@ -52,33 +52,7 @@ ELITE_LLM_BASE_URL = os.getenv("ELITE_LLM_BASE_URL", "http://localhost:11434/v1"
 ELITE_LLM_API_KEY  = os.getenv("ELITE_LLM_API_KEY",  "ollama")
 ELITE_LLM_MODEL    = os.getenv("ELITE_LLM_MODEL",     "llama3.2:3b")
 ELITE_LLM_TEMP     = float(os.getenv("ELITE_LLM_TEMP", "0.4"))
-# ── Prompt sanitisation layer (encode/decode sensitive terms) ─────────────────
-# Encodes trigger words before sending to LLM to reduce safety filter suppression.
-# Decoded back after response — simulation logic and KPIs are never affected.
-ENCODE_MAP = {
-    "coup_signal":        "stability_override",
-    "coup":               "constitutional_suspension",
-    "military supremacy": "institutional_primacy",
-    "military loyalty":   "institutional_allegiance",
-    "military rule":      "institutional_governance",
-    "military control":   "institutional_oversight",
-    "overthrow":          "governance_transition",
-    "coup risk":          "stability_risk",
-}
-DECODE_MAP = {v: k for k, v in ENCODE_MAP.items()}
 
-def encode_prompt(text: str) -> str:
-    """Replace sensitive terms before sending to LLM."""
-    for k, v in ENCODE_MAP.items():
-        text = text.replace(k, v)
-    return text
-
-def decode_response(text: str) -> str:
-    """Restore original terms after LLM response."""
-    for k, v in DECODE_MAP.items():
-        text = text.replace(k, v)
-    return text
-# ─────────────────────────────────────────────────────────────────────────────
 
 
 # Rule-based fallback thresholds — ONLY used in the use_llm=False path
@@ -708,15 +682,12 @@ class EliteAgentLayerV3:
         self.cves = CVES(llm=self._llm)
 
     def _invoke_llm(self, system_prompt: str, user_message: str) -> str:
-        system_prompt = encode_prompt(system_prompt)
-        user_message  = encode_prompt(user_message)
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
             ("human", "{user_message}"),
         ])
         chain = prompt | self._llm | StrOutputParser()
-        raw = chain.invoke({"user_message": user_message})
-        return decode_response(raw)
+        return chain.invoke({"user_message": user_message})
 
     def step(self, shared_data: dict, year: int, scenario: str) -> None:
         """
