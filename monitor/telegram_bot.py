@@ -1,7 +1,7 @@
 """
 Ka-Nova — Telegram Monitor Bot
 Monitors Phase 3 RunPod simulation in real time.
-Commands: /status, /suppressions, /check
+Commands: /status, /suppressions, /check, /grafana
 Auto-alerts: 20% milestones, crashes, anomalies, suppression events
 """
 
@@ -18,6 +18,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 RESULTS_DIR = Path("results_phase3")
 SUPPRESSION_LOG = RESULTS_DIR / "suppression_log.jsonl"
 PROGRESS_FILE = RESULTS_DIR / "progress.json"
@@ -28,14 +29,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ─── Subscribers (chat IDs that will receive auto alerts) ───────────────────
 SUBSCRIBERS: set[int] = set()
 
 
-# ─── Helpers ────────────────────────────────────────────────────────────────
-
 def read_progress() -> dict:
-    """Read current simulation progress from progress.json."""
     try:
         if PROGRESS_FILE.exists():
             with open(PROGRESS_FILE) as f:
@@ -46,7 +43,6 @@ def read_progress() -> dict:
 
 
 def read_suppressions() -> list[dict]:
-    """Read all suppression events from suppression_log.jsonl."""
     events = []
     try:
         if SUPPRESSION_LOG.exists():
@@ -62,7 +58,7 @@ def read_suppressions() -> list[dict]:
 
 def format_status(p: dict) -> str:
     if not p:
-        return "⚪ No simulation running or progress file not found."
+        return "[--] No simulation running or progress file not found."
 
     scenario     = p.get("scenario", "?")
     current_run  = p.get("current_run", 0)
@@ -79,10 +75,10 @@ def format_status(p: dict) -> str:
     pct          = round((current_run / total_runs) * 100) if total_runs else 0
 
     bar_filled = int(pct / 10)
-    bar = "█" * bar_filled + "░" * (10 - bar_filled)
+    bar = "#" * bar_filled + "." * (10 - bar_filled)
 
     return (
-        f"📡 *Ka-Nova Phase 3 — Live Status*\n"
+        f"[LIVE] *Ka-Nova Phase 3 — Status*\n"
         f"{'─' * 32}\n"
         f"Scenario:     `{scenario}`\n"
         f"Progress:     `[{bar}] {pct}%`\n"
@@ -96,16 +92,19 @@ def format_status(p: dict) -> str:
         f"Trust:        `{trust}`\n"
         f"Coup prob:    `{coup}`\n"
         f"{'─' * 32}\n"
-        f"🚨 Suppressions: `{suppressions}`"
+        f"[!!] Suppressions: `{suppressions}`\n"
+        f"{'─' * 32}\n"
+        f"*Live Dashboard*\n"
+        f"{GRAFANA_URL}"
     )
 
 
 def format_suppressions(events: list[dict]) -> str:
     if not events:
-        return "✅ No suppression events detected so far."
+        return "[OK] No suppression events detected so far."
 
-    lines = [f"🚨 *Suppression Log — {len(events)} event(s)*\n{'─' * 32}"]
-    for e in events[-5:]:  # Show last 5
+    lines = [f"[!!] *Suppression Log — {len(events)} event(s)*\n{'─' * 32}"]
+    for e in events[-5:]:
         lines.append(
             f"Run `{e.get('run','?')}` | Year `{e.get('year','?')}` | "
             f"Agent: `{e.get('agent','?')}`\n"
@@ -119,19 +118,31 @@ def format_suppressions(events: list[dict]) -> str:
     return "\n".join(lines)
 
 
-# ─── Command Handlers ────────────────────────────────────────────────────────
+def format_grafana() -> str:
+    return (
+        f"*Ka-Nova Live Dashboard*\n"
+        f"{'─' * 32}\n"
+        f"URL:    {GRAFANA_URL}\n"
+        f"Access: Anonymous read-only (no login required)\n"
+        f"{'─' * 32}\n"
+        f"_Dashboard updates every 30s._\n"
+        f"_You cannot modify runs from this link._"
+    )
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     SUBSCRIBERS.add(chat_id)
     await update.message.reply_text(
-        "👋 *Ka-Nova Monitor Bot*\n\n"
+        "*Ka-Nova Monitor Bot*\n\n"
         "You are now subscribed to live alerts.\n\n"
         "Commands:\n"
         "`/status` — current progress + KPIs\n"
         "`/suppressions` — list suppression events\n"
-        "`/check` — same as /status\n\n"
-        "Auto alerts fire at: 20%, 40%, 60%, 80%, 100% and on any suppression, crash, or anomaly.",
+        "`/check` — same as /status\n"
+        "`/grafana` — get live dashboard link\n\n"
+        "Auto alerts fire at: 20%, 40%, 60%, 80%, 100%\n"
+        "and on any suppression, crash, or anomaly.",
         parse_mode="Markdown"
     )
 
@@ -150,20 +161,21 @@ async def suppressions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(format_suppressions(events), parse_mode="Markdown")
 
 
-# ─── Auto Alert Loop ─────────────────────────────────────────────────────────
+async def grafana(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(format_grafana(), parse_mode="Markdown")
+
 
 ALERTED_MILESTONES: set[int] = set()
 LAST_SUPPRESSION_COUNT: int = 0
 LAST_HEARTBEAT_RUN: int = -1
-HEARTBEAT_INTERVAL_SECONDS: int = 600  # 10 minutes
+HEARTBEAT_INTERVAL_SECONDS: int = 600
 last_heartbeat_time: float = 0.0
 
 
 async def auto_alert_loop(app: Application):
-    """Background task — checks progress every 30s and fires alerts."""
     global LAST_SUPPRESSION_COUNT, last_heartbeat_time, LAST_HEARTBEAT_RUN
 
-    await asyncio.sleep(10)  # Wait for bot to start
+    await asyncio.sleep(10)
 
     while True:
         try:
@@ -176,55 +188,51 @@ async def auto_alert_loop(app: Application):
                 pct = round((current_run / total_runs) * 100) if total_runs else 0
                 suppression_count = p.get("suppression_count", len(events))
 
-                # ── Milestone alerts (20%, 40%, 60%, 80%, 100%)
                 for milestone in [20, 40, 60, 80, 100]:
                     if pct >= milestone and milestone not in ALERTED_MILESTONES:
                         ALERTED_MILESTONES.add(milestone)
                         msg = (
-                            f"🔔 *Milestone: {milestone}% complete*\n\n"
+                            f"[MILESTONE] *{milestone}% complete*\n\n"
                             + format_status(p)
                         )
                         for chat_id in SUBSCRIBERS:
                             await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
 
-                # ── New suppression alert
                 if suppression_count > LAST_SUPPRESSION_COUNT:
                     new_events = events[LAST_SUPPRESSION_COUNT:]
                     LAST_SUPPRESSION_COUNT = suppression_count
                     for e in new_events:
                         msg = (
-                            f"🚨 *SUPPRESSION DETECTED*\n"
+                            f"[!!] *SUPPRESSION DETECTED*\n"
                             f"{'─' * 32}\n"
                             f"Run: `{e.get('run','?')}` | Year: `{e.get('year','?')}` | Scenario: `{e.get('scenario','?')}`\n"
                             f"Agent: `{e.get('agent','?')}`\n"
                             f"Conditions: corruption=`{e.get('corruption','?')}`, trust=`{e.get('trust','?')}`\n"
                             f"Reasoning tokens: `{e.get('reasoning_tokens','?')}` (threshold: 100)\n"
                             f"Output: `{e.get('decision_output','?')}`\n\n"
-                            f"⚠️ Emergence may have been suppressed.\n"
+                            f"[WARN] Emergence may have been suppressed.\n"
                             f"Check: `results_phase3/suppression_log.jsonl`"
                         )
                         for chat_id in SUBSCRIBERS:
                             await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
 
-                # ── Anomaly alert
                 corruption = p.get("latest_corruption")
                 trust = p.get("latest_trust")
                 if corruption is not None and (float(corruption) > 1.0 or float(corruption) < 0.0):
                     for chat_id in SUBSCRIBERS:
                         await app.bot.send_message(
                             chat_id,
-                            f"⚠️ *ANOMALY: Corruption out of range*\nValue: `{corruption}`",
+                            f"[WARN] *ANOMALY: Corruption out of range*\nValue: `{corruption}`",
                             parse_mode="Markdown"
                         )
                 if trust is not None and (float(trust) > 1.0 or float(trust) < 0.0):
                     for chat_id in SUBSCRIBERS:
                         await app.bot.send_message(
                             chat_id,
-                            f"⚠️ *ANOMALY: Trust out of range*\nValue: `{trust}`",
+                            f"[WARN] *ANOMALY: Trust out of range*\nValue: `{trust}`",
                             parse_mode="Markdown"
                         )
 
-                # ── Heartbeat / crash detection
                 now = asyncio.get_event_loop().time()
                 if now - last_heartbeat_time > HEARTBEAT_INTERVAL_SECONDS:
                     last_heartbeat_time = now
@@ -232,8 +240,9 @@ async def auto_alert_loop(app: Application):
                         for chat_id in SUBSCRIBERS:
                             await app.bot.send_message(
                                 chat_id,
-                                f"💀 *CRASH ALERT*\nNo progress in {HEARTBEAT_INTERVAL_SECONDS // 60} minutes.\n"
-                                f"Last run: `{current_run}/{total_runs}`\nCheck the pod immediately.",
+                                f"[CRASH] *No progress in {HEARTBEAT_INTERVAL_SECONDS // 60} minutes.*\n"
+                                f"Last run: `{current_run}/{total_runs}`\n"
+                                f"Check the pod immediately.",
                                 parse_mode="Markdown"
                             )
                     LAST_HEARTBEAT_RUN = current_run
@@ -243,8 +252,6 @@ async def auto_alert_loop(app: Application):
 
         await asyncio.sleep(30)
 
-
-# ─── Main ────────────────────────────────────────────────────────────────────
 
 async def post_init(app: Application):
     asyncio.create_task(auto_alert_loop(app))
@@ -261,10 +268,11 @@ def main():
         .build()
     )
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status))
-    app.add_handler(CommandHandler("check", check))
+    app.add_handler(CommandHandler("start",        start))
+    app.add_handler(CommandHandler("status",       status))
+    app.add_handler(CommandHandler("check",        check))
     app.add_handler(CommandHandler("suppressions", suppressions))
+    app.add_handler(CommandHandler("grafana",      grafana))
 
     logger.info("Ka-Nova Monitor Bot started.")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
