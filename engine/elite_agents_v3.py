@@ -508,11 +508,11 @@ def _log_decision(
     if suppression_flagged:
         row["suppression_flag"] = True
 
-    with open(RESULTS_DIR / "elite_decisions.jsonl", "a") as f:
+    with open(RESULTS_DIR / f"elite_decisions_{scenario}.jsonl", "a") as f:
         f.write(json.dumps(row) + "\n")
 
     if suppression_flagged:
-        with open(RESULTS_DIR / "suppression_log.jsonl", "a") as f:
+        with open(RESULTS_DIR / f"suppression_log_{scenario}.jsonl", "a") as f:
             f.write(json.dumps({
                 "run": run_id, "year": year, "scenario": scenario,
                 "agent": agent_display,
