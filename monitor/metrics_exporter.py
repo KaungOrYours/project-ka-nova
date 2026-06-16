@@ -25,26 +25,35 @@ SCRAPE_INTERVAL = 15  # seconds
 # ─── Metrics ────────────────────────────────────────────────────────────────
 
 # Progress
-kanova_current_run       = Gauge("kanova_current_run",       "Current run number")
-kanova_total_runs        = Gauge("kanova_total_runs",        "Total runs planned")
-kanova_progress_pct      = Gauge("kanova_progress_pct",      "Completion percentage")
-kanova_eta_minutes       = Gauge("kanova_eta_minutes",       "Estimated minutes remaining")
-kanova_ok_runs           = Gauge("kanova_ok_runs",           "Successful runs")
-kanova_err_runs          = Gauge("kanova_err_runs",          "Failed runs")
+kanova_current_run          = Gauge("kanova_current_run",          "Current run number")
+kanova_runs_completed       = Gauge("kanova_runs_completed",       "Runs completed (alias for Grafana gauge panel)")
+kanova_total_runs           = Gauge("kanova_total_runs",           "Total runs planned")
+kanova_progress_pct         = Gauge("kanova_progress_pct",         "Completion percentage")
+kanova_eta_minutes          = Gauge("kanova_eta_minutes",          "Estimated minutes remaining")
+kanova_ok_runs              = Gauge("kanova_ok_runs",              "Successful runs")
+kanova_err_runs             = Gauge("kanova_err_runs",             "Failed runs")
 
-# KPIs
-kanova_corruption        = Gauge("kanova_corruption",        "Latest corruption index")
-kanova_trust             = Gauge("kanova_trust",             "Latest trust index")
-kanova_coup_probability  = Gauge("kanova_coup_probability",  "Latest coup probability")
-kanova_current_step      = Gauge("kanova_current_step",      "Current simulation year")
+# KPIs — names match Grafana dashboard expressions exactly
+kanova_corruption_index     = Gauge("kanova_corruption_index",     "Latest corruption index")
+kanova_trust_index          = Gauge("kanova_trust_index",          "Latest trust index")
+kanova_coup_probability     = Gauge("kanova_coup_probability",     "Latest coup probability")
+kanova_gini_coefficient     = Gauge("kanova_gini_coefficient",     "Latest Gini coefficient")
+kanova_iig_effectiveness    = Gauge("kanova_iig_effectiveness",    "Latest IIG effectiveness")
+kanova_north_star_progress  = Gauge("kanova_north_star_progress",  "Latest North Star progress")
+kanova_vpn_floor            = Gauge("kanova_vpn_floor",            "Latest VPN floor (info access)")
+kanova_social_media_openness= Gauge("kanova_social_media_openness","Latest social media openness")
+kanova_china_influence      = Gauge("kanova_china_influence",      "Latest China influence index")
+kanova_total_shocks_fired   = Gauge("kanova_total_shocks_fired",   "Total external shocks fired")
+kanova_total_shutdowns      = Gauge("kanova_total_shutdowns",      "Total social media shutdowns")
+kanova_current_step         = Gauge("kanova_current_step",         "Current simulation year")
 
 # Suppression
-kanova_suppression_total = Gauge("kanova_suppression_total", "Total suppression events detected")
-kanova_suppression_new   = Counter("kanova_suppression_new", "New suppression events (cumulative)")
+kanova_suppression_total    = Gauge("kanova_suppression_total",    "Total suppression events detected")
+kanova_suppression_new      = Counter("kanova_suppression_new",    "New suppression events (cumulative)")
 
 # Health
-kanova_exporter_up       = Gauge("kanova_exporter_up",       "Exporter is running (1=yes)")
-kanova_last_update_age   = Gauge("kanova_last_update_age",   "Seconds since last progress.json update")
+kanova_exporter_up          = Gauge("kanova_exporter_up",          "Exporter is running (1=yes)")
+kanova_last_update_age      = Gauge("kanova_last_update_age",      "Seconds since last progress.json update")
 
 
 # ─── Reader ─────────────────────────────────────────────────────────────────
@@ -66,14 +75,23 @@ def read_and_export():
             pct          = round((current_run / total_runs) * 100) if total_runs else 0
 
             kanova_current_run.set(current_run)
+            kanova_runs_completed.set(current_run)
             kanova_total_runs.set(total_runs)
             kanova_progress_pct.set(pct)
             kanova_eta_minutes.set(p.get("eta_minutes", 0))
             kanova_ok_runs.set(p.get("ok", 0))
             kanova_err_runs.set(p.get("err", 0))
-            kanova_corruption.set(p.get("latest_corruption", 0))
-            kanova_trust.set(p.get("latest_trust", 0))
+            kanova_corruption_index.set(p.get("latest_corruption", 0))
+            kanova_trust_index.set(p.get("latest_trust", 0))
             kanova_coup_probability.set(p.get("latest_coup", 0))
+            kanova_gini_coefficient.set(p.get("latest_gini", 0))
+            kanova_iig_effectiveness.set(p.get("latest_iig", 0))
+            kanova_north_star_progress.set(p.get("latest_north_star", 0))
+            kanova_vpn_floor.set(p.get("latest_vpn_floor", 0))
+            kanova_social_media_openness.set(p.get("latest_social_media_openness", 0))
+            kanova_china_influence.set(p.get("latest_china_influence", 0))
+            kanova_total_shocks_fired.set(p.get("total_shocks_fired", 0))
+            kanova_total_shutdowns.set(p.get("total_shutdowns", 0))
             kanova_current_step.set(p.get("current_step", 0))
 
             # Age of last update

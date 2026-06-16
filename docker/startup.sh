@@ -19,9 +19,9 @@ echo ""
 echo "[1/5] Pulling latest codebase from GitHub..."
 if [ -d "/workspace/project-ka-nova" ]; then
     cd /workspace/project-ka-nova
-    git pull origin main
+    git pull https://${GITHUB_TOKEN}@github.com/KaungOrYours/project-ka-nova main
 else
-    git clone https://github.com/KaungOrYours/project-ka-nova /workspace/project-ka-nova
+    git clone https://${GITHUB_TOKEN}@github.com/KaungOrYours/project-ka-nova /workspace/project-ka-nova
     cd /workspace/project-ka-nova
 fi
 echo "Codebase ready."
