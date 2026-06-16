@@ -68,7 +68,7 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
 
     # Reset progress and JSONL logs on first run
     if run_id == 0:
-        for f in ["progress.json", "elite_decisions.jsonl", "suppression_log.jsonl", "cves_violations.jsonl", "cves_scores.jsonl"]:
+        for f in ["progress.json", "cves_violations.jsonl", "cves_scores.jsonl"]:
             p = RESULTS_DIR / f
             if p.exists():
                 p.unlink()
@@ -317,7 +317,7 @@ class KaNovaPhase3Runner:
                     }
 
             # Count suppressions
-            suppression_log = RESULTS_DIR / "suppression_log.jsonl"
+            suppression_log = RESULTS_DIR / f"suppression_log_{self.scenario}.jsonl"
             suppression_count = 0
             if suppression_log.exists():
                 with open(suppression_log) as f:
