@@ -23,6 +23,8 @@ import time
 import logging
 import numpy as np
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(override=False)
 
 logger = logging.getLogger("ka_nova.elite_v3")
 
@@ -516,6 +518,9 @@ def _log_decision(
                 "agent": agent_display,
                 "reasoning_tokens": reasoning_tokens,
                 "decision_output":  decision.get("reason"),
+                "corruption": round(shared_data.get("corruption_index", 0.72), 4),
+                "trust":      round(shared_data.get("trust_index",       0.22), 4),
+                "coup_risk":  round(shared_data.get("coup_risk",         0.25), 4),
             }) + "\n")
 
 
