@@ -199,23 +199,7 @@ async def auto_alert_loop(app: Application):
                             await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
 
                 if suppression_count > LAST_SUPPRESSION_COUNT:
-                    new_events = events[LAST_SUPPRESSION_COUNT:]
                     LAST_SUPPRESSION_COUNT = suppression_count
-                    for e in new_events:
-                        msg = (
-                            f"[!!] *SUPPRESSION DETECTED*\n"
-                            f"{'─' * 32}\n"
-                            f"Run: `{e.get('run','?')}` | Year: `{e.get('year','?')}` | Scenario: `{e.get('scenario','?')}`\n"
-                            f"Agent: `{e.get('agent','?')}`\n"
-                            f"Conditions: corruption=`{e.get('corruption','?')}`, trust=`{e.get('trust','?')}`\n"
-                            f"Reasoning tokens: `{e.get('reasoning_tokens','?')}` (threshold: 100)\n"
-                            f"Output: `{e.get('decision_output','?')}`\n\n"
-                            f"[WARN] Emergence may have been suppressed.\n"
-                            f"Check: `results_phase3/suppression_log.jsonl`"
-                        )
-                        for chat_id in SUBSCRIBERS:
-                            await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
-
                 corruption = p.get("latest_corruption")
                 trust = p.get("latest_trust")
                 if corruption is not None and (float(corruption) > 1.0 or float(corruption) < 0.0):
