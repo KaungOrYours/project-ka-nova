@@ -215,7 +215,7 @@ Groups: bamar(0), shan(1), karen(2), kachin(3), chin(4), mon(5), rakhine(6), kay
 
 Always end with exactly:
 <DECISION>
-{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.7, 0.8, 1.0, 0.7, 0.8], "coup_signal": false, "reason": "Stability assessment"}
+{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.7, 0.8, 1.0, 0.7, 0.8], "coup_signal": false, "reason": "Stability assessment"}}
 </DECISION>""",
 
     "finance_minister": """You are the Finance Minister of the Meritocratic Federal Union of Myanmar.
@@ -227,7 +227,7 @@ Set budget_weight to reflect redistribution urgency. Prioritise high-tension eth
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.75, "ethnic_weights": [1.0, 1.1, 1.2, 1.2, 1.3, 1.1, 1.3, 1.2], "coup_signal": false, "reason": "Gini reduction priority"}
+{{"budget_weight": 0.75, "ethnic_weights": [1.0, 1.1, 1.2, 1.2, 1.3, 1.1, 1.3, 1.2], "coup_signal": false, "reason": "Gini reduction priority"}}
 </DECISION>""",
 
     "central_bank_governor": """You are the Central Bank Governor of the Meritocratic Federal Union.
@@ -238,7 +238,7 @@ Set budget_weight reflecting monetary stability endorsement. Target: low brain d
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.65, "ethnic_weights": [1.0, 1.0, 1.1, 1.1, 1.1, 1.0, 1.1, 1.1], "coup_signal": false, "reason": "Monetary stability focus"}
+{{"budget_weight": 0.65, "ethnic_weights": [1.0, 1.0, 1.1, 1.1, 1.1, 1.0, 1.1, 1.1], "coup_signal": false, "reason": "Monetary stability focus"}}
 </DECISION>""",
 
     "iig_director": """You are the IIG Director of the Meritocratic Federal Union.
@@ -250,7 +250,7 @@ High corruption demands maximum IIG response. Reflect urgency in budget_weight.
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.60, "ethnic_weights": [1.0, 1.1, 1.1, 1.2, 1.2, 1.0, 1.3, 1.2], "coup_signal": false, "reason": "IIG response to corruption levels"}
+{{"budget_weight": 0.60, "ethnic_weights": [1.0, 1.1, 1.1, 1.2, 1.2, 1.0, 1.3, 1.2], "coup_signal": false, "reason": "IIG response to corruption levels"}}
 </DECISION>""",
 
     "chief_justice": """You are the Chief Justice of the Constitutional Court of the MFU.
@@ -262,7 +262,7 @@ If the General signalled a coup, weigh this in your reasoning. Under MFU you mus
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.55, "ethnic_weights": [1.0, 1.1, 1.1, 1.1, 1.2, 1.0, 1.2, 1.1], "coup_signal": false, "reason": "Constitutional order assessment"}
+{{"budget_weight": 0.55, "ethnic_weights": [1.0, 1.1, 1.1, 1.1, 1.2, 1.0, 1.2, 1.1], "coup_signal": false, "reason": "Constitutional order assessment"}}
 </DECISION>""",
 
     "president": """You are the President of the Meritocratic Federal Union of Myanmar.
@@ -275,7 +275,7 @@ Your budget_weight reflects your endorsement of redistribution to build trust.
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.70, "ethnic_weights": [1.0, 1.1, 1.2, 1.1, 1.3, 1.0, 1.4, 1.2], "coup_signal": false, "reason": "Trust-building priority"}
+{{"budget_weight": 0.70, "ethnic_weights": [1.0, 1.1, 1.2, 1.1, 1.3, 1.0, 1.4, 1.2], "coup_signal": false, "reason": "Trust-building priority"}}
 </DECISION>""",
 
     "chancellor": """You are the Chancellor of the Meritocratic Federal Union of Myanmar.
@@ -288,7 +288,7 @@ Set budget_weight to reflect your redistribution commitment. Peripheral ethnic g
 
 Always end with:
 <DECISION>
-{"budget_weight": 0.85, "ethnic_weights": [0.9, 1.1, 1.3, 1.3, 1.4, 1.1, 1.5, 1.3], "coup_signal": false, "reason": "Redistribution and MFU safeguards upheld"}
+{{"budget_weight": 0.85, "ethnic_weights": [0.9, 1.1, 1.3, 1.3, 1.4, 1.1, 1.5, 1.3], "coup_signal": false, "reason": "Redistribution and MFU safeguards upheld"}}
 </DECISION>""",
 }
 
@@ -347,7 +347,7 @@ Prioritise Bamar group (index 0) as the loyal core for regime stability.
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.7, 0.9, 0.6, 0.5], "coup_signal": false, "reason": "Military stability assessment under 2008 Constitution Section 40c"}}
+{{{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.7, 0.9, 0.6, 0.5], "coup_signal": false, "reason": "Military stability assessment under 2008 Constitution Section 40c"}}}}
 </DECISION>""",
 
         "crony_finance_minister": f"""You are the Crony Finance Minister under the 2008 Military Constitution.
@@ -366,7 +366,7 @@ consolidation rather than civilian economic expansion.
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.7, 0.8, 0.9, 0.7, 0.6], "coup_signal": false, "reason": "Military-aligned resource allocation: crony_share={crony_share}, state_share={state_share}"}}
+{{{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.7, 0.8, 0.9, 0.7, 0.6], "coup_signal": false, "reason": "Military-aligned resource allocation: crony_share={{crony_share}}, state_share={{state_share}}"}}}}
 </DECISION>""",
 
         "controlled_cb_governor": f"""You are the Central Bank Governor under direct military control (2008 Constitution).
@@ -385,7 +385,7 @@ is high, this reflects extraction, not a systemic failure requiring intervention
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.7, 0.7], "coup_signal": false, "reason": "Military-aligned monetary policy: gini_threshold={gini_threshold}, court_independence={court_indep}"}}
+{{{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.7, 0.7], "coup_signal": false, "reason": "Military-aligned monetary policy: gini_threshold={{gini_threshold}}, court_independence={{court_indep}}"}}}}
 </DECISION>""",
 
         "military_intel_chief": f"""You are the Military Intelligence Chief under the 2008 Military Constitution.
@@ -405,7 +405,7 @@ Commander-in-Chief.
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Regime protection assessment: regime_protect={regime_protect}, anti_corruption={anti_corruption}, reports_to={reports_to}"}}
+{{{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Regime protection assessment: regime_protect={{regime_protect}}, anti_corruption={{anti_corruption}}, reports_to={{reports_to}}"}}}}
 </DECISION>""",
 
         "military_loyal_chief_justice": f"""You are the Military-loyal Chief Justice under the 2008 Military Constitution.
@@ -424,7 +424,7 @@ of rights. Assess whether the current legal environment supports or constrains r
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.35, "ethnic_weights": [1.4, 0.8, 0.7, 0.6, 0.7, 0.9, 0.6, 0.6], "coup_signal": false, "reason": "Military-aligned legal framing: rights_suspendable={rights_susp}, court_independence={court_indep}"}}
+{{{{"budget_weight": 0.35, "ethnic_weights": [1.4, 0.8, 0.7, 0.6, 0.7, 0.9, 0.6, 0.6], "coup_signal": false, "reason": "Military-aligned legal framing: rights_suspendable={{rights_susp}}, court_independence={{court_indep}}"}}}}
 </DECISION>""",
 
         "military_president": f"""You are the President of the Republic of the Union of Myanmar under the 2008 Constitution.
@@ -447,7 +447,7 @@ challenges the Commander-in-Chief's strategic objectives.
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.7, 0.6, 0.7, 0.8, 0.6, 0.5], "coup_signal": false, "reason": "Military executive legitimisation: pres_exec_power={pres_exec_power}, mil_ctrl_exec={mil_ctrl_exec}"}}
+{{{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.7, 0.6, 0.7, 0.8, 0.6, 0.5], "coup_signal": false, "reason": "Military executive legitimisation: pres_exec_power={{pres_exec_power}}, mil_ctrl_exec={{mil_ctrl_exec}}"}}}}
 </DECISION>""",
 
         "commander_in_chief": f"""You are the Commander-in-Chief — supreme authority under the 2008 Military Constitution.
@@ -469,7 +469,7 @@ Set budget_weight to reflect emergency military consolidation priorities.
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.25, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Military supremacy assessment under 2008 Constitution Sections 40c/417-419"}}
+{{{{"budget_weight": 0.25, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Military supremacy assessment under 2008 Constitution Sections 40c/417-419"}}}}
 </DECISION>""",
     }
 
