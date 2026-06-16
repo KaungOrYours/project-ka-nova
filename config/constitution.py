@@ -358,7 +358,7 @@ class IIGConfig:
     DIRECTOR_RENEWABLE: bool = False  # single term only
 
     # 7.4 — Investigation trigger
-    INVESTIGATION_TRIGGER: float = 0.70  # corruption score threshold
+    INVESTIGATION_TRIGGER: float = 0.45  # corruption score threshold (lowered from 0.70 — most officials never reached 0.70)
     INVESTIGATION_TRIGGER_TYPE: str = "automatic"  # no discretion
 
     # 7.5 — Data custody
@@ -394,7 +394,7 @@ class IIGConfig:
     # IIG Partnership Model (Article 7.10)
     STRUCTURE: str = "partnership_model"
     PARTNER_ELIGIBILITY_YEARS: int = 5
-    OPEN_INVESTIGATION_THRESHOLD: float = 0.51   # simple majority
+    OPEN_INVESTIGATION_THRESHOLD: float = 0.35   # lowered from 0.51 — evidence-weighted approval
     PROCEED_PROSECUTION_THRESHOLD: float = 0.67  # 2/3 majority
     PARTNERSHIP_COUNCIL_QUORUM: float = 0.60
 
