@@ -118,14 +118,28 @@ class FeedbackEngine:
         current_trust = m.shared_data.get("trust_index", 0.22)
         rights_ok = not m.shared_data.get("rights_violated", False)
 
-        rights_penalty = 0.0 if rights_ok else CONSTITUTION.rights.RIGHTS_VIOLATION_TRUST_DROP
-
-        # Trust update — recency-biased
-        new_trust = (
-            current_trust * 0.70 +
-            performance * 0.25 +
-            (0.05 if rights_ok else 0.0)
-        ) - rights_penalty
+        # Scenario-aware trust dynamics
+        # Scenario C (military): fear-compliance produces low but non-zero trust.
+        # The full MFU rights violation penalty (0.20) applies only in A/B where
+        # rights violations are constitutional shocks. In C, repression is the
+        # baseline — penalty is smaller and a floor enforces fear-compliance trust.
+        if m.scenario == "C":
+            rights_penalty = 0.0 if rights_ok else 0.04   # chronic low-level erosion
+            trust_floor    = 0.10                           # fear-compliance floor
+            performance_c  = min(performance, 0.25)         # military policy quality capped
+            new_trust = (
+                current_trust * 0.80 +
+                performance_c * 0.20
+            ) - rights_penalty
+            new_trust = max(trust_floor, new_trust)
+        else:
+            rights_penalty = 0.0 if rights_ok else CONSTITUTION.rights.RIGHTS_VIOLATION_TRUST_DROP
+            # Trust update — recency-biased
+            new_trust = (
+                current_trust * 0.70 +
+                performance * 0.25 +
+                (0.05 if rights_ok else 0.0)
+            ) - rights_penalty
 
         # v7 — Trust acceleration trigger (Article VIII)
         corruption = m.shared_data.get("corruption_index", 1.0)
@@ -824,8 +838,9 @@ class FeedbackEngine:
                         0.0, 1.0
                     )
                 m.shared_data["rights_violated"] = True
+                # Floor at 0.10 — fear-compliance trust, not zero collapse
                 m.shared_data["trust_index"] = max(
-                    0.0,
+                    0.10,
                     m.shared_data.get("trust_index", 0.22) - 0.05
                 )
 

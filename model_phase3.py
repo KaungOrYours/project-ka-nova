@@ -181,7 +181,7 @@ class KaNovaModelPhase3(Model):
         # ── Elite agent layer ─────────────────────────────────────────────────
         self.elite_layer = EliteAgentLayer(use_llm=use_llm)
         if ELITE_V3_AVAILABLE:
-            print("Elite agents: v3 (Sam's CVES)")
+            print("Elite agents: v3")
         else:
             print("Elite agents: Phase 2 fallback (elite_agents.py)")
 
