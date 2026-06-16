@@ -41,6 +41,8 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
+from dotenv import load_dotenv
+load_dotenv()
 from model_phase3 import KaNovaModelPhase3
 
 # W&B experiment tracking
@@ -63,6 +65,13 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
     """Run one simulation — called by pool workers."""
     import random
     import numpy as np
+
+    # Reset progress and JSONL logs on first run
+    if run_id == 0:
+        for f in ["progress.json", "elite_decisions.jsonl", "suppression_log.jsonl", "cves_violations.jsonl", "cves_scores.jsonl"]:
+            p = RESULTS_DIR / f
+            if p.exists():
+                p.unlink()
 
     seed = run_id * 100 + ord(scenario)
     try:
