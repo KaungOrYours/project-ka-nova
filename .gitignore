@@ -17,3 +17,6 @@ results_phase2.zip
 .env
 wandb/
 results_phase3/
+__pycache__/
+logs/
+*.pyc
