@@ -406,11 +406,15 @@ def parse_args():
     p.add_argument("--steps",    type=int, default=50)
     p.add_argument("--workers",  type=int, default=None)
     p.add_argument("--use-llm",  dest="use_llm", action="store_true", default=False)
+    p.add_argument("--model",    type=str, default=None, help="Ollama model e.g. llama3.2:1b")
     return p.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
+
+    if args.model:
+        os.environ["ELITE_LLM_MODEL"] = args.model
 
     if args.test:
         print("TEST MODE — 1 run, 200 citizens, 5 steps")
@@ -419,7 +423,7 @@ if __name__ == "__main__":
             runs=1,
             n_citizens=200,
             n_steps=5,
-            use_llm=False,
+            use_llm=args.use_llm,
             workers=1,
         )
     else:
