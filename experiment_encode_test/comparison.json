@@ -1,0 +1,15 @@
+{
+  "encode_ON": {
+    "mode": "ON",
+    "suppression_count": 170,
+    "total_decisions": 1050,
+    "suppression_pct": 16.19
+  },
+  "encode_OFF": {
+    "mode": "OFF",
+    "suppression_count": 195,
+    "total_decisions": 1050,
+    "suppression_pct": 18.57
+  },
+  "pct_difference": -2.38
+}
