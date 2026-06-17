@@ -103,11 +103,16 @@ class CVES:
         """
         Parse and validate LLM output.
         On schema failure: reprompt up to 3 times. Returns defaults on persistent failure.
+
+        Returns a dict with the decision fields plus:
+            _l1_parse_failure: bool — True if all retries failed (recoverable structural issue)
+            _l1_resolved_text: str  — the final raw text that was successfully parsed (or last attempt)
         """
         # Lazy import avoids circular dependency at module load time
         from engine.elite_agents_v3 import parse_decision, ROLE_DEFAULTS
 
         attempt_text = raw_text
+        last_text = raw_text
         for attempt in range(3):
             decision = parse_decision(attempt_text, agent_role)
 
@@ -115,6 +120,8 @@ class CVES:
                 try:
                     validated = AgentDecisionSchema(**decision)
                     result    = validated.model_dump()
+                    result["_l1_parse_failure"] = False
+                    result["_l1_resolved_text"] = attempt_text
                     _write_score({
                         "layer": "L1", "agent": agent_role,
                         "attempt": attempt, "status": "pass",
@@ -130,6 +137,7 @@ class CVES:
                         )
                         try:
                             attempt_text = invoke_fn(system_prompt, correction_msg)
+                            last_text = attempt_text
                             continue
                         except Exception:
                             break
@@ -145,11 +153,15 @@ class CVES:
                 bw = decision.get("budget_weight", 0.5)
                 ew = decision.get("ethnic_weights", [])
                 if 0.0 <= bw <= 1.0 and len(ew) == 8:
+                    decision["_l1_parse_failure"] = False
+                    decision["_l1_resolved_text"] = attempt_text
                     return decision
                 break
 
         default = ROLE_DEFAULTS.get(agent_role, ROLE_DEFAULTS["chancellor"]).copy()
         default["reason"] = "L1 parse failed — role default applied"
+        default["_l1_parse_failure"] = True
+        default["_l1_resolved_text"] = last_text
         return default
 
     # ── L2: Constitutional constraint ─────────────────────────────────────────

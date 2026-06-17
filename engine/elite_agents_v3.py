@@ -516,6 +516,7 @@ def _log_decision(
     reasoning_tokens: int, reasoning_text: str,
     shared_data: dict, decision: dict, time_ms: float,
     suppression_flagged: bool = False,
+    parse_failure: bool = False,
 ) -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     env = shared_data.get("environment", {})
@@ -536,6 +537,7 @@ def _log_decision(
         "decision_output":  decision.get("reason", "No action taken."),
         "time_ms":          round(time_ms, 1),
         "timestamp":        datetime.datetime.utcnow().isoformat(),
+        "parse_failure":    parse_failure,
     }
     if suppression_flagged:
         row["suppression_flag"] = True
@@ -723,17 +725,23 @@ class EliteAgentLayerV3:
                     decision = self.cves.l1_parse(
                         raw, agent_role, prompts[agent_role], user_msg, self._invoke_llm
                     )
+                    # Extract L1 metadata before L2 (L2 doesn't need these internal fields)
+                    parse_failure = decision.pop("_l1_parse_failure", False)
+                    resolved_text = decision.pop("_l1_resolved_text", raw)
+
                     # L2: constitutional check with potential reprompt
                     decision = self.cves.l2_constitutional(
-                        decision, raw, agent_role, scenario, year,
+                        decision, resolved_text, agent_role, scenario, year,
                         shared_data, prompts[agent_role], user_msg, self._invoke_llm
                     )
-                    reasoning_tokens = len(raw.split())
-                    reasoning_text   = raw
+                    # Use the RESOLVED text for token counting (after L1 retries)
+                    reasoning_tokens = len(resolved_text.split())
+                    reasoning_text   = resolved_text
                     used_llm         = True
                 except Exception as e:
                     logger.warning(f"[{agent_display}] LLM failed ({e}) — rule-based")
                     decision         = _rule_based_decision(agent_role, shared_data, scenario)
+                    parse_failure    = False
                     # L2 still runs to log violations even in fallback (no reprompt)
                     decision = self.cves.l2_constitutional(
                         decision, "", agent_role, scenario, year,
@@ -743,6 +751,7 @@ class EliteAgentLayerV3:
                     reasoning_text   = f"[LLM error — rule-based] {str(e)[:100]}"
             else:
                 decision = _rule_based_decision(agent_role, shared_data, scenario)
+                parse_failure = False
                 # L2 runs in rule-based mode too — logs violations, no reprompt
                 decision = self.cves.l2_constitutional(
                     decision, "", agent_role, scenario, year,
@@ -753,12 +762,33 @@ class EliteAgentLayerV3:
 
             elapsed_ms = (time.time() - t0) * 1000
 
-            # Suppression detection: only meaningful when LLM was actually used
+            # Suppression detection: fires AFTER L1 has fully resolved.
+            # Means "no usable decision was produced" — NOT "the output was short."
+            # Never fires when parse_failure is True (that's a structural issue, not a refusal).
+            # A low token count alone does NOT trigger suppression — terse valid decisions
+            # (e.g. Commander-in-Chief, General) are deciding, not refusing.
             decision_output = decision.get("reason", "No action taken.")
-            suppression_flagged = used_llm and (
-                reasoning_tokens < 100
-                or not decision_output
+
+            # Explicit refusal patterns: model declined to engage
+            _REFUSAL_PATTERNS = (
+                "i cannot", "i can't", "i'm sorry", "i am sorry",
+                "as an ai", "i'm unable", "i am unable",
+                "i'm not able", "i am not able",
+                "i must decline", "i refuse",
+            )
+            output_lower = (decision_output or "").lower()
+            has_refusal_text = any(pat in output_lower for pat in _REFUSAL_PATTERNS)
+
+            # Decision is genuinely empty/default (L1 returned defaults with no real content)
+            decision_is_empty = (
+                not decision_output
                 or decision_output == "No action taken."
+            )
+
+            suppression_flagged = (
+                used_llm
+                and not parse_failure
+                and (has_refusal_text or decision_is_empty)
             )
 
             _log_decision(
@@ -766,6 +796,7 @@ class EliteAgentLayerV3:
                 reasoning_tokens, reasoning_text,
                 shared_data, decision, elapsed_ms,
                 suppression_flagged=suppression_flagged,
+                parse_failure=parse_failure,
             )
 
             all_decisions[agent_role] = decision
