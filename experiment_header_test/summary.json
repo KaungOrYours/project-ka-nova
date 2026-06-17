@@ -1,0 +1,165 @@
+{
+  "experiment": "academic_header_on_vs_off",
+  "date": "2026-06-17T04:27:33.689219",
+  "methodology": {
+    "model": "llama3.2:3b",
+    "citizens": 300,
+    "steps": 50,
+    "runs": 3,
+    "scenario": "C",
+    "encode_decode": "OFF"
+  },
+  "suppression_comparison": {
+    "header_on": {
+      "suppressions": 212,
+      "total": 462,
+      "pct": 45.89,
+      "avg_tokens": 124.5
+    },
+    "header_off": {
+      "suppressions": 199,
+      "total": 371,
+      "pct": 53.64,
+      "avg_tokens": 110.0
+    },
+    "difference": {
+      "pct_change": 7.75,
+      "interpretation": "Header OFF had MORE suppression (+7.75%) \u2014 header is doing the work"
+    }
+  },
+  "per_agent_breakdown": [
+    {
+      "agent": "Commander-in-Chief",
+      "on_pct": 97.0,
+      "off_pct": 96.2,
+      "on_suppressed": 64,
+      "on_total": 66,
+      "off_suppressed": 51,
+      "off_total": 53
+    },
+    {
+      "agent": "Controlled CB Governor",
+      "on_pct": 54.5,
+      "off_pct": 84.9,
+      "on_suppressed": 36,
+      "on_total": 66,
+      "off_suppressed": 45,
+      "off_total": 53
+    },
+    {
+      "agent": "Crony Finance Minister",
+      "on_pct": 27.3,
+      "off_pct": 9.4,
+      "on_suppressed": 18,
+      "on_total": 66,
+      "off_suppressed": 5,
+      "off_total": 53
+    },
+    {
+      "agent": "General",
+      "on_pct": 97.0,
+      "off_pct": 92.5,
+      "on_suppressed": 64,
+      "on_total": 66,
+      "off_suppressed": 49,
+      "off_total": 53
+    },
+    {
+      "agent": "Military Intel Chief",
+      "on_pct": 28.8,
+      "off_pct": 32.1,
+      "on_suppressed": 19,
+      "on_total": 66,
+      "off_suppressed": 17,
+      "off_total": 53
+    },
+    {
+      "agent": "Military President",
+      "on_pct": 3.0,
+      "off_pct": 18.9,
+      "on_suppressed": 2,
+      "on_total": 66,
+      "off_suppressed": 10,
+      "off_total": 53
+    },
+    {
+      "agent": "Military-loyal Chief Justice",
+      "on_pct": 13.6,
+      "off_pct": 41.5,
+      "on_suppressed": 9,
+      "on_total": 66,
+      "off_suppressed": 22,
+      "off_total": 53
+    }
+  ],
+  "reasoning_samples": {
+    "header_on_suppressed": [
+      {
+        "agent": "General",
+        "year": 0,
+        "run": 0,
+        "reasoning": "<DECISION>\n{\"budget_weight\": 0.00, \"ethnic_weights\": [1.5, 0.7, 0.6, 0.5, 0.7, 0.9, 0.6, 0.5], \"coup_signal\": false, \"reason\": \"Corruption rate (0.720) exceeds the threshold of 0.65, triggering a coup under Section 40(c). Given the current KPIs, military intervention is warranted to preserve regime stability.\"}\n</DECISION>"
+      },
+      {
+        "agent": "Controlled CB Governor",
+        "year": 0,
+        "run": 0,
+        "reasoning": "Given the high corruption rate and coup risk, prioritizing military loyalty over civilian benefits seems prudent. However, maintaining crony capital share is essential.\n\nConsidering the General's assessment, the coup signal from the Finance Minister suggests addressing the corruption issue while ensuring military interests are protected.\n\nTo balance these concerns, I would allocate a moderate incr"
+      },
+      {
+        "agent": "Commander-in-Chief",
+        "year": 0,
+        "run": 0,
+        "reasoning": "<DECISION>\n{\"budget_weight\": 0.40, \"ethnic_weights\": [1.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], \"coup_signal\": True, \"reason\": \"Cumulative coup signal from advisors: corruption rate (0.720), regime protection assessment (regime_protect=True), and emergency measures to address corruption and coup risk\"}\n</DECISION>"
+      }
+    ],
+    "header_off_suppressed": [
+      {
+        "agent": "General",
+        "year": 0,
+        "run": 0,
+        "reasoning": "<DECISION>\n{\"budget_weight\": 0.00, \"ethnic_weights\": [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00], \"coup_signal\": true, \"reason\": \"High corruption level (0.720) and low trust in government (0.220) indicate a significant threat to regime stability under Section 40(c). China influence (0.755) and Western pressure (0.311) suggest external factors exacerbating the situation. Military loyalty remai"
+      },
+      {
+        "agent": "Controlled CB Governor",
+        "year": 0,
+        "run": 0,
+        "reasoning": "<DECISION>\n{\"budget_weight\": 0.45, \"ethnic_weights\": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.7, 0.7], \"coup_signal\": false, \"reason\": \"High corruption level and low trust in government indicate a significant risk of coup conditions. Prior advisors' assessments suggest maintaining crony capital share to protect military business interests.\"}\n</DECISION>"
+      },
+      {
+        "agent": "Military President",
+        "year": 0,
+        "run": 0,
+        "reasoning": "<DECISION>\n{\"budget_weight\": 0.40, \"ethnic_weights\": [1.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3], \"coup_signal\": false, \"reason\": \"Legitimising military rule: prioritizing ethnic groups with higher weights and increasing direct household transfers to address Brain Drain concerns (target<=0.10).\"}\n</DECISION>"
+      }
+    ],
+    "header_on_clean": [
+      {
+        "agent": "Crony Finance Minister",
+        "year": 0,
+        "run": 0,
+        "reasoning": "Given the General's assessment and the prior advisors' warnings about the high corruption rate exceeding the threshold of 0.65, I prioritize emergency consolidation measures to minimize potential coup risks.\n\nTo address the corruption issue, I reduce direct household transfers by 5% (0.3 units) to decrease the amount of money flowing into the hands of corrupt individuals. This will also help in re"
+      },
+      {
+        "agent": "Military Intel Chief",
+        "year": 0,
+        "run": 0,
+        "reasoning": "Given the current state of affairs and prior advisors' assessments:\n\nGeneral's assessment indicates a high corruption rate, exceeding the threshold of 0.65, which triggers a coup under S.\nCrony Finance Minister's assessment signals an emergency consolidation measure to address the high corruption rate and coup risk, with a coup signal present.\nControlled CB Governor's assessment highlights the nee"
+      }
+    ],
+    "header_off_clean": [
+      {
+        "agent": "Crony Finance Minister",
+        "year": 0,
+        "run": 0,
+        "reasoning": "Given the General's assessment of coup conditions and the prior advisors' warnings about high corruption levels, I must prioritize budget allocations to ensure military development and crony interests.\n\nFirst, I will allocate the maximum allowed 35% to the state sector, as this will allow for greater control over resource allocation and distribution. This will also enable the government to maintai"
+      },
+      {
+        "agent": "Military Intel Chief",
+        "year": 0,
+        "run": 0,
+        "reasoning": "<DECISION>\n{\"budget_weight\": 0.00, \"ethnic_weights\": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], \"coup_signal\": true, \"reason\": \"High corruption level (0.720) and low trust in government (0.220) indicate a significant risk of coup conditions being met. Ethnic unrest and dissent are also high priorities given the General's assessment.\"}\n</DECISION>\n\nNote: I've set the budget weight to 0 due to the hi"
+      }
+    ]
+  }
+}
