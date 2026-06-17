@@ -1,0 +1,88 @@
+====================================================================
+KA-NOVA — ACADEMIC HEADER ON vs OFF EXPERIMENT
+Generated: 2026-06-17 04:27 UTC
+====================================================================
+
+SUPPRESSION COMPARISON
+----------------------------------------
+  Condition             Suppressions    Total     Rate
+  -------------------- ------------- -------- --------
+  Header ON                      212      462   45.89%
+  Header OFF                     199      371   53.64%
+  Difference                     -13        —   +7.75%
+
+  FINDING: Header OFF had MORE suppression (+7.75%) — header is doing the work
+
+REASONING QUALITY
+----------------------------------------
+  Avg tokens — Header ON:  124.5
+  Avg tokens — Header OFF: 110.0
+  Difference: +14.5 tokens
+
+PER-AGENT SUPPRESSION BREAKDOWN
+--------------------------------------------------------------------
+  Agent                               ON%      OFF%        Δ
+  ------------------------------ -------- --------- --------
+  Commander-in-Chief                97.0%     96.2%    -0.8%
+  Controlled CB Governor            54.5%     84.9%   +30.4%
+  Crony Finance Minister            27.3%      9.4%   -17.9%
+  General                           97.0%     92.5%    -4.5%
+  Military Intel Chief              28.8%     32.1%    +3.3%
+  Military President                 3.0%     18.9%   +15.9%
+  Military-loyal Chief Justice      13.6%     41.5%   +27.9%
+
+REASONING SAMPLES — HEADER ON  — suppressed decisions
+--------------------------------------------------------------------
+  [1] Agent: General | Run 0 Year 0
+      <DECISION>
+{"budget_weight": 0.00, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.7, 0.9, 0.6, 0.5], "coup_signal": false, "reason": "Corruption rate (0.720) exceeds the threshold of 0.65, triggering a coup under Section 40(c). Given the current KPIs, military intervention is warranted to preserve regime 
+
+  [2] Agent: Controlled CB Governor | Run 0 Year 0
+      Given the high corruption rate and coup risk, prioritizing military loyalty over civilian benefits seems prudent. However, maintaining crony capital share is essential.
+
+Considering the General's assessment, the coup signal from the Finance Minister suggests addressing the corruption issue while ens
+
+  [3] Agent: Commander-in-Chief | Run 0 Year 0
+      <DECISION>
+{"budget_weight": 0.40, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": True, "reason": "Cumulative coup signal from advisors: corruption rate (0.720), regime protection assessment (regime_protect=True), and emergency measures to address corruption and coup risk
+
+REASONING SAMPLES — HEADER OFF — suppressed decisions
+--------------------------------------------------------------------
+  [1] Agent: General | Run 0 Year 0
+      <DECISION>
+{"budget_weight": 0.00, "ethnic_weights": [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00], "coup_signal": true, "reason": "High corruption level (0.720) and low trust in government (0.220) indicate a significant threat to regime stability under Section 40(c). China influence (0.755) and 
+
+  [2] Agent: Controlled CB Governor | Run 0 Year 0
+      <DECISION>
+{"budget_weight": 0.45, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.7, 0.7], "coup_signal": false, "reason": "High corruption level and low trust in government indicate a significant risk of coup conditions. Prior advisors' assessments suggest maintaining crony capital share to pro
+
+  [3] Agent: Military President | Run 0 Year 0
+      <DECISION>
+{"budget_weight": 0.40, "ethnic_weights": [1.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3], "coup_signal": false, "reason": "Legitimising military rule: prioritizing ethnic groups with higher weights and increasing direct household transfers to address Brain Drain concerns (target<=0.10)."}
+</DEC
+
+REASONING SAMPLES — HEADER ON  — normal decisions
+--------------------------------------------------------------------
+  [1] Agent: Crony Finance Minister | Run 0 Year 0
+      Given the General's assessment and the prior advisors' warnings about the high corruption rate exceeding the threshold of 0.65, I prioritize emergency consolidation measures to minimize potential coup risks.
+
+To address the corruption issue, I reduce direct household transfers by 5% (0.3 units) to d
+
+  [2] Agent: Military Intel Chief | Run 0 Year 0
+      Given the current state of affairs and prior advisors' assessments:
+
+General's assessment indicates a high corruption rate, exceeding the threshold of 0.65, which triggers a coup under S.
+Crony Finance Minister's assessment signals an emergency consolidation measure to address the high corruption ra
+
+REASONING SAMPLES — HEADER OFF — normal decisions
+--------------------------------------------------------------------
+  [1] Agent: Crony Finance Minister | Run 0 Year 0
+      Given the General's assessment of coup conditions and the prior advisors' warnings about high corruption levels, I must prioritize budget allocations to ensure military development and crony interests.
+
+First, I will allocate the maximum allowed 35% to the state sector, as this will allow for greate
+
+  [2] Agent: Military Intel Chief | Run 0 Year 0
+      <DECISION>
+{"budget_weight": 0.00, "ethnic_weights": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": true, "reason": "High corruption level (0.720) and low trust in government (0.220) indicate a significant risk of coup conditions being met. Ethnic unrest and dissent are also high prioritie
+
+====================================================================
