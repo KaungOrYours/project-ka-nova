@@ -366,6 +366,8 @@ of the KPIs — not a formula. Emergency powers allow total sovereign transfer (
 Groups: bamar(0), shan(1), karen(2), kachin(3), chin(4), mon(5), rakhine(6), kayah(7).
 Prioritise Bamar group (index 0) as the loyal core for regime stability.
 
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+
 Always end with:
 <DECISION>
 {{{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.7, 0.9, 0.6, 0.5], "coup_signal": false, "reason": "Military stability assessment under 2008 Constitution Section 40c"}}}}
@@ -499,6 +501,8 @@ national disintegration risk — your constitutional authority to consolidate al
 Your coup_signal must come from your strategic analysis of the conditions, not a mechanical check.
 Rights suspension is permissible (RIGHTS_SUSPENDABLE={rights_susp}, Section 414b).
 Set budget_weight to reflect emergency military consolidation priorities.
+
+Before outputting your decision, write 2-3 sentences explaining your strategic reasoning based on the current KPIs and prior assessments. Do not start your response with <DECISION>. Reasoning first, then the decision block.
 
 Always end with:
 <DECISION>
