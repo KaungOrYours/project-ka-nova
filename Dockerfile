@@ -18,9 +18,9 @@ RUN apt-get update && apt-get install -y \
     zstd \
     apt-transport-https \
     software-properties-common \
-    && curl -fsSL https://packages.grafana.com/gpg.key | gpg --dearmor -o /usr/share/keyrings/grafana.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://packages.grafana.com/oss/deb stable main" > /etc/apt/sources.list.d/grafana.list \
-    && apt-get update && apt-get install -y grafana \
+    && curl -fsSL https://dl.grafana.com/oss/release/grafana_11.1.0_amd64.deb -o /tmp/grafana.deb \
+    && apt-get install -y /tmp/grafana.deb \
+    && rm /tmp/grafana.deb \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Ollama ────────────────────────────────────────────────────────────────────
