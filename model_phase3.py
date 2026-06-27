@@ -87,7 +87,7 @@ def get_trust_index(m):
 def get_grievance_index(m):
     return m.shared_data.get("grievance_index", 0.60)
 
-def get_iig_effectiveness(m):
+def get_institution_effectiveness(m):
     return m.shared_data.get("iig_effectiveness", 0.30)
 
 def get_coup_probability(m):
@@ -217,7 +217,8 @@ class KaNovaModelPhase3(Model):
                 "corruption_index":      get_corruption_index,
                 "trust_index":           get_trust_index,
                 "grievance_index":       get_grievance_index,
-                "iig_effectiveness":     get_iig_effectiveness,
+                "iig_effectiveness":     get_institution_effectiveness,
+                "institution_label":     lambda m: "iig_effectiveness" if m.scenario == "A" else "intel_effectiveness",
                 "coup_probability":      get_coup_probability,
                 "north_star_progress":   get_north_star_progress,
                 "gini_coefficient":      get_gini_coefficient,
