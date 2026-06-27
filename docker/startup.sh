@@ -29,11 +29,13 @@ echo "Codebase ready."
 # ── 2. Write .env from pod environment variables ──────────────────────────────
 echo ""
 echo "[2/5] Writing .env..."
+GRAFANA_PUBLIC_URL="https://${RUNPOD_POD_ID}-3000.proxy.runpod.net"
 cat > /workspace/project-ka-nova/.env << EOF
 TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 WANDB_API_KEY=${WANDB_API_KEY}
-GRAFANA_URL=${GRAFANA_URL:-http://localhost:3000}
+GRAFANA_URL=${GRAFANA_PUBLIC_URL}
 ELITE_LLM_MODEL=${LLM_MODEL:-llama3.2:3b}
+RUNPOD_POD_ID=${RUNPOD_POD_ID}
 EOF
 echo ".env written."
 
@@ -56,7 +58,22 @@ python3 monitor/metrics_exporter.py &
 METRICS_PID=$!
 echo "Metrics exporter PID: $METRICS_PID"
 
-# ── 5. Start Telegram bot ─────────────────────────────────────────────────────
+# ── 5. Start Grafana ─────────────────────────────────────────────────────────
+echo ""
+echo "Starting Grafana on :3000..."
+service grafana-server start
+sleep 5
+echo "Grafana ready."
+
+# ── Send Grafana URL via Telegram ─────────────────────────────────────────────
+GRAFANA_PUBLIC_URL="https://${RUNPOD_POD_ID}-3000.proxy.runpod.net"
+curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+  -d chat_id=1096527379 \
+  -d text="Ka-Nova pod is up! Live Grafana dashboard: ${GRAFANA_PUBLIC_URL}" \
+  -d parse_mode="Markdown" > /dev/null
+echo "Grafana URL sent to Telegram."
+
+# ── 6. Start Telegram bot ─────────────────────────────────────────────────────
 echo ""
 echo "Starting Telegram monitor bot..."
 python3 monitor/telegram_bot.py &

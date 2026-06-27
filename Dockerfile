@@ -16,6 +16,11 @@ RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
     zstd \
+    apt-transport-https \
+    software-properties-common \
+    && curl -fsSL https://packages.grafana.com/gpg.key | gpg --dearmor -o /usr/share/keyrings/grafana.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://packages.grafana.com/oss/deb stable main" > /etc/apt/sources.list.d/grafana.list \
+    && apt-get update && apt-get install -y grafana \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Ollama ────────────────────────────────────────────────────────────────────
