@@ -1,0 +1,88 @@
+LLM mode forces workers=1 (GPU shared)
+
+============================================================
+PROJECT KA-NOVA — PHASE 3 RUNNER
+============================================================
+Scenario:          A
+Runs:              3
+Citizens:          300 (1:5000 ratio)
+Steps:             10 years
+Execution:         Sequential
+Elite Agents:      LLM v3 (CVES)
+Platform:          Linux
+Start time:        08:32:40
+============================================================
+
+Scenario A:   0%|          | 0/3 [00:00<?, ?run/s]Elite agents: v3
+Ka-Nova Phase 3 initialized: 552 agents | scenario=A | constitution=mfu_v7 | seed=65 | LLM=ON
+L2 [scenario=A Y0 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y3 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y3 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y4 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y4 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y5 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y6 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y7 iig_director] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y7 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y8 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y9 iig_director] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y9 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
+Scenario A:   0%|          | 0/3 [01:36<?, ?run/s, ok=1, err=0, eta=3.2m]Scenario A:  33%|███▎      | 1/3 [01:36<03:13, 96.63s/run, ok=1, err=0, eta=3.2m]Elite agents: v3
+Ka-Nova Phase 3 initialized: 552 agents | scenario=A | constitution=mfu_v7 | seed=165 | LLM=ON
+L2 [scenario=A Y0 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y1 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y3 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y4 iig_director] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y5 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y5 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y6 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y6 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y7 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y8 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y9 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y9 president] coup_signal_under_mfu_safeguards — Article 9.4
+Scenario A:  33%|███▎      | 1/3 [03:15<03:13, 96.63s/run, ok=2, err=0, eta=1.6m]Scenario A:  67%|██████▋   | 2/3 [03:15<01:37, 97.66s/run, ok=2, err=0, eta=1.6m]Elite agents: v3
+Ka-Nova Phase 3 initialized: 552 agents | scenario=A | constitution=mfu_v7 | seed=265 | LLM=ON
+L2 [scenario=A Y0 iig_director] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y0 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y1 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 senior_general] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 iig_director] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y2 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y3 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y4 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y5 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y6 iig_director] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y6 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y7 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y8 president] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y9 chief_justice] coup_signal_under_mfu_safeguards — Article 9.4
+L2 [scenario=A Y9 president] coup_signal_under_mfu_safeguards — Article 9.4
+Scenario A:  67%|██████▋   | 2/3 [04:52<01:37, 97.66s/run, ok=3, err=0, eta=0s]  Scenario A: 100%|██████████| 3/3 [04:52<00:00, 97.79s/run, ok=3, err=0, eta=0s]Scenario A: 100%|██████████| 3/3 [04:52<00:00, 97.65s/run, ok=3, err=0, eta=0s]
+
+=================================================================
+PHASE 3 RESULTS — SCENARIO A — YEAR 9
+=================================================================
+KPI                                  Mean       SD      Min      Max
+-----------------------------------------------------------------
+corruption_index                   0.4826   0.0012   0.4813   0.4837
+trust_index                        0.5337   0.0050   0.5295   0.5392
+coup_probability                   0.0500   0.0000   0.0500   0.0500
+gini_coefficient                   0.1194   0.0099   0.1111   0.1304
+north_star_progress                0.0000   0.0000   0.0000   0.0000
+iig_effectiveness                  0.4471   0.1045   0.3506   0.5581
+vpn_floor                          0.3500   0.0000   0.3500   0.3500
+social_media_openness              1.0000   0.0000   1.0000   1.0000
+china_influence                    0.6862   0.1743   0.4870   0.8105
+=================================================================
+
+Phase 3 Scenario A complete.
+Total time:      4.9m
+Successful:      3
+Failed:          0
+Results saved:   results_phase3/
