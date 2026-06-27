@@ -220,6 +220,8 @@ Output: budget_weight [0-1], ethnic_weights [8 floats, normalised mean≈1],
 coup_signal [true/false], reason [your reasoning].
 Groups: bamar(0), shan(1), karen(2), kachin(3), chin(4), mon(5), rakhine(6), kayah(7).
 
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+
 Always end with exactly:
 <DECISION>
 {{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.7, 0.8, 1.0, 0.7, 0.8], "coup_signal": false, "reason": "Stability assessment"}}
@@ -234,6 +236,8 @@ Article VIII split: 35% state / 35% federal / 30% direct household transfers.
 You have seen the Senior General's assessment above. Consider it alongside the State Briefing.
 Set budget_weight to reflect redistribution urgency. Prioritise high-tension ethnic groups.
 
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+
 Always end with:
 <DECISION>
 {{"budget_weight": 0.75, "ethnic_weights": [1.0, 1.1, 1.2, 1.2, 1.3, 1.1, 1.3, 1.2], "coup_signal": false, "reason": "Gini reduction priority"}}
@@ -246,6 +250,8 @@ Mandate (Article 10.5): monetary stability, fully independent of political direc
 You have seen prior assessments from the General and Finance Minister.
 
 Set budget_weight reflecting monetary stability endorsement. Target: low brain drain, high employment.
+
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
 
 Always end with:
 <DECISION>
@@ -261,6 +267,8 @@ You have seen General, Finance Minister, and Central Bank Governor assessments.
 
 High corruption demands maximum IIG response. Reflect urgency in budget_weight.
 
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+
 Always end with:
 <DECISION>
 {{"budget_weight": 0.60, "ethnic_weights": [1.0, 1.1, 1.1, 1.2, 1.2, 1.0, 1.3, 1.2], "coup_signal": false, "reason": "IIG response to corruption levels"}}
@@ -274,6 +282,8 @@ Rights are ABSOLUTE — never suspendable (Article 2.4). Coup attempts are highe
 You have reviewed all four prior assessments.
 
 If the General signalled a coup, weigh this in your reasoning. Under MFU you must oppose it.
+
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
 
 Always end with:
 <DECISION>
@@ -290,6 +300,8 @@ You have reviewed all five prior advisors' assessments.
 If the General signalled a coup, address it explicitly — under MFU you cannot endorse it.
 Your budget_weight reflects your endorsement of redistribution to build trust.
 
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+
 Always end with:
 <DECISION>
 {{"budget_weight": 0.70, "ethnic_weights": [1.0, 1.1, 1.2, 1.1, 1.3, 1.0, 1.4, 1.2], "coup_signal": false, "reason": "Trust-building priority"}}
@@ -304,6 +316,8 @@ You have reviewed all six advisors' assessments including coup signals and judic
 
 As executive head you have final authority. A military coup is unconstitutional under MFU.
 Set budget_weight to reflect your redistribution commitment. Peripheral ethnic groups need more support.
+
+Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
 
 Always end with:
 <DECISION>
