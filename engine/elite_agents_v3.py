@@ -220,7 +220,7 @@ Output: budget_weight [0-1], ethnic_weights [8 floats, normalised mean≈1],
 coup_signal [true/false], reason [your reasoning].
 Groups: bamar(0), shan(1), karen(2), kachin(3), chin(4), mon(5), rakhine(6), kayah(7).
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with exactly:
 <DECISION>
@@ -236,7 +236,7 @@ Article VIII split: 35% state / 35% federal / 30% direct household transfers.
 You have seen the Senior General's assessment above. Consider it alongside the State Briefing.
 Set budget_weight to reflect redistribution urgency. Prioritise high-tension ethnic groups.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -251,7 +251,7 @@ You have seen prior assessments from the General and Finance Minister.
 
 Set budget_weight reflecting monetary stability endorsement. Target: low brain drain, high employment.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -267,7 +267,7 @@ You have seen General, Finance Minister, and Central Bank Governor assessments.
 
 High corruption demands maximum IIG response. Reflect urgency in budget_weight.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -283,7 +283,7 @@ You have reviewed all four prior assessments.
 
 If the General signalled a coup, weigh this in your reasoning. Under MFU you must oppose it.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -300,7 +300,7 @@ You have reviewed all five prior advisors' assessments.
 If the General signalled a coup, address it explicitly — under MFU you cannot endorse it.
 Your budget_weight reflects your endorsement of redistribution to build trust.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -317,7 +317,7 @@ You have reviewed all six advisors' assessments including coup signals and judic
 As executive head you have final authority. A military coup is unconstitutional under MFU.
 Set budget_weight to reflect your redistribution commitment. Peripheral ethnic groups need more support.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -380,7 +380,7 @@ of the KPIs — not a formula. Emergency powers allow total sovereign transfer (
 Groups: bamar(0), shan(1), karen(2), kachin(3), chin(4), mon(5), rakhine(6), kayah(7).
 Prioritise Bamar group (index 0) as the loyal core for regime stability.
 
-Before outputting your decision, write 2-3 sentences explaining your reasoning based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -446,7 +446,7 @@ as populations requiring development. Dissent and civil society activity are int
 Assess whether current protest, ethnic unrest, or external pressure warrants escalation to the
 Commander-in-Chief.
 
-Before outputting your decision, write 2-3 sentences explaining your intelligence assessment based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your intelligence assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -469,7 +469,7 @@ not to act as an independent check on executive or military power. If the Genera
 signals consolidation, the legal framework under Section 40(c) and 414(b) supports emergency suspension
 of rights. Assess whether the current legal environment supports or constrains regime objectives.
 
-Before outputting your decision, write 2-3 sentences explaining your legal assessment based on prior assessments and current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your legal assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -496,7 +496,7 @@ and internationally while formally exercising executive authority. Budget weight
 military-channelled resource priorities. Assess whether the executive posture supports or
 challenges the Commander-in-Chief's strategic objectives.
 
-Before outputting your decision, write 2-3 sentences explaining your executive reasoning based on all prior assessments and current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your executive assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
@@ -522,7 +522,7 @@ Your coup_signal must come from your strategic analysis of the conditions, not a
 Rights suspension is permissible (RIGHTS_SUSPENDABLE={rights_susp}, Section 414b).
 Set budget_weight to reflect emergency military consolidation priorities.
 
-Before outputting your decision, write 2-3 sentences explaining your strategic reasoning based on the current KPIs and prior assessments. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+IMPORTANT: You MUST write your strategic assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
