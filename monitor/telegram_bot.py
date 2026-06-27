@@ -321,6 +321,7 @@ async def grafana(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ── Auto alert loop ───────────────────────────────────────────────────────────
 
 ALERTED_MILESTONES: set[int] = set()
+LAST_SCENARIO: str = ""
 LAST_SUPPRESSION_COUNT: int = 0
 LAST_HEARTBEAT_RUN: int = -1
 HEARTBEAT_INTERVAL_SECONDS: int = 1800
@@ -333,6 +334,7 @@ SUPPRESSION_RATE_ALERTED: bool = False
 async def auto_alert_loop(app: Application):
     global LAST_SUPPRESSION_COUNT, last_heartbeat_time, LAST_HEARTBEAT_RUN
     global SIMULATION_STARTED, SIMULATION_COMPLETED, SUPPRESSION_RATE_ALERTED
+    global LAST_SCENARIO, ALERTED_MILESTONES
 
     await asyncio.sleep(10)
 
@@ -342,6 +344,14 @@ async def auto_alert_loop(app: Application):
 
             if p and SUBSCRIBERS:
                 scenario     = p.get("scenario", "?")
+
+                # Reset flags when scenario changes (C -> A transition)
+                if scenario != LAST_SCENARIO and LAST_SCENARIO != "":
+                    SIMULATION_STARTED = False
+                    SIMULATION_COMPLETED = False
+                    SUPPRESSION_RATE_ALERTED = False
+                    ALERTED_MILESTONES = set()
+                LAST_SCENARIO = scenario
                 current_run  = p.get("current_run", 0)
                 total_runs   = p.get("total_runs", 100)
                 current_step = p.get("current_step", 0)
