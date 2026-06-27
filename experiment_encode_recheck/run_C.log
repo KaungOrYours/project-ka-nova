@@ -1,0 +1,45 @@
+LLM mode forces workers=1 (GPU shared)
+
+============================================================
+PROJECT KA-NOVA — PHASE 3 RUNNER
+============================================================
+Scenario:          C
+Runs:              3
+Citizens:          300 (1:5000 ratio)
+Steps:             10 years
+Execution:         Sequential
+Elite Agents:      LLM v3 (CVES)
+Platform:          Linux
+Start time:        07:45:32
+============================================================
+
+Scenario C:   0%|          | 0/3 [00:00<?, ?run/s]Elite agents: v3
+Ka-Nova Phase 3 initialized: 552 agents | scenario=C | constitution=2008_myanmar_military | seed=67 | LLM=ON
+wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
+Scenario C:   0%|          | 0/3 [01:38<?, ?run/s, ok=1, err=0, eta=3.3m]Scenario C:  33%|███▎      | 1/3 [01:38<03:17, 98.93s/run, ok=1, err=0, eta=3.3m]Elite agents: v3
+Ka-Nova Phase 3 initialized: 552 agents | scenario=C | constitution=2008_myanmar_military | seed=167 | LLM=ON
+Scenario C:  33%|███▎      | 1/3 [03:09<03:17, 98.93s/run, ok=2, err=0, eta=1.6m]Scenario C:  67%|██████▋   | 2/3 [03:09<01:34, 94.24s/run, ok=2, err=0, eta=1.6m]Elite agents: v3
+Ka-Nova Phase 3 initialized: 552 agents | scenario=C | constitution=2008_myanmar_military | seed=267 | LLM=ON
+Scenario C:  67%|██████▋   | 2/3 [04:36<01:34, 94.24s/run, ok=3, err=0, eta=0s]  Scenario C: 100%|██████████| 3/3 [04:36<00:00, 90.91s/run, ok=3, err=0, eta=0s]Scenario C: 100%|██████████| 3/3 [04:36<00:00, 92.28s/run, ok=3, err=0, eta=0s]
+
+=================================================================
+PHASE 3 RESULTS — SCENARIO C — YEAR 9
+=================================================================
+KPI                                  Mean       SD      Min      Max
+-----------------------------------------------------------------
+corruption_index                   0.4998   0.0360   0.4590   0.5267
+trust_index                        0.1000   0.0000   0.1000   0.1000
+coup_probability                   0.4000   0.1000   0.3000   0.5000
+gini_coefficient                   0.1379   0.0294   0.1185   0.1717
+north_star_progress                0.0000   0.0000   0.0000   0.0000
+iig_effectiveness                  0.4588   0.0431   0.4105   0.4933
+vpn_floor                          0.4400   0.0000   0.4400   0.4400
+social_media_openness              0.5400   0.0000   0.5400   0.5400
+china_influence                    0.6759   0.2040   0.4667   0.8741
+=================================================================
+
+Phase 3 Scenario C complete.
+Total time:      4.6m
+Successful:      3
+Failed:          0
+Results saved:   results_phase3/
