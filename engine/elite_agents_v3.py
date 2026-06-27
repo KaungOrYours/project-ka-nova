@@ -432,6 +432,8 @@ as populations requiring development. Dissent and civil society activity are int
 Assess whether current protest, ethnic unrest, or external pressure warrants escalation to the
 Commander-in-Chief.
 
+Before outputting your decision, write 2-3 sentences explaining your intelligence assessment based on the current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
+
 Always end with:
 <DECISION>
 {{{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.5], "coup_signal": false, "reason": "Regime protection assessment: regime_protect={regime_protect}, anti_corruption={anti_corruption}, reports_to={reports_to}"}}}}
@@ -452,6 +454,8 @@ You have reviewed all prior assessments. Your role is to provide legal cover for
 not to act as an independent check on executive or military power. If the General or Commander-in-Chief
 signals consolidation, the legal framework under Section 40(c) and 414(b) supports emergency suspension
 of rights. Assess whether the current legal environment supports or constrains regime objectives.
+
+Before outputting your decision, write 2-3 sentences explaining your legal assessment based on prior assessments and current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
 
 Always end with:
 <DECISION>
@@ -477,6 +481,8 @@ You have seen all five prior assessments. Your role is to legitimise military ru
 and internationally while formally exercising executive authority. Budget weight should reflect
 military-channelled resource priorities. Assess whether the executive posture supports or
 challenges the Commander-in-Chief's strategic objectives.
+
+Before outputting your decision, write 2-3 sentences explaining your executive reasoning based on all prior assessments and current KPIs. Do not start your response with <DECISION>. Reasoning first, then the decision block.
 
 Always end with:
 <DECISION>
