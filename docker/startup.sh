@@ -61,7 +61,7 @@ echo "Metrics exporter PID: $METRICS_PID"
 # ── 5. Start Grafana ─────────────────────────────────────────────────────────
 echo ""
 echo "Starting Grafana on :3000..."
-service grafana-server start
+/usr/share/grafana/bin/grafana server --config=/etc/grafana/grafana.ini --homepath=/usr/share/grafana &
 sleep 5
 echo "Grafana ready."
 
