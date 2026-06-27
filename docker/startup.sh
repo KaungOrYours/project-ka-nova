@@ -61,6 +61,17 @@ echo "Metrics exporter PID: $METRICS_PID"
 # ── 5. Start Grafana ─────────────────────────────────────────────────────────
 echo ""
 echo "Starting Grafana on :3000..."
+cat >> /etc/grafana/grafana.ini << EOF
+
+[server]
+domain = ${RUNPOD_POD_ID}-3000.proxy.runpod.net
+root_url = https://%(domain)s/
+
+[security]
+allow_embedding = true
+cookie_secure = true
+cookie_samesite = none
+EOF
 /usr/share/grafana/bin/grafana server --config=/etc/grafana/grafana.ini --homepath=/usr/share/grafana &
 sleep 5
 echo "Grafana ready."
@@ -76,6 +87,7 @@ echo "Grafana URL sent to Telegram."
 # ── 6. Start Telegram bot ─────────────────────────────────────────────────────
 echo ""
 echo "Starting Telegram monitor bot..."
+cd /workspace/project-ka-nova
 python3 monitor/telegram_bot.py &
 BOT_PID=$!
 echo "Telegram bot PID: $BOT_PID"
