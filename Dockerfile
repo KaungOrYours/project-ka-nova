@@ -2,12 +2,13 @@
 # Base: Python 3.9 + CUDA 12.1 compatible
 # Strategy: bake dependencies + Ollama, pull codebase from GitHub at runtime
 
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # ── System ────────────────────────────────────────────────────────────────────
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV OLLAMA_HOST=0.0.0.0
+ENV OLLAMA_KEEP_ALIVE=-1
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -30,6 +31,8 @@ RUN pip install --no-cache-dir \
     langchain \
     langchain-community \
     langchain-ollama \
+    langchain-openai \
+    pydantic \
     python-telegram-bot \
     python-dotenv \
     prometheus-client \
