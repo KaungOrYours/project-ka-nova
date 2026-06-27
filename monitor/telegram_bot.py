@@ -237,6 +237,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/grafana     — live dashboard link\n"
         "/help        — all commands\n\n"
         "Auto alerts: simulation start, 20/40/60/80/100%, completion, crash"
+        f"
+Live Grafana dashboard: {GRAFANA_URL}"
     )
 
 
