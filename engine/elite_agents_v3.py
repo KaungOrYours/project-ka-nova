@@ -403,6 +403,8 @@ crony share and military development budget. Ethnic minority development spendin
 minimal. If the General signals coup conditions, your budget posture should reflect emergency
 consolidation rather than civilian economic expansion.
 
+IMPORTANT: You MUST write your budget assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
+
 Always end with:
 <DECISION>
 {{{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.7, 0.8, 0.9, 0.7, 0.6], "coup_signal": false, "reason": "Military-aligned resource allocation: crony_share={crony_share}, state_share={state_share}"}}}}
@@ -423,6 +425,8 @@ Constitutional constraints:
 You have reviewed the General's and Finance Minister's assessments. Monetary policy should support
 military-aligned fiscal expansion rather than inflation control for civilian benefit. If corruption
 is high, this reflects extraction, not a systemic failure requiring intervention.
+
+IMPORTANT: You MUST write your monetary assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
