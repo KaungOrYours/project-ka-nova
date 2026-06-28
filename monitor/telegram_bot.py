@@ -337,8 +337,7 @@ async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     recent = decisions[-n:]
     scen_label = f"Scenario {scenario}" if scenario else "All"
     agent_label = f" | filter: {agent_filter}" if agent_filter else ""
-    lines = [f"*Reasoning — {scen_label}{agent_label} (last {len(recent)})*
-{'─' * 32}"]
+    lines = [f"*Reasoning — {scen_label}{agent_label} (last {len(recent)})*\n{'─' * 32}"]
     for d in recent:
         text = d.get("reasoning_text", "")[:300]
         coup = d.get("decision_output", {}).get("coup_signal", "?") if isinstance(d.get("decision_output"), dict) else "?"
