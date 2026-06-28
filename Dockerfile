@@ -50,6 +50,8 @@ WORKDIR /workspace
 COPY --from=grafana /usr/share/grafana /usr/share/grafana
 COPY --from=grafana /etc/grafana /etc/grafana
 RUN mkdir -p /var/lib/grafana /var/log/grafana
+COPY docker/grafana/datasources /etc/grafana/provisioning/datasources
+COPY docker/grafana/dashboards /etc/grafana/provisioning/dashboards
 
 # ── Startup script ────────────────────────────────────────────────────────────
 COPY docker/startup.sh /startup.sh
