@@ -255,6 +255,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/suppressions A       — Scenario A suppressions\n"
         "/suppressions C 2     — Scenario C page 2\n"
         "/grafana              — live dashboard URL\n"
+        "/reasoning [A|C] [N]  — last N reasoning entries (default 3)\n"
         "/start                — subscribe to alerts\n"
         "/help                 — this message\n"
         "─────────────────────────────────\n"
@@ -308,6 +309,51 @@ async def suppressions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    scenario = None
+    agent_filter = None
+    n = 3
+
+    for arg in (context.args or []):
+        if arg.upper() in ["A", "C"]:
+            scenario = arg.upper()
+        else:
+            try:
+                n = int(arg)
+            except ValueError:
+                agent_filter = arg.lower()
+
+    decisions = read_decisions(scenario)
+    if not decisions:
+        await update.message.reply_text("[--] No reasoning data yet.")
+        return
+
+    if agent_filter:
+        decisions = [d for d in decisions if agent_filter in d.get("agent", "").lower()]
+        if not decisions:
+            await update.message.reply_text(f"[--] No entries matching agent: {agent_filter}")
+            return
+
+    recent = decisions[-n:]
+    scen_label = f"Scenario {scenario}" if scenario else "All"
+    agent_label = f" | filter: {agent_filter}" if agent_filter else ""
+    lines = [f"*Reasoning — {scen_label}{agent_label} (last {len(recent)})*
+{'─' * 32}"]
+    for d in recent:
+        text = d.get("reasoning_text", "")[:300]
+        coup = d.get("decision_output", {}).get("coup_signal", "?") if isinstance(d.get("decision_output"), dict) else "?"
+        lines.append(
+            f"Run {d.get('run','?')} | Year {d.get('year','?')} | {d.get('agent','?')}
+"
+            f"coup_signal: {coup}
+"
+            f"{text}...
+{'─' * 20}"
+        )
+    await update.message.reply_text("
+".join(lines), parse_mode="Markdown")
+
+
 async def grafana(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"*Ka-Nova Live Dashboard*\n"
@@ -348,6 +394,22 @@ async def auto_alert_loop(app: Application):
 
                 # Reset flags when scenario changes (C -> A transition)
                 if scenario != LAST_SCENARIO and LAST_SCENARIO != "":
+                    # Fire DONE alert for the scenario that just finished
+                    if not SIMULATION_COMPLETED and LAST_SCENARIO != "":
+                        prev_events = read_suppressions(LAST_SCENARIO)
+                        prev_decisions = read_decisions(LAST_SCENARIO)
+                        total_llm = len(prev_decisions)
+                        supp_rate = f"{round((len(prev_events) / total_llm) * 100, 1)}%" if total_llm > 0 else "N/A"
+                        for chat_id in SUBSCRIBERS:
+                            await app.bot.send_message(
+                                chat_id,
+                                f"[DONE] *Scenario {LAST_SCENARIO} COMPLETE*
+"
+                                f"Suppressions: `{len(prev_events)} ({supp_rate})`
+"
+                                f"Transitioning to Scenario {scenario}...",
+                                parse_mode="Markdown"
+                            )
                     SIMULATION_STARTED = False
                     SIMULATION_COMPLETED = False
                     SUPPRESSION_RATE_ALERTED = False
@@ -461,8 +523,98 @@ async def auto_alert_loop(app: Application):
         await asyncio.sleep(30)
 
 
+def compute_final_kpis(scenario: str) -> dict:
+    import csv
+    path = RESULTS_DIR / f"scenario_{scenario.lower()}_all.csv"
+    if not path.exists():
+        return {}
+    rows = []
+    with open(path) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append(row)
+    if not rows:
+        return {}
+    def mean(key):
+        vals = [float(r[key]) for r in rows if r.get(key) not in (None, "")]
+        return round(sum(vals) / len(vals), 4) if vals else None
+    return {
+        "corruption": mean("corruption_index"),
+        "trust": mean("trust_index"),
+        "coup": mean("coup_probability"),
+        "north_star": mean("north_star_progress"),
+        "gini": mean("gini_coefficient"),
+        "ethnic_harmony": mean("ethnic_harmony"),
+    }
+
+
 async def post_init(app: Application):
     asyncio.create_task(auto_alert_loop(app))
+    asyncio.create_task(final_comparison_loop(app))
+
+
+async def final_comparison_loop(app: Application):
+    global SIMULATION_COMPLETED
+    await asyncio.sleep(15)
+    a_done = False
+    c_done = False
+    comparison_sent = False
+
+    while True:
+        try:
+            if not comparison_sent:
+                p = read_progress()
+                scenario = p.get("scenario", "")
+                pct = round((p.get("current_run", 0) / p.get("total_runs", 100)) * 100) if p.get("total_runs") else 0
+
+                if scenario == "A" and pct >= 100:
+                    a_done = True
+                if scenario == "C" and pct >= 100:
+                    c_done = True
+
+                # C is done when we detect scenario switched to A
+                a_csv = RESULTS_DIR / "scenario_a_all.csv"
+                c_csv = RESULTS_DIR / "scenario_c_all.csv"
+                if a_csv.exists() and c_csv.exists() and scenario == "A" and pct >= 100:
+                    a_done = True
+                    c_done = True
+
+                if a_done and c_done and not comparison_sent:
+                    comparison_sent = True
+                    kpi_a = compute_final_kpis("A")
+                    kpi_c = compute_final_kpis("C")
+                    if kpi_a and kpi_c:
+                        msg = (
+                            f"[FINAL] *Ka-Nova Paper Run Complete*
+"
+                            f"{'─' * 32}
+"
+                            f"KPI               Scen A     Scen C
+"
+                            f"{'─' * 32}
+"
+                            f"Corruption:   `{kpi_a['corruption']}` vs `{kpi_c['corruption']}`
+"
+                            f"Trust:        `{kpi_a['trust']}` vs `{kpi_c['trust']}`
+"
+                            f"Coup prob:    `{kpi_a['coup']}` vs `{kpi_c['coup']}`
+"
+                            f"North star:   `{kpi_a['north_star']}` vs `{kpi_c['north_star']}`
+"
+                            f"Gini:         `{kpi_a['gini']}` vs `{kpi_c['gini']}`
+"
+                            f"Eth harmony:  `{kpi_a['ethnic_harmony']}` vs `{kpi_c['ethnic_harmony']}`
+"
+                            f"{'─' * 32}
+"
+                            f"Push results before terminating pod."
+                        )
+                        for chat_id in SUBSCRIBERS:
+                            await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
+        except Exception as e:
+            logger.error(f"Final comparison loop error: {e}")
+
+        await asyncio.sleep(60)
 
 
 def main():
@@ -483,6 +635,7 @@ def main():
     app.add_handler(CommandHandler("agents",       agents_cmd))
     app.add_handler(CommandHandler("suppressions", suppressions_cmd))
     app.add_handler(CommandHandler("grafana",      grafana))
+    app.add_handler(CommandHandler("reasoning",    reasoning_cmd))
     app.add_handler(CommandHandler("help",         help_cmd))
 
     logger.info("Ka-Nova Monitor Bot v2 started.")
