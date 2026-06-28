@@ -22,3 +22,4 @@ logs/
 *.pyc
 
 .env.pod
+results_phase3/progress.json
