@@ -5,87 +5,6 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 0, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": true, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 1, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.1032, "consensus_score": 0.9799, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 2, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.1151, "consensus_score": 0.9772, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 3, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0547, "consensus_score": 0.9883, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 4, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 5, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0893, "consensus_score": 0.9839, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 6, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 7, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 8, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 9, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6286, "bw_std": 0.1485, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"run": 0, "year": 9, "layer": "L4", "outlier_flag": true, "current_budget_impact": 0.0943, "hist_mean": 0.0961, "hist_std": 0.0005, "z_score": 3.5355, "l4_mode": "flag", "action": "flagged"}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
 {"run": 0, "year": 0, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": true, "lijphart_flag": false}
 {"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
@@ -94,87 +13,7 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 1, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6286, "bw_std": 0.1385, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 2, "scenario": "A", "layer": "L3", "negotiation_triggered": true, "outlier_count": 1, "bw_mean": 0.6071, "bw_std": 0.1208, "inclusiveness_score": 1.1151, "consensus_score": 0.9772, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 3, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 4, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 5, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 6, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0833, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 7, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 8, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 9, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 0, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1522, "inclusiveness_score": 1.1151, "consensus_score": 0.9772, "ar_divergence_flag": true, "lijphart_flag": false}
-{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
-{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 1, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6143, "bw_std": 0.1407, "inclusiveness_score": 1.0986, "consensus_score": 0.9824, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 1, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.5, "bw_std": 0.0964, "inclusiveness_score": 1.1329, "consensus_score": 0.9727, "ar_divergence_flag": false, "lijphart_flag": false}
 {"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
@@ -190,8 +29,7 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 3, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.5857, "bw_std": 0.1827, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
-{"run": 0, "year": 3, "layer": "L4", "outlier_flag": true, "current_budget_impact": 0.0879, "hist_mean": 0.095, "hist_std": 0.002, "z_score": 3.5355, "l4_mode": "flag", "action": "flagged"}
+{"run": 0, "year": 3, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.5929, "bw_std": 0.1522, "inclusiveness_score": 1.1111, "consensus_score": 0.981, "ar_divergence_flag": false, "lijphart_flag": false}
 {"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
@@ -199,7 +37,7 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 4, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 4, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0913, "consensus_score": 0.9846, "ar_divergence_flag": false, "lijphart_flag": false}
 {"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
@@ -223,7 +61,7 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 7, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.5929, "bw_std": 0.105, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 7, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
 {"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
@@ -231,7 +69,7 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 8, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6214, "bw_std": 0.1508, "inclusiveness_score": 1.0913, "consensus_score": 0.9834, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 8, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.1187, "consensus_score": 0.9782, "ar_divergence_flag": false, "lijphart_flag": false}
 {"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
@@ -239,4 +77,123 @@
 {"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
 {"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
-{"run": 0, "year": 9, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6214, "bw_std": 0.1578, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 9, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6714, "bw_std": 0.1436, "inclusiveness_score": 1.129, "consensus_score": 0.9752, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 0, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0873, "consensus_score": 0.9846, "ar_divergence_flag": true, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 1, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 2, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 3, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6357, "bw_std": 0.1481, "inclusiveness_score": 1.0933, "consensus_score": 0.9847, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 4, "scenario": "A", "layer": "L3", "negotiation_triggered": true, "outlier_count": 1, "bw_mean": 0.5786, "bw_std": 0.2343, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 4, "layer": "L4", "outlier_flag": true, "current_budget_impact": 0.0895, "hist_mean": 0.0956, "hist_std": 0.0005, "z_score": 13.1813, "l4_mode": "flag", "action": "flagged"}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 5, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 6, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.7143, "bw_std": 0.1767, "inclusiveness_score": 1.1627, "consensus_score": 0.9706, "ar_divergence_flag": false, "lijphart_flag": false}
+{"run": 0, "year": 6, "layer": "L4", "outlier_flag": true, "current_budget_impact": 0.1071, "hist_mean": 0.0947, "hist_std": 0.0024, "z_score": 5.195, "l4_mode": "flag", "action": "flagged"}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 7, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 8, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.1032, "consensus_score": 0.9799, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 9, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.5929, "bw_std": 0.1498, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 0, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.65, "bw_std": 0.1439, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": true, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 1, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 2, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.65, "bw_std": 0.1389, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "president", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chancellor", "attempt": 0, "status": "pass"}
+{"run": 0, "year": 3, "scenario": "A", "layer": "L3", "negotiation_triggered": false, "outlier_count": 0, "bw_mean": 0.6429, "bw_std": 0.1348, "inclusiveness_score": 1.0873, "consensus_score": 0.9842, "ar_divergence_flag": false, "lijphart_flag": false}
+{"layer": "L1", "agent": "senior_general", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "finance_minister", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "central_bank_governor", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "iig_director", "attempt": 0, "status": "pass"}
+{"layer": "L1", "agent": "chief_justice", "attempt": 0, "status": "pass"}
