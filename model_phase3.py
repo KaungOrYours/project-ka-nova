@@ -510,6 +510,11 @@ class KaNovaModelPhase3(Model):
                 state["corruption"] - (iig * 0.005), 0.0, 1.0
             ))
 
+        # Aggregate state corruption back into shared_data
+        if self.states:
+            avg_corruption = sum(s["corruption"] for s in self.states.values()) / len(self.states)
+            self.shared_data["corruption_index"] = round(float(avg_corruption), 4)
+
     def get_results(self):
         """Return results DataFrame — same interface as KaNovaModel."""
         return self.datacollector.get_model_vars_dataframe().reset_index()
