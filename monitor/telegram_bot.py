@@ -255,6 +255,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/suppressions A       — Scenario A suppressions\n"
         "/suppressions C 2     — Scenario C page 2\n"
         "/grafana              — live dashboard URL\n"
+        "/reasoning [A|C] [N]  — last N reasoning entries (default 3)\n"
         "/start                — subscribe to alerts\n"
         "/help                 — this message\n"
         "─────────────────────────────────\n"
@@ -427,18 +428,18 @@ async def auto_alert_loop(app: Application):
                 for milestone in [20, 40, 60, 80, 100]:
                     if pct >= milestone and milestone not in ALERTED_MILESTONES:
                         ALERTED_MILESTONES.add(milestone)
+                        ALERTED_MILESTONES.add(milestone)
+                        snapshot = dict(p)
+                        snapshot['current_run'] = min(round(milestone * p.get('total_runs', 100) / 100), p.get('total_runs', 100))
                         for chat_id in SUBSCRIBERS:
                             await app.bot.send_message(
                                 chat_id,
                                 f"[MILESTONE] *{milestone}% complete — Scenario {scenario}*\n\n"
-                                + format_status(p),
+                                + format_status(snapshot),
                                 parse_mode="Markdown"
                             )
 
-                # Alert 3 — Simulation complete
-                if pct >= 100 and not SIMULATION_COMPLETED:
-                    SIMULATION_COMPLETED = True
-                    events = read_suppressions(scenario)
+
                     decisions = read_decisions(scenario)
                     total_llm = len(decisions)
                     supp_rate = f"{round((len(events) / total_llm) * 100, 1)}%" if total_llm > 0 else "N/A"
