@@ -506,9 +506,16 @@ class KaNovaModelPhase3(Model):
                 (fdi * 0.005),
                 -0.10, 0.15
             ))
-            state["corruption"] = float(np.clip(
-                state["corruption"] - (iig * 0.005), 0.0, 1.0
-            ))
+            if self.scenario == "A":
+                # MFU: IIG actively reduces corruption
+                state["corruption"] = float(np.clip(
+                    state["corruption"] - (iig * 0.02), 0.0, 1.0
+                ))
+            else:
+                # 2008 constitution: no accountability, corruption drifts up
+                state["corruption"] = float(np.clip(
+                    state["corruption"] + 0.01, 0.0, 1.0
+                ))
 
         # Aggregate state corruption back into shared_data
         if self.states:
