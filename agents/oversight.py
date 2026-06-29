@@ -503,9 +503,10 @@ class IIGDirector(IIGAgent):
         ]
         if all_iig:
             total_solved = sum(a.cases_solved for a in all_iig)
-            total_opened = sum(a.cases_opened for a in all_iig) or 1
-            effectiveness = total_solved / total_opened
-            self.model.shared_data["iig_effectiveness"] = min(1.0, effectiveness)
+            total_opened = sum(a.cases_opened for a in all_iig)
+            if total_opened > 0:
+                effectiveness = total_solved / total_opened
+                self.model.shared_data["iig_effectiveness"] = min(1.0, effectiveness)
 
     def cast_tiebreaker_vote(self, vote_item: Dict) -> str:
         """

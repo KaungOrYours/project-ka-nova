@@ -238,8 +238,14 @@ class IIGSystem:
         self.total_cases_solved = total_solved
         self.total_cases_opened = total_opened
 
-        effectiveness = total_solved / max(1, total_opened)
-        self.model.shared_data["iig_effectiveness"] = min(1.0, effectiveness)
+        if total_opened > 0:
+            effectiveness = total_solved / max(1, total_opened)
+            self.model.shared_data["iig_effectiveness"] = min(1.0, effectiveness)
+        elif self.model.scenario == "A":
+            # IIG exists and is operational even before cases open
+            # Floor rises slowly to reflect institutional presence
+            current = self.model.shared_data.get("iig_effectiveness", 0.30)
+            self.model.shared_data["iig_effectiveness"] = min(0.40, current + 0.01)
 
     def get_summary(self) -> Dict:
         return {
