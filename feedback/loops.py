@@ -216,16 +216,19 @@ class FeedbackEngine:
         if iig_agents:
             total_solved = sum(a.cases_solved for a in iig_agents)
             total_opened = sum(a.cases_opened for a in iig_agents)
-            raw_effectiveness = total_solved / max(1, total_opened)
+            if total_opened > 0 and total_solved > 0:
+                raw_effectiveness = total_solved / total_opened
+                # Smooth effectiveness update only when cases are being solved
+                current_effectiveness = m.shared_data.get("iig_effectiveness", 0.30)
+                new_effectiveness = (
+                    current_effectiveness * 0.60 +
+                    raw_effectiveness * 0.40
+                )
+            else:
+                # No solved cases yet — preserve current value
+                new_effectiveness = m.shared_data.get("iig_effectiveness", 0.30)
         else:
-            raw_effectiveness = 0.0
-
-        # Smooth effectiveness update
-        current_effectiveness = m.shared_data.get("iig_effectiveness", 0.30)
-        new_effectiveness = (
-            current_effectiveness * 0.60 +
-            raw_effectiveness * 0.40
-        )
+            new_effectiveness = m.shared_data.get("iig_effectiveness", 0.30)
 
         # Scenario modifier
         if m.scenario == "B":

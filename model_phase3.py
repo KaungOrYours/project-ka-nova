@@ -454,11 +454,11 @@ class KaNovaModelPhase3(Model):
     def _scenario_a_rules(self):
         """Full MFU — all constitutional safeguards enforced."""
         self.shared_data["rights_violated"] = False
-        self.shared_data["iig_effectiveness"] = min(
-            1.0,
-            self.shared_data.get("iig_effectiveness", 0.30) +
-            0.01 * (self.current_year / self.max_years)
-        )
+        # IIG effectiveness floor — institution is operational even before cases open
+        current_iig = self.shared_data.get("iig_effectiveness", 0.30)
+        year_bonus = 0.01 * (self.current_year / self.max_years)
+        floor = min(0.30 + year_bonus, 0.40)
+        self.shared_data["iig_effectiveness"] = max(floor, min(1.0, current_iig + year_bonus))
         shame_size = self.shared_data.get("shame_register_size", 0)
         if shame_size > 5:
             for agent in self.schedule.agents:
@@ -521,6 +521,14 @@ class KaNovaModelPhase3(Model):
         if self.states:
             avg_corruption = sum(s["corruption"] for s in self.states.values()) / len(self.states)
             self.shared_data["corruption_index"] = round(float(avg_corruption), 4)
+
+        # IIG effectiveness floor — enforce after all other writes
+        if self.scenario == "A":
+            year_bonus = 0.01 * (self.current_year / max(1, self.max_years))
+            floor = min(0.30 + year_bonus, 0.40)
+            current = self.shared_data.get("iig_effectiveness", 0.30)
+            if current < floor:
+                self.shared_data["iig_effectiveness"] = floor
 
     def get_results(self):
         """Return results DataFrame — same interface as KaNovaModel."""
