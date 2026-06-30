@@ -279,6 +279,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/suppressions C 2     — Scenario C page 2\n"
         "/grafana              — live dashboard URL\n"
         "/reasoning [A|C] [N]  — last N reasoning entries (default 3)\n"
+        "/reasoning <year> [agent] — compare A vs C reasoning for a year\n"
         "/start                — subscribe to alerts\n"
         "/help                 — this message\n"
         "─────────────────────────────────\n"
@@ -333,10 +334,65 @@ async def suppressions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    args = context.args or []
+
+    # New mode: first arg is a plain integer that is NOT a scenario letter -> year comparison mode
+    # /reasoning <year>            -> both scenarios, all agents, that year
+    # /reasoning <year> <agent>    -> both scenarios, filtered agent, that year
+    if args and args[0].upper() not in ["A", "C"]:
+        try:
+            year = int(args[0])
+        except ValueError:
+            await update.message.reply_text(
+                "[--] Usage:\n"
+                "/reasoning <year> [agent]        — compare Scenario A vs C for a year\n"
+                "/reasoning [A|C] [agent] [N]      — last N entries for one scenario"
+            )
+            return
+
+        agent_filter = args[1].lower() if len(args) > 1 else None
+
+        lines = [f"*Reasoning — Year {year} (A vs C){' | filter: ' + agent_filter if agent_filter else ''}*"]
+        any_found = False
+        for scenario in ["A", "C"]:
+            decisions = read_decisions(scenario)
+            year_decisions = [d for d in decisions if str(d.get("year", "")) == str(year)]
+            if agent_filter:
+                year_decisions = [d for d in year_decisions if agent_filter in d.get("agent", "").lower()]
+
+            lines.append(f"\n{'─' * 32}\n*Scenario {scenario}*")
+            if not year_decisions:
+                lines.append("[--] No entries for this year/filter.")
+                continue
+            any_found = True
+            for d in year_decisions:
+                text = d.get("reasoning_text", "")[:250]
+                coup = d.get("decision_output", {}).get("coup_signal", "?") if isinstance(d.get("decision_output"), dict) else "?"
+                lines.append(
+                    f"Run {d.get('run','?')} | {d.get('agent','?')} | coup_signal: {coup}\n"
+                    f"{text}..."
+                )
+
+        if not any_found:
+            await update.message.reply_text(f"[--] No reasoning data found for Year {year}" + (f" / agent: {agent_filter}" if agent_filter else "") + ".")
+            return
+
+        # Telegram message length safety — split if too long
+        full_msg = "\n".join(lines)
+        if len(full_msg) > 3800:
+            await update.message.reply_text(
+                full_msg[:3800] + "\n\n[...truncated — narrow with an agent name, e.g. /reasoning {} chief_justice]".format(year),
+                parse_mode="Markdown"
+            )
+        else:
+            await update.message.reply_text(full_msg, parse_mode="Markdown")
+        return
+
+    # Legacy mode: /reasoning [A|C] [agent] [N]
     scenario = None
     agent_filter = None
     n = 3
-    for arg in (context.args or []):
+    for arg in args:
         if arg.upper() in ["A", "C"]:
             scenario = arg.upper()
         else:
