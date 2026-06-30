@@ -63,6 +63,9 @@ echo ""
 echo "Starting Grafana on :3000..."
 cat >> /etc/grafana/grafana.ini << EOF
 
+[paths]
+provisioning = /etc/grafana/provisioning
+
 [server]
 domain = ${RUNPOD_POD_ID}-3000.proxy.runpod.net
 root_url = https://%(domain)s/
