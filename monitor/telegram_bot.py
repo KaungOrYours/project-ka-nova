@@ -27,7 +27,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-SUBSCRIBERS: set[int] = set()
+SUBSCRIBERS_FILE = Path("monitor/subscribers.json")
+
+
+def load_subscribers() -> set[int]:
+    try:
+        if SUBSCRIBERS_FILE.exists():
+            with open(SUBSCRIBERS_FILE) as f:
+                return set(json.load(f))
+    except Exception:
+        pass
+    return set()
+
+
+def save_subscribers():
+    try:
+        SUBSCRIBERS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(SUBSCRIBERS_FILE, "w") as f:
+            json.dump(list(SUBSCRIBERS), f)
+    except Exception as e:
+        logger.error(f"Failed to save subscribers: {e}")
+
+
+SUBSCRIBERS: set[int] = load_subscribers()
 
 
 # ── Readers ───────────────────────────────────────────────────────────────────
@@ -226,6 +248,7 @@ def format_agents(scenario: str = None) -> str:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     SUBSCRIBERS.add(chat_id)
+    save_subscribers()
     await update.message.reply_text(
         "Ka-Nova Monitor Bot v2\n\n"
         "Subscribed to live alerts.\n\n"
@@ -428,7 +451,6 @@ async def auto_alert_loop(app: Application):
                 for milestone in [20, 40, 60, 80, 100]:
                     if pct >= milestone and milestone not in ALERTED_MILESTONES:
                         ALERTED_MILESTONES.add(milestone)
-                        ALERTED_MILESTONES.add(milestone)
                         snapshot = dict(p)
                         snapshot['current_run'] = min(round(milestone * p.get('total_runs', 100) / 100), p.get('total_runs', 100))
                         for chat_id in SUBSCRIBERS:
@@ -439,7 +461,10 @@ async def auto_alert_loop(app: Application):
                                 parse_mode="Markdown"
                             )
 
-
+                # Alert 3 — Scenario complete (current scenario hits 100%, not yet flagged completed)
+                if pct >= 100 and not SIMULATION_COMPLETED:
+                    SIMULATION_COMPLETED = True
+                    events = read_suppressions(scenario)
                     decisions = read_decisions(scenario)
                     total_llm = len(decisions)
                     supp_rate = f"{round((len(events) / total_llm) * 100, 1)}%" if total_llm > 0 else "N/A"
