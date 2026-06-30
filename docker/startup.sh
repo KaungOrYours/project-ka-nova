@@ -74,6 +74,9 @@ root_url = https://%(domain)s/
 allow_embedding = true
 cookie_secure = true
 cookie_samesite = none
+
+[live]
+allowed_origins = https://${RUNPOD_POD_ID}-3000.proxy.runpod.net
 EOF
 /usr/share/grafana/bin/grafana server --config=/etc/grafana/grafana.ini --homepath=/usr/share/grafana &
 sleep 5
