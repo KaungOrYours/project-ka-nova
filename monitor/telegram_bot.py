@@ -257,6 +257,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/kpis        — KPI targets vs current values\n"
         "/agents      — per-agent LLM vs suppression breakdown\n"
         "/suppressions [scenario] [page] — suppression log\n"
+        "/reasoning <year> [agent] — compare A vs C reasoning\n"
         "/grafana     — live dashboard link\n"
         "/help        — all commands\n\n"
         "Auto alerts: simulation start, 20/40/60/80/100%, completion, crash\n"
