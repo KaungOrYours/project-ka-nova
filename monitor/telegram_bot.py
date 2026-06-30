@@ -27,6 +27,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+async def to_thread(fn, *args):
+    """Run a blocking function in a thread executor so it never freezes
+    the bot's event loop, even when reading large result files."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, fn, *args)
+
 SUBSCRIBERS_FILE = Path("monitor/subscribers.json")
 
 
@@ -295,8 +302,9 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    p = read_progress()
-    await update.message.reply_text(format_status(p), parse_mode="Markdown")
+    p = await to_thread(read_progress)
+    text = await to_thread(format_status, p)
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -304,13 +312,15 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def kpis(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    p = read_progress()
-    await update.message.reply_text(format_kpis(p), parse_mode="Markdown")
+    p = await to_thread(read_progress)
+    text = await to_thread(format_kpis, p)
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def agents_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     scenario = context.args[0].upper() if context.args else None
-    await update.message.reply_text(format_agents(scenario), parse_mode="Markdown")
+    text = await to_thread(format_agents, scenario)
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def suppressions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -329,9 +339,8 @@ async def suppressions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 page = int(context.args[0])
             except ValueError:
                 page = 0
-    await update.message.reply_text(
-        format_suppressions(scenario, page), parse_mode="Markdown"
-    )
+    text = await to_thread(format_suppressions, scenario, page)
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -373,7 +382,7 @@ async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lines = [f"*Reasoning — Year {year} (A vs C){' | filter: ' + agent_filter if agent_filter else ''}*"]
         any_found = False
         for scenario in ["A", "C"]:
-            decisions = read_decisions(scenario)
+            decisions = await to_thread(read_decisions, scenario)
             year_decisions = [d for d in decisions if str(d.get("year", "")) == str(year)]
             if agent_filter:
                 year_decisions = [d for d in year_decisions if agent_filter in d.get("agent", "").lower()]
@@ -418,7 +427,7 @@ async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 n = int(arg)
             except ValueError:
                 agent_filter = arg.lower()
-    decisions = read_decisions(scenario)
+    decisions = await to_thread(read_decisions, scenario)
     if not decisions:
         await update.message.reply_text("[--] No reasoning data yet.")
         return
@@ -475,7 +484,7 @@ async def auto_alert_loop(app: Application):
 
     while True:
         try:
-            p = read_progress()
+            p = await to_thread(read_progress)
 
             if p and SUBSCRIBERS:
                 scenario     = p.get("scenario", "?")
@@ -483,8 +492,8 @@ async def auto_alert_loop(app: Application):
                 # Reset flags when scenario changes (C -> A transition)
                 if scenario != LAST_SCENARIO and LAST_SCENARIO != "":
                     if not SIMULATION_COMPLETED and LAST_SCENARIO != "":
-                        prev_events = read_suppressions(LAST_SCENARIO)
-                        prev_decisions = read_decisions(LAST_SCENARIO)
+                        prev_events = await to_thread(read_suppressions, LAST_SCENARIO)
+                        prev_decisions = await to_thread(read_decisions, LAST_SCENARIO)
                         total_llm = len(prev_decisions)
                         supp_rate = f"{round((len(prev_events) / total_llm) * 100, 1)}%" if total_llm > 0 else "N/A"
                         for chat_id in SUBSCRIBERS:
@@ -527,19 +536,20 @@ async def auto_alert_loop(app: Application):
                         ALERTED_MILESTONES.add(milestone)
                         snapshot = dict(p)
                         snapshot['current_run'] = min(round(milestone * p.get('total_runs', 100) / 100), p.get('total_runs', 100))
+                        snapshot_text = await to_thread(format_status, snapshot)
                         for chat_id in SUBSCRIBERS:
                             await app.bot.send_message(
                                 chat_id,
                                 f"[MILESTONE] *{milestone}% complete — Scenario {scenario}*\n\n"
-                                + format_status(snapshot),
+                                + snapshot_text,
                                 parse_mode="Markdown"
                             )
 
                 # Alert 3 — Scenario complete (current scenario hits 100%, not yet flagged completed)
                 if pct >= 100 and not SIMULATION_COMPLETED:
                     SIMULATION_COMPLETED = True
-                    events = read_suppressions(scenario)
-                    decisions = read_decisions(scenario)
+                    events = await to_thread(read_suppressions, scenario)
+                    decisions = await to_thread(read_decisions, scenario)
                     total_llm = len(decisions)
                     supp_rate = f"{round((len(events) / total_llm) * 100, 1)}%" if total_llm > 0 else "N/A"
                     for chat_id in SUBSCRIBERS:
@@ -558,7 +568,7 @@ async def auto_alert_loop(app: Application):
                         )
 
                 # Alert 4 — Suppression rate warning
-                decisions = read_decisions(scenario)
+                decisions = await to_thread(read_decisions, scenario)
                 total_llm = len(decisions)
                 if total_llm > 50 and not SUPPRESSION_RATE_ALERTED:
                     rate = (supp_count / total_llm) * 100
@@ -648,7 +658,7 @@ async def final_comparison_loop(app: Application):
     while True:
         try:
             if not comparison_sent:
-                p = read_progress()
+                p = await to_thread(read_progress)
                 scenario = p.get("scenario", "")
                 pct = round((p.get("current_run", 0) / p.get("total_runs", 100)) * 100) if p.get("total_runs") else 0
                 if scenario == "A" and pct >= 100:
@@ -662,8 +672,8 @@ async def final_comparison_loop(app: Application):
                     c_done = True
                 if a_done and c_done and not comparison_sent:
                     comparison_sent = True
-                    kpi_a = compute_final_kpis("A")
-                    kpi_c = compute_final_kpis("C")
+                    kpi_a = await to_thread(compute_final_kpis, "A")
+                    kpi_c = await to_thread(compute_final_kpis, "C")
                     if kpi_a and kpi_c:
                         msg = (
                             f"[FINAL] *Ka-Nova Paper Run Complete*\n"
