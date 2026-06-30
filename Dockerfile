@@ -3,6 +3,7 @@
 # Strategy: bake dependencies + Ollama, pull codebase from GitHub at runtime
 
 FROM grafana/grafana:11.1.0 AS grafana
+FROM prom/prometheus:v2.53.0 AS prometheus
 FROM python:3.11-slim
 
 # ── System ────────────────────────────────────────────────────────────────────
@@ -53,10 +54,16 @@ RUN mkdir -p /var/lib/grafana /var/log/grafana
 COPY docker/grafana/datasources /etc/grafana/provisioning/datasources
 COPY docker/grafana/dashboards /etc/grafana/provisioning/dashboards
 
+# ── Prometheus ────────────────────────────────────────────────────────────────
+COPY --from=prometheus /bin/prometheus /usr/local/bin/prometheus
+COPY --from=prometheus /bin/promtool /usr/local/bin/promtool
+RUN mkdir -p /var/lib/prometheus
+COPY docker/prometheus.yml /etc/prometheus/prometheus.yml
+
 # ── Startup script ────────────────────────────────────────────────────────────
 COPY docker/startup.sh /startup.sh
 RUN chmod +x /startup.sh
 
-EXPOSE 8000 11434
+EXPOSE 8000 9090 11434
 
 CMD ["/startup.sh"]
