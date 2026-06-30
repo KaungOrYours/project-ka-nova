@@ -336,10 +336,27 @@ async def suppressions_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def reasoning_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args or []
 
+    if not args:
+        await update.message.reply_text(
+            "*Reasoning — usage*\n"
+            f"{'─' * 32}\n"
+            "/reasoning <year> — compare A vs C, all agents, that year\n"
+            "/reasoning <year> <agent> — compare A vs C, one agent, that year\n"
+            "/reasoning [A|C] [agent] [N] — last N entries for one scenario\n"
+            f"{'─' * 32}\n"
+            "Examples:\n"
+            "/reasoning 5\n"
+            "/reasoning 5 chief_justice\n"
+            "/reasoning A chief_justice 5\n"
+            "/reasoning C 10",
+            parse_mode="Markdown"
+        )
+        return
+
     # New mode: first arg is a plain integer that is NOT a scenario letter -> year comparison mode
     # /reasoning <year>            -> both scenarios, all agents, that year
     # /reasoning <year> <agent>    -> both scenarios, filtered agent, that year
-    if args and args[0].upper() not in ["A", "C"]:
+    if args[0].upper() not in ["A", "C"]:
         try:
             year = int(args[0])
         except ValueError:
