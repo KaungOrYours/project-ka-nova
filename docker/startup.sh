@@ -76,7 +76,7 @@ cookie_secure = true
 cookie_samesite = none
 
 [live]
-allowed_origins = https://${RUNPOD_POD_ID}-3000.proxy.runpod.net
+max_connections = 0
 EOF
 /usr/share/grafana/bin/grafana server --config=/etc/grafana/grafana.ini --homepath=/usr/share/grafana &
 sleep 5
