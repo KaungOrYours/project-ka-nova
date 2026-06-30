@@ -76,13 +76,20 @@ EOF
 sleep 5
 echo "Grafana ready."
 
-# ── Send Grafana URL via Telegram ─────────────────────────────────────────────
+# ── Send Grafana URL + quick-start instructions via Telegram ──────────────────
 GRAFANA_PUBLIC_URL="https://${RUNPOD_POD_ID}-3000.proxy.runpod.net"
 curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
   -d chat_id=1096527379 \
-  -d text="Ka-Nova pod is up! Live Grafana dashboard: ${GRAFANA_PUBLIC_URL}" \
+  -d text="Ka-Nova pod is up!
+
+Grafana dashboard: ${GRAFANA_PUBLIC_URL}
+Login: admin / admin
+
+IMPORTANT: Send /start to this bot now to subscribe to alerts (START, MILESTONE, DONE, FINAL). Alerts will NOT fire automatically until you do this.
+
+Monitor commands: /status /kpis /agents /reasoning /help" \
   -d parse_mode="Markdown" > /dev/null
-echo "Grafana URL sent to Telegram."
+echo "Grafana URL + instructions sent to Telegram."
 
 # ── 6. Start Telegram bot ─────────────────────────────────────────────────────
 echo ""
