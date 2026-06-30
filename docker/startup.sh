@@ -57,6 +57,17 @@ cd /workspace/project-ka-nova
 python3 monitor/metrics_exporter.py &
 METRICS_PID=$!
 echo "Metrics exporter PID: $METRICS_PID"
+sleep 3
+
+echo ""
+echo "Starting Prometheus server on :9090..."
+/usr/local/bin/prometheus \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/var/lib/prometheus \
+    --web.listen-address=:9090 &
+PROMETHEUS_PID=$!
+echo "Prometheus PID: $PROMETHEUS_PID"
+sleep 3
 
 # ── 5. Start Grafana ─────────────────────────────────────────────────────────
 echo ""
