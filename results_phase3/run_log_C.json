@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-06-29T08:51:48.060820",
+  "timestamp": "2026-07-01T10:15:11.928341",
   "scenario": "C",
-  "runs": 3,
-  "n_citizens": 300,
-  "n_steps": 10,
+  "runs": 100,
+  "n_citizens": 11000,
+  "n_steps": 50,
   "workers": 1,
   "use_llm": true,
-  "successful": 3,
+  "successful": 100,
   "failed": 0,
   "errors": []
 }
