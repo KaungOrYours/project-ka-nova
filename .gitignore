@@ -24,3 +24,6 @@ logs/
 .env.pod
 results_phase3/progress.json
 monitor/telegram_bot.py.bak
+
+# Claude Code project config/memory, local only, never tracked
+.claude/
