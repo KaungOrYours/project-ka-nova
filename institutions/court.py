@@ -60,7 +60,22 @@ class ConstitutionalCourtSystem:
         self._process_emergency_requests()
         self._maintain_iig_data_custody()
 
-        if year > 0 and year % CONSTITUTION.amendment.REVIEW_INTERVAL == 0:
+        # Bug #12 wiring fix: read REVIEW_INTERVAL from the model's
+        # resolved per-scenario constitution (self.model.CONSTITUTION), not
+        # the module-level MFU `CONSTITUTION` singleton — this method was
+        # never called anywhere before this fix, so the module-level read
+        # never actually mattered in practice; wiring annual_session() into
+        # the live step() loop for the first time makes it matter for
+        # every scenario, not just A. Guard against REVIEW_INTERVAL == 0
+        # (2008 Myanmar, Thailand, Pakistan, Chile, Germany, South Korea
+        # all encode this — only MFU/A has a real 10-year review cycle):
+        # this value is factually correct for a constitution with no
+        # mandatory review mechanism, so "review never triggers" is the
+        # right behaviour, not a ZeroDivisionError. Guard lives here in the
+        # engine per the explicit instruction in constitution_2008.py's own
+        # REVIEW_INTERVAL comment, not as a data change.
+        review_interval = self.model.CONSTITUTION.amendment.REVIEW_INTERVAL
+        if review_interval > 0 and year > 0 and year % review_interval == 0:
             self._conduct_constitutional_review(year)
 
         self._log_annual_activity(year)
@@ -94,7 +109,10 @@ class ConstitutionalCourtSystem:
                 if corruption_score > (0.85 * j.independence_score)
             )
 
-            supermajority = CONSTITUTION.crypto_justice.COURT_SUPERMAJORITY_FOR_TOTAL_RUIN
+            # Bug #11 propagation fix: read from self.model.CONSTITUTION,
+            # not the module-level MFU singleton (same bug class already
+            # fixed for annual_session()'s REVIEW_INTERVAL guard above).
+            supermajority = self.model.CONSTITUTION.crypto_justice.COURT_SUPERMAJORITY_FOR_TOTAL_RUIN
 
             if yes_votes >= supermajority:
                 self._certify_total_ruin(case)
@@ -130,7 +148,7 @@ class ConstitutionalCourtSystem:
             if complaint.get("reviewed", False):
                 continue
             violation = complaint.get("type", "")
-            if violation in CONSTITUTION.rights.FUNDAMENTAL_RIGHTS:
+            if violation in self.model.CONSTITUTION.rights.FUNDAMENTAL_RIGHTS:
                 complaint["ruling"] = "void_ab_initio"
                 self.rights_violations_struck += 1
                 self.model.shared_data.setdefault(
@@ -167,7 +185,7 @@ class ConstitutionalCourtSystem:
                 continue
             touches_rights = req.get("touches_rights", False)
             valid_scenario = req.get("scenario") in (
-                CONSTITUTION.emergency.TRIGGER_SCENARIOS
+                self.model.CONSTITUTION.emergency.TRIGGER_SCENARIOS
             )
             req["court_certified"] = not touches_rights and valid_scenario
             if req["court_certified"]:
@@ -200,7 +218,7 @@ class ConstitutionalCourtSystem:
         ]
 
         assembly_size = min(
-            CONSTITUTION.amendment.CITIZENS_ASSEMBLY_SIZE,
+            self.model.CONSTITUTION.amendment.CITIZENS_ASSEMBLY_SIZE,
             len(eligible)
         )
 

@@ -88,9 +88,12 @@ class FederalDevFundAgent(Agent):
     """Resource revenue distribution. Article 8.6 — 40/40/20 constitutional split."""
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.state_share = CONSTITUTION.federal.RESOURCE_STATE_SHARE
-        self.federal_share = CONSTITUTION.federal.RESOURCE_FEDERAL_DEV_SHARE
-        self.ethnic_share = CONSTITUTION.federal.RESOURCE_ETHNIC_DIRECT_SHARE
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton imported above — every encoded
+        # constitution defines its own federal resource-split shares.
+        self.state_share = self.model.CONSTITUTION.federal.RESOURCE_STATE_SHARE
+        self.federal_share = self.model.CONSTITUTION.federal.RESOURCE_FEDERAL_DEV_SHARE
+        self.ethnic_share = self.model.CONSTITUTION.federal.RESOURCE_ETHNIC_DIRECT_SHARE
         self.fund_balance = 0.0
         self.total_received = 0.0
         self.total_distributed = 0.0
@@ -151,11 +154,14 @@ class FederalDevFundAgent(Agent):
             self.state_gdp_shares[state_id] = state_data.get("gdp", 100.0) / total_gdp
 
     def _check_triggers(self):
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton.
+        constitution = self.model.CONSTITUTION
         triggers = []
         for state_id, share in self.state_gdp_shares.items():
-            if share > CONSTITUTION.federal.STATE_GDP_CAP:
+            if share > constitution.federal.STATE_GDP_CAP:
                 triggers.append({"type": "state_gdp_dominance", "state_id": state_id, "gdp_share": share})
-        if self.gini_coefficient > CONSTITUTION.federal.GINI_THRESHOLD:
+        if self.gini_coefficient > constitution.federal.GINI_THRESHOLD:
             triggers.append({"type": "inequality_threshold", "gini": self.gini_coefficient})
         if triggers:
             self.model.shared_data["ecb_triggers"] = triggers
@@ -224,8 +230,10 @@ class NationalShameRegisterAgent(Agent):
         if self.entry_count == 0:
             return
         self.model.shared_data["shame_register_size"] = self.entry_count
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton.
         reduction = (
-            CONSTITUTION.crypto_justice.SHAME_REGISTER_CORRUPTION_REDUCTION *
+            self.model.CONSTITUTION.crypto_justice.SHAME_REGISTER_CORRUPTION_REDUCTION *
             0.05 * (self.entry_count ** 0.5)
         )
         self.corruption_reduction_achieved = min(0.40, reduction)
@@ -333,9 +341,11 @@ class EconomicCheckBalanceAgent(Agent):
     """Article 10.8 — three automatic triggers, three simultaneous enforcers."""
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.state_gdp_cap = CONSTITUTION.federal.STATE_GDP_CAP
-        self.sector_monopoly_cap = CONSTITUTION.federal.SECTOR_MONOPOLY_CAP
-        self.gini_threshold = CONSTITUTION.federal.GINI_THRESHOLD
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton imported above.
+        self.state_gdp_cap = self.model.CONSTITUTION.federal.STATE_GDP_CAP
+        self.sector_monopoly_cap = self.model.CONSTITUTION.federal.SECTOR_MONOPOLY_CAP
+        self.gini_threshold = self.model.CONSTITUTION.federal.GINI_THRESHOLD
         self.active_interventions = []
         self.completed_interventions = []
         self.intervention_count = 0
@@ -437,6 +447,10 @@ if __name__ == "__main__":
         def __init__(self):
             self.current_year = 0
             self.schedule = MockSchedule()
+            # Bug #11 propagation fix: the agent classes above now read
+            # self.model.CONSTITUTION instead of the module-level MFU
+            # singleton, so this self-test mock needs the attribute too.
+            self.CONSTITUTION = CONSTITUTION
             self.states = {
                 s: {"gdp": gdp, "gdp_growth": 0.02, "resource_revenue": rev,
                     "budget": 0.0, "ethnic_direct_fund": 0.0}

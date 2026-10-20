@@ -75,7 +75,10 @@ class ForeignInvestorAgent(Agent):
         self.investor_type = investor_type  # corporate / sovereign / venture
         self.home_country = home_country
         self.sector = sector
-        self.is_strategic_sector = sector in CONSTITUTION.economic.STRATEGIC_SECTORS
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton imported above — each constitution
+        # defines its own strategic-sector list and foreign ownership caps.
+        self.is_strategic_sector = sector in self.model.CONSTITUTION.economic.STRATEGIC_SECTORS
 
         # ── CAPITAL ───────────────────────────────────────────────────────────
         self.capital_available = capital
@@ -86,9 +89,9 @@ class ForeignInvestorAgent(Agent):
 
         # ── OWNERSHIP COMPLIANCE (Article 10.3) ───────────────────────────────
         self.max_ownership = (
-            CONSTITUTION.economic.FOREIGN_CAP_STRATEGIC
+            self.model.CONSTITUTION.economic.FOREIGN_CAP_STRATEGIC
             if self.is_strategic_sector
-            else CONSTITUTION.economic.FOREIGN_CAP_OPEN
+            else self.model.CONSTITUTION.economic.FOREIGN_CAP_OPEN
         )
         self.current_ownership_pct = 0.0
         self.compliant = True
@@ -498,8 +501,10 @@ class NeighboringStateAgent(Agent):
         )
 
         # Scorched earth deterrence — invasion is too costly
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton.
         scorched_earth_deterrence = (
-            CONSTITUTION.roe.EXTERNAL_FULL_FORCE *
+            self.model.CONSTITUTION.roe.EXTERNAL_FULL_FORCE *
             mfu_military_strength * 0.80
         )
 
@@ -1116,10 +1121,13 @@ class ForeignPopulation:
         agent_id = 30000
 
         # Foreign Investors (50)
+        # Bug #11 propagation fix: read from model.CONSTITUTION (the
+        # function parameter, not the module-level MFU singleton) — each
+        # constitution defines its own sector lists.
         investor_types = ["corporate", "sovereign", "venture"]
         sectors = (
-            list(CONSTITUTION.economic.STRATEGIC_SECTORS) +
-            list(CONSTITUTION.economic.OPEN_SECTORS)
+            list(model.CONSTITUTION.economic.STRATEGIC_SECTORS) +
+            list(model.CONSTITUTION.economic.OPEN_SECTORS)
         )
         countries = ["China", "India", "Thailand", "Singapore",
                      "Japan", "South Korea", "USA", "EU", "Australia"]
@@ -1200,7 +1208,7 @@ class ForeignPopulation:
         # Illicit Networks (40)
         network_types = ["jade_smuggling", "drug_network",
                          "resource_extraction", "financial_illicit"]
-        states = list(CONSTITUTION.simulation.SIMULATION_STATES)
+        states = list(model.CONSTITUTION.simulation.SIMULATION_STATES)
         resource_types = ["jade", "teak", "rare_earth", "drug", "cash"]
 
         for i in range(40):
@@ -1228,6 +1236,10 @@ if __name__ == "__main__":
     class MockModel:
         def __init__(self):
             self.current_year = 0
+            # Bug #11 propagation fix: the agent classes above now read
+            # self.model.CONSTITUTION instead of the module-level MFU
+            # singleton, so this self-test mock needs the attribute too.
+            self.CONSTITUTION = CONSTITUTION
             self.states = {
                 s: {
                     "corruption_level": 0.72,

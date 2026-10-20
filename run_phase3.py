@@ -44,6 +44,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 load_dotenv()
 from model_phase3 import KaNovaModelPhase3
+from config.scenario_registry import SCENARIOS, get_scenario
 
 # W&B experiment tracking
 try:
@@ -53,9 +54,12 @@ except ImportError:
     WANDB_AVAILABLE = False
 
 RESULTS_DIR = Path("results_phase3")
+# Registry-driven — one results subdirectory per registered scenario code
+# (all 7), not a hardcoded A/C pair. Directories are created regardless of
+# whether that scenario's constitution module is encoded yet (cheap,
+# harmless if unused).
 SCENARIO_DIRS = {
-    "A": RESULTS_DIR / "scenario_a",
-    "C": RESULTS_DIR / "scenario_c",
+    code: RESULTS_DIR / f"scenario_{code.lower()}" for code in SCENARIOS
 }
 
 IS_LINUX = platform.system() == "Linux"
@@ -66,14 +70,18 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
     import random
     import numpy as np
 
-    # Reset progress and JSONL logs on first run
+    # Reset progress and per-scenario JSONL logs on first run
     if run_id == 0:
-        for f in ["progress.json", "cves_violations.jsonl", "cves_scores.jsonl"]:
+        for f in [
+            "progress.json",
+            f"cves_violations_{scenario}.jsonl",
+            f"cves_scores_{scenario}.jsonl",
+        ]:
             p = RESULTS_DIR / f
             if p.exists():
                 p.unlink()
 
-    seed = run_id * 100 + ord(scenario)
+    seed = run_id * 100 + sum(ord(ch) for ch in scenario)
     try:
         model = KaNovaModelPhase3(
             scenario=scenario,
@@ -184,7 +192,11 @@ class KaNovaPhase3Runner:
         use_llm: bool = False,
         workers: int = None,
     ):
-        assert scenario in ("A", "C"), "Phase 3 only supports scenarios A and C"
+        # Registry-driven (was a hardcoded `("A", "C")` tuple). Raises a
+        # clear error for an unknown code, or for a known-but-not-yet-
+        # encoded code (SK/TH/PK/CL/DE before their constitution module
+        # lands) — see config/scenario_registry.get_scenario().
+        get_scenario(scenario)
 
         self.scenario   = scenario
         self.runs       = runs
@@ -432,8 +444,11 @@ def parse_args():
     p = argparse.ArgumentParser(description="Ka-Nova Phase 3 Runner")
     p.add_argument("--test",     action="store_true",
                    help="Quick test: 1 run, 200 citizens, 5 steps")
-    p.add_argument("--scenario", choices=["A", "C"], default="A",
-                   help="Which scenario to run (one pod = one scenario)")
+    p.add_argument("--scenario", choices=sorted(SCENARIOS.keys()), default="A",
+                   help="Which scenario to run (one pod = one scenario). "
+                        "Only A and C are encoded today — SK/TH/PK/CL/DE are "
+                        "registered but will raise a clear error until their "
+                        "constitution modules are encoded.")
     p.add_argument("--runs",     type=int, default=100)
     p.add_argument("--citizens", type=int, default=11000)
     p.add_argument("--steps",    type=int, default=50)

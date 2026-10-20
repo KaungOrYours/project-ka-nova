@@ -72,6 +72,11 @@ class IIGAgent(CitizenAgent):
         ethnicity: str,
         years_of_service: int = 0
     ):
+        # Bug #11 propagation fix: read from the `model` parameter directly
+        # (not self.model.CONSTITUTION, since super().__init__() has not
+        # run yet at this point so self.model does not exist), not the
+        # module-level MFU `CONSTITUTION` singleton imported above. Every
+        # encoded constitution's `iig` section defines these fields.
         super().__init__(
             unique_id=unique_id,
             model=model,
@@ -79,18 +84,18 @@ class IIGAgent(CitizenAgent):
             state_id=state_id,
             ethnicity=ethnicity,
             age=random.randint(
-                CONSTITUTION.iig.ENTRY_MIN_AGE,
-                CONSTITUTION.iig.ENTRY_MIN_AGE + 20
+                model.CONSTITUTION.iig.ENTRY_MIN_AGE,
+                model.CONSTITUTION.iig.ENTRY_MIN_AGE + 20
             )
         )
 
         # ── IIG IDENTITY ──────────────────────────────────────────────────────
         self.division = division
         self.years_of_service = years_of_service
-        self.is_partner = years_of_service >= CONSTITUTION.iig.PARTNER_ELIGIBILITY_YEARS
+        self.is_partner = years_of_service >= self.model.CONSTITUTION.iig.PARTNER_ELIGIBILITY_YEARS
 
         # ── MERIT ENFORCEMENT — IIG entry requires 0.85+ ──────────────────────
-        merit_min = CONSTITUTION.iig.ENTRY_MERIT_MIN
+        merit_min = self.model.CONSTITUTION.iig.ENTRY_MERIT_MIN
         if self.merit_score < merit_min:
             boost = merit_min - self.merit_score + 0.02
             self.productivity = min(1.0, self.productivity + boost * 0.4)
@@ -126,7 +131,7 @@ class IIGAgent(CitizenAgent):
         self.national_service_completed = True  # prerequisite
 
         # ── POST SERVICE TRACKING ────────────────────────────────────────────
-        self.permitted_post_service = CONSTITUTION.iig.PERMITTED_POST_SERVICE
+        self.permitted_post_service = self.model.CONSTITUTION.iig.PERMITTED_POST_SERVICE
 
     # ══════════════════════════════════════════════════════════════════════════
     # MESA STEP
@@ -154,7 +159,7 @@ class IIGAgent(CitizenAgent):
 
         # 5. Partner eligibility update
         self.is_partner = (
-            self.years_of_service >= CONSTITUTION.iig.PARTNER_ELIGIBILITY_YEARS
+            self.years_of_service >= self.model.CONSTITUTION.iig.PARTNER_ELIGIBILITY_YEARS
         )
         self.vote_weight = self._calculate_vote_weight()
 
@@ -171,7 +176,7 @@ class IIGAgent(CitizenAgent):
         IIG does not choose who to investigate — threshold is constitutional.
         """
 
-        trigger = CONSTITUTION.iig.INVESTIGATION_TRIGGER
+        trigger = self.model.CONSTITUTION.iig.INVESTIGATION_TRIGGER
         corruption_log = self.model.shared_data.get("corruption_acts_log", [])
 
         for act in corruption_log:
@@ -195,7 +200,7 @@ class IIGAgent(CitizenAgent):
         """
 
         evidence_strength = act.get("corruption_score", 0.0)
-        threshold = CONSTITUTION.iig.OPEN_INVESTIGATION_THRESHOLD
+        threshold = self.model.CONSTITUTION.iig.OPEN_INVESTIGATION_THRESHOLD
 
         # Partners vote based on evidence quality
         partners = self._get_partners()
@@ -382,9 +387,9 @@ class IIGAgent(CitizenAgent):
         evidence_score = vote_item.get("evidence_score", 0.0)
 
         if vote_type == "open_investigation":
-            threshold = CONSTITUTION.iig.OPEN_INVESTIGATION_THRESHOLD
+            threshold = self.model.CONSTITUTION.iig.OPEN_INVESTIGATION_THRESHOLD
         elif vote_type == "proceed_prosecution":
-            threshold = CONSTITUTION.iig.PROCEED_PROSECUTION_THRESHOLD
+            threshold = self.model.CONSTITUTION.iig.PROCEED_PROSECUTION_THRESHOLD
         else:
             threshold = 0.51
 
@@ -465,8 +470,8 @@ class IIGDirector(IIGAgent):
             years_of_service=random.randint(5, 15)  # promoted from within
         )
 
-        self.term_remaining = CONSTITUTION.iig.DIRECTOR_TERM
-        self.term_renewable = CONSTITUTION.iig.DIRECTOR_RENEWABLE  # False
+        self.term_remaining = self.model.CONSTITUTION.iig.DIRECTOR_TERM
+        self.term_renewable = self.model.CONSTITUTION.iig.DIRECTOR_RENEWABLE  # False
         self.appointed_by = "constitutional_court"
         self.is_partner = True
         self.vote_weight = 0.0  # tiebreaker only — not regular vote
@@ -577,8 +582,10 @@ class CourtJudge(CitizenAgent):
 
         # ── JUDICIAL IDENTITY ─────────────────────────────────────────────────
         self.judge_number = judge_number
-        self.term_remaining = CONSTITUTION.judiciary.JUDGE_TERM
-        self.max_terms = CONSTITUTION.judiciary.JUDGE_MAX_TERMS
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton imported above.
+        self.term_remaining = self.model.CONSTITUTION.judiciary.JUDGE_TERM
+        self.max_terms = self.model.CONSTITUTION.judiciary.JUDGE_MAX_TERMS
         self.terms_served = 0
 
         # ── INDEPENDENCE ──────────────────────────────────────────────────────
@@ -595,7 +602,7 @@ class CourtJudge(CitizenAgent):
         self.removal_attempts_blocked: int = 0
 
         # ── BUDGET — constitutionally fixed ───────────────────────────────────
-        self.budget_protected = CONSTITUTION.judiciary.BUDGET_FIXED
+        self.budget_protected = self.model.CONSTITUTION.judiciary.BUDGET_FIXED
         self.political_interference = False
 
         # ── REMOVAL THRESHOLD — hardest in system ─────────────────────────────
@@ -662,7 +669,7 @@ class CourtJudge(CitizenAgent):
                     # Count judge votes across all court judges
                     court_votes = self._count_court_votes_for_total_ruin(case)
 
-                    supermajority = CONSTITUTION.crypto_justice.COURT_SUPERMAJORITY_FOR_TOTAL_RUIN
+                    supermajority = self.model.CONSTITUTION.crypto_justice.COURT_SUPERMAJORITY_FOR_TOTAL_RUIN
                     if court_votes >= supermajority:
                         self._certify_total_ruin(case)
                         self.total_ruin_certified += 1
@@ -786,7 +793,7 @@ class CourtJudge(CitizenAgent):
                 continue
 
             violation_type = complaint.get("type")
-            is_fundamental = violation_type in CONSTITUTION.rights.FUNDAMENTAL_RIGHTS
+            is_fundamental = violation_type in self.model.CONSTITUTION.rights.FUNDAMENTAL_RIGHTS
 
             if is_fundamental:
                 # Rights violation — strike down immediately
@@ -822,7 +829,7 @@ class CourtJudge(CitizenAgent):
             # Verify emergency does not touch fundamental rights
             touches_rights = request.get("touches_rights", False)
             valid_scenario = request.get("scenario") in (
-                CONSTITUTION.emergency.TRIGGER_SCENARIOS
+                self.model.CONSTITUTION.emergency.TRIGGER_SCENARIOS
             )
 
             if not touches_rights and valid_scenario:
@@ -1035,13 +1042,15 @@ class OversightPopulation:
         agent_id += 1
 
         # IIG Agents (49 — distributed across nine divisions)
+        # Bug #11 propagation fix: read from model.CONSTITUTION (the
+        # function parameter, not the module-level MFU singleton).
         all_divisions = (
-            list(CONSTITUTION.iig.FUNCTIONAL_DIVISIONS) +
-            list(CONSTITUTION.iig.MANDATE_DIVISIONS) +
-            list(CONSTITUTION.iig.OPERATIONAL_DIVISIONS)
+            list(model.CONSTITUTION.iig.FUNCTIONAL_DIVISIONS) +
+            list(model.CONSTITUTION.iig.MANDATE_DIVISIONS) +
+            list(model.CONSTITUTION.iig.OPERATIONAL_DIVISIONS)
         )
 
-        states = list(CONSTITUTION.simulation.SIMULATION_STATES)
+        states = list(model.CONSTITUTION.simulation.SIMULATION_STATES)
 
         for i in range(49):
             division = all_divisions[i % len(all_divisions)]
@@ -1061,7 +1070,7 @@ class OversightPopulation:
             agent_id += 1
 
         # Constitutional Court — 11 judges (Article 6.1)
-        judge_count = CONSTITUTION.judiciary.JUDGE_COUNT
+        judge_count = model.CONSTITUTION.judiciary.JUDGE_COUNT
         ethnic_distribution = ETHNIC_GROUPS[:judge_count]
 
         for i in range(judge_count):
@@ -1117,6 +1126,10 @@ if __name__ == "__main__":
         def __init__(self):
             self.current_year = 0
             self.schedule = MockSchedule()
+            # Bug #11 propagation fix: the agent classes above now read
+            # self.model.CONSTITUTION instead of the module-level MFU
+            # singleton, so this self-test mock needs the attribute too.
+            self.CONSTITUTION = CONSTITUTION
             self.states = {
                 s: {
                     "corruption_level": 0.72,

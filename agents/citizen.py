@@ -892,7 +892,15 @@ class CitizenAgent(Agent):
         """
 
         self.national_service_year = self.model.current_year
-        threshold = CONSTITUTION.military.NS_CIVILIAN_TRACK_THRESHOLD
+        # Bug #14 fix: read from the model's resolved per-scenario
+        # constitution (self.model.CONSTITUTION), not the module-level MFU
+        # `CONSTITUTION` singleton imported above. Every encoded
+        # constitution's `military` section defines these NS_* fields
+        # (confirmed in constitution.py, constitution_2008.py,
+        # constitution_thailand.py), so this is a direct swap, no fallback
+        # needed.
+        active_constitution = self.model.CONSTITUTION
+        threshold = active_constitution.military.NS_CIVILIAN_TRACK_THRESHOLD
 
         if self.merit_score >= threshold:
             self.national_service_track = "civilian"
@@ -903,17 +911,17 @@ class CitizenAgent(Agent):
         self.constitutional_loyalty = min(
             1.0,
             self.constitutional_loyalty +
-            CONSTITUTION.military.NS_LOYALTY_BOOST
+            active_constitution.military.NS_LOYALTY_BOOST
         )
         self.ethnic_cross_exposure = min(
             1.0,
             self.ethnic_cross_exposure +
-            CONSTITUTION.military.NS_ETHNIC_EXPOSURE_BOOST
+            active_constitution.military.NS_ETHNIC_EXPOSURE_BOOST
         )
         self.civic_contribution = min(
             1.0,
             self.civic_contribution +
-            CONSTITUTION.military.NS_CIVIC_CONTRIBUTION_BOOST
+            active_constitution.military.NS_CIVIC_CONTRIBUTION_BOOST
         )
 
         self.national_service_completed = True

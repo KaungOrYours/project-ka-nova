@@ -103,6 +103,15 @@ class ThreeChamberSystem:
         from agents.official import OfficialAgent, AnalysisCouncilMember
         from agents.official import EthnicLeaderAgent
 
+        # Bug #11 propagation fix: read thresholds from the model's resolved
+        # per-scenario constitution (self.model.CONSTITUTION), not the
+        # module-level MFU `CONSTITUTION` singleton imported above. Before
+        # this fix, every scenario (including Scenario C and all 5 new
+        # constitutions) silently used MFU's CONGRESS_THRESHOLD/
+        # ETHNIC_THRESHOLD/ANALYSIS_THRESHOLD regardless of its own encoded
+        # values.
+        constitution = self.model.CONSTITUTION
+
         congress_members = [
             a for a in self.model.schedule.agents
             if isinstance(a, OfficialAgent) and a.role == "congress_member"
@@ -137,9 +146,9 @@ class ThreeChamberSystem:
 
             # Policy passes only if all three approve
             all_pass = (
-                congress_result >= CONSTITUTION.chambers.CONGRESS_THRESHOLD and
-                ethnic_result >= CONSTITUTION.chambers.ETHNIC_THRESHOLD and
-                analysis_result >= CONSTITUTION.chambers.ANALYSIS_THRESHOLD
+                congress_result >= constitution.chambers.CONGRESS_THRESHOLD and
+                ethnic_result >= constitution.chambers.ETHNIC_THRESHOLD and
+                analysis_result >= constitution.chambers.ANALYSIS_THRESHOLD
             )
 
             policy.voted = True
@@ -154,11 +163,11 @@ class ThreeChamberSystem:
                 })
             else:
                 self.failed_policies.append(policy)
-                if congress_result < CONSTITUTION.chambers.CONGRESS_THRESHOLD:
+                if congress_result < constitution.chambers.CONGRESS_THRESHOLD:
                     self.veto_count["congress"] += 1
-                if ethnic_result < CONSTITUTION.chambers.ETHNIC_THRESHOLD:
+                if ethnic_result < constitution.chambers.ETHNIC_THRESHOLD:
                     self.veto_count["ethnic"] += 1
-                if analysis_result < CONSTITUTION.chambers.ANALYSIS_THRESHOLD:
+                if analysis_result < constitution.chambers.ANALYSIS_THRESHOLD:
                     self.veto_count["analysis"] += 1
 
             self.pending_policies.remove(policy)
@@ -218,10 +227,15 @@ class ThreeChamberSystem:
 
         ratio = yes_votes / len(members) if members else 1.0
 
-        if ratio < CONSTITUTION.chambers.ANALYSIS_THRESHOLD:
+        # Bug #11 propagation fix: read from self.model.CONSTITUTION, not
+        # the module-level MFU singleton (see process_votes() above for
+        # rationale).
+        constitution = self.model.CONSTITUTION
+
+        if ratio < constitution.chambers.ANALYSIS_THRESHOLD:
             # Analysis Council vetoed — Citizens Assembly must confirm at 51%
             policy.veto_time_days += 365
-            if policy.veto_time_days >= CONSTITUTION.chambers.ANALYSIS_VETO_TIME_LIMIT:
+            if policy.veto_time_days >= constitution.chambers.ANALYSIS_VETO_TIME_LIMIT:
                 # Time limit expired — escalate to Constitutional Court
                 self.model.shared_data.setdefault(
                     "analysis_veto_escalations", []
@@ -275,8 +289,10 @@ class ThreeChamberSystem:
         if not all_citizens:
             return 0.0
 
-        # Randomly sample 320 citizens (v7 canonical)
-        assembly_size = CONSTITUTION.simulation.CITIZENS_ASSEMBLY_SIZE  # 320
+        # Randomly sample 320 citizens (v7 canonical for MFU; other
+        # constitutions define their own value — bug #11 propagation fix,
+        # read from self.model.CONSTITUTION, not the module-level singleton)
+        assembly_size = self.model.CONSTITUTION.simulation.CITIZENS_ASSEMBLY_SIZE
         sample = random.sample(all_citizens, min(assembly_size, len(all_citizens)))
 
         yes_votes = 0

@@ -1266,6 +1266,19 @@ class SimulationConfig:
         "mon", "rakhine",
     )
 
+    # Citizens Assembly sample size (civic-lottery review panel).
+    # NOTE: this duplicates AmendmentConfig.CITIZENS_ASSEMBLY_SIZE (also 320).
+    # institutions/chambers.py reads it from HERE (simulation section);
+    # institutions/court.py reads it from amendment. Both must stay in sync.
+    # Pre-existing gap found 2026-10-20 while auditing field parity for the
+    # scenario-registry refactor: this attribute did not exist anywhere on
+    # SimulationConfig, so institutions/chambers.py:279 would raise
+    # AttributeError the moment the Citizens Assembly veto-confirmation path
+    # was ever actually exercised (apparently never hit in the already
+    # -published 100-run A/C datasets, or this would already have crashed).
+    # Backfilled here with the same canonical v7 value used elsewhere.
+    CITIZENS_ASSEMBLY_SIZE: int = 320
+
     # Agent archetypes distribution
     ARCHETYPES: Dict = field(default_factory=lambda: {
         "civic_champion": 0.15,

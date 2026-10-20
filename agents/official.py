@@ -55,62 +55,83 @@ from agents.citizen import CitizenAgent, ARCHETYPES, ETHNIC_GROUPS
 # ROLE DEFINITIONS — unchanged from Phase 1
 # ══════════════════════════════════════════════════════════════════════════════
 
-OFFICIAL_ROLES: Dict[str, Dict] = {
-    "president": {
-        "merit_min": CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE,
-        "term_years": CONSTITUTION.executive.PRESIDENT_TERM,
-        "max_terms": CONSTITUTION.executive.PRESIDENT_MAX_TERMS,
-        "executive_power": False,
-        "tiebreaker": True,
-        "removal_chambers": CONSTITUTION.executive.PRESIDENT_REMOVAL_CHAMBERS,
-        "cooling_off": 0
-    },
-    "chancellor": {
-        "merit_min": CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE,
-        "term_years": CONSTITUTION.executive.CHANCELLOR_TERM,
-        "max_terms": CONSTITUTION.executive.CHANCELLOR_MAX_TERMS,
-        "executive_power": True,
-        "tiebreaker": False,
-        "removal_chambers": CONSTITUTION.executive.CHANCELLOR_DISMISSAL_CHAMBERS_REQUIRED,
-        "cooling_off": CONSTITUTION.executive.CHANCELLOR_COOLING_OFF
-    },
-    "minister": {
-        "merit_min": CONSTITUTION.executive.MINISTER_MERIT_MIN,
-        "term_years": CONSTITUTION.executive.CHANCELLOR_TERM,
-        "max_terms": 99,
-        "executive_power": True,
-        "tiebreaker": False,
-        "removal_chambers": 0,
-        "cooling_off": 0
-    },
-    "congress_member": {
-        "merit_min": CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE,
-        "term_years": CONSTITUTION.chambers.CONGRESS_TERM,
-        "max_terms": 99,
-        "executive_power": False,
-        "tiebreaker": False,
-        "removal_chambers": 0,
-        "cooling_off": 0
-    },
-    "ethnic_leader": {
-        "merit_min": CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE,
-        "term_years": CONSTITUTION.chambers.ETHNIC_TERM,
-        "max_terms": CONSTITUTION.chambers.ETHNIC_MAX_TERMS,
-        "executive_power": False,
-        "tiebreaker": False,
-        "removal_chambers": 0,
-        "cooling_off": 0
-    },
-    "analysis_council_member": {
-        "merit_min": CONSTITUTION.chambers.ANALYSIS_MERIT_MIN,
-        "term_years": CONSTITUTION.chambers.ANALYSIS_TERM,
-        "max_terms": 99,
-        "executive_power": False,
-        "tiebreaker": False,
-        "removal_chambers": 0,
-        "cooling_off": 0
+# NOTE (fixed 2026-10-20 — part of the scenario-registry wiring fix,
+# .claude/memory.md bug #11): this used to be a plain module-level dict,
+# evaluated ONCE at import time using whatever `CONSTITUTION` pointed at in
+# that moment (always the MFU singleton, since `from config.constitution
+# import CONSTITUTION` above is unconditional). Even after model_phase3.py
+# starts correctly swapping which constitution object a given run's
+# model.CONSTITUTION points at, THIS dict would have stayed permanently
+# frozen on MFU's values for every scenario, for the lifetime of the
+# process — officials under every constitution would silently keep MFU's
+# merit floors/term lengths/removal thresholds. Converted to a function so
+# it is rebuilt fresh, from whichever constitution is live, every time an
+# OfficialAgent is constructed (i.e. every run, via
+# KaNovaModelPhase3._create_agents_phase3(), which runs AFTER the
+# constitution switch in __init__).
+def _build_official_roles(constitution) -> Dict[str, Dict]:
+    return {
+        "president": {
+            "merit_min": constitution.merit.MERIT_MIN_PUBLIC_OFFICE,
+            "term_years": constitution.executive.PRESIDENT_TERM,
+            "max_terms": constitution.executive.PRESIDENT_MAX_TERMS,
+            "executive_power": False,
+            "tiebreaker": True,
+            "removal_chambers": constitution.executive.PRESIDENT_REMOVAL_CHAMBERS,
+            "cooling_off": 0
+        },
+        "chancellor": {
+            "merit_min": constitution.merit.MERIT_MIN_PUBLIC_OFFICE,
+            "term_years": constitution.executive.CHANCELLOR_TERM,
+            "max_terms": constitution.executive.CHANCELLOR_MAX_TERMS,
+            "executive_power": True,
+            "tiebreaker": False,
+            "removal_chambers": constitution.executive.CHANCELLOR_DISMISSAL_CHAMBERS_REQUIRED,
+            "cooling_off": constitution.executive.CHANCELLOR_COOLING_OFF
+        },
+        "minister": {
+            "merit_min": constitution.executive.MINISTER_MERIT_MIN,
+            "term_years": constitution.executive.CHANCELLOR_TERM,
+            "max_terms": 99,
+            "executive_power": True,
+            "tiebreaker": False,
+            "removal_chambers": 0,
+            "cooling_off": 0
+        },
+        "congress_member": {
+            "merit_min": constitution.merit.MERIT_MIN_PUBLIC_OFFICE,
+            "term_years": constitution.chambers.CONGRESS_TERM,
+            "max_terms": 99,
+            "executive_power": False,
+            "tiebreaker": False,
+            "removal_chambers": 0,
+            "cooling_off": 0
+        },
+        "ethnic_leader": {
+            "merit_min": constitution.merit.MERIT_MIN_PUBLIC_OFFICE,
+            "term_years": constitution.chambers.ETHNIC_TERM,
+            "max_terms": constitution.chambers.ETHNIC_MAX_TERMS,
+            "executive_power": False,
+            "tiebreaker": False,
+            "removal_chambers": 0,
+            "cooling_off": 0
+        },
+        "analysis_council_member": {
+            "merit_min": constitution.chambers.ANALYSIS_MERIT_MIN,
+            "term_years": constitution.chambers.ANALYSIS_TERM,
+            "max_terms": 99,
+            "executive_power": False,
+            "tiebreaker": False,
+            "removal_chambers": 0,
+            "cooling_off": 0
+        }
     }
-}
+
+
+# Module-level default — used only by any legacy call site that doesn't pass
+# a constitution explicitly (kept for backward compatibility). Built from
+# the MFU singleton at import time, same value this dict always had before.
+OFFICIAL_ROLES: Dict[str, Dict] = _build_official_roles(CONSTITUTION)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -153,7 +174,14 @@ class OfficialAgent(CitizenAgent):
 
         self.role = role
         self.ministry = ministry
-        self.role_config = OFFICIAL_ROLES.get(role, OFFICIAL_ROLES["congress_member"])
+        # Rebuild from whichever constitution THIS model/run actually uses
+        # (model.CONSTITUTION, registry-driven — see note above
+        # OFFICIAL_ROLES). Falls back to the module-level MFU-default dict
+        # only if the model has no CONSTITUTION attribute yet (should not
+        # happen in the live Phase 3 pipeline, defensive only).
+        live_constitution = getattr(model, "CONSTITUTION", CONSTITUTION)
+        roles = _build_official_roles(live_constitution)
+        self.role_config = roles.get(role, roles["congress_member"])
 
         merit_floor = self.role_config["merit_min"]
         if self.merit_score < merit_floor:

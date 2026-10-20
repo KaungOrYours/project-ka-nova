@@ -35,6 +35,21 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+# Bug #13: resolve chain_type from the scenario registry instead of
+# branching on literal `scenario == "A"`/`"C"` strings — the latter gave
+# every new civilian-chain scenario (South Korea, Chile, Germany) the
+# Scenario-C military-default/shutdown behaviour below, since none of them
+# is literally the string "A" or "C".
+from config.scenario_registry import get_scenario
+# Found alongside bug #13/#17 while auditing this file: the ethnic
+# word-of-mouth bonus below divided by a hardcoded 8 (Myanmar's own group
+# count) for every scenario, so Pakistan (4 real groups, all active) would
+# only ever earn half the max bonus instead of the full bonus a 100%-active
+# fraction of its OWN group count should earn, and Chile/Thailand/Germany
+# (0 real groups) would always divide by 8 instead of correctly getting 0
+# regardless. Reused rather than re-duplicated a third time.
+from engine.cves import _get_ethnic_group_count
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CONSTANTS
@@ -83,6 +98,15 @@ class SocialMediaChannel:
 
     def __init__(self, scenario: str, seed: int = 42):
         self.scenario = scenario
+        # chain_type drives the openness/shutdown defaults below (bug #13)
+        # — resolved once here via the registry rather than re-checking a
+        # literal scenario string at every step().
+        self.chain_type = get_scenario(scenario).chain_type
+        # Active scenario's REAL total ethnic-group count (bug #13/#17
+        # cross-reference) — used below to normalise the ethnic
+        # word-of-mouth bonus against this scenario's own group count,
+        # not Myanmar's fixed 8.
+        self.n_ethnic_total = _get_ethnic_group_count(get_scenario(scenario).constitution)
         self.seed = seed
         self.rng = np.random.default_rng(seed)
 
@@ -114,9 +138,11 @@ class SocialMediaChannel:
         if elite_decision is not None:
             raw_openness = float(np.clip(elite_decision, 0.0, 1.0))
         else:
-            # Default by scenario if LLM hasn't decided yet
+            # Default by chain_type if LLM hasn't decided yet (bug #13 —
+            # was a literal `self.scenario == "A"` check, which skipped
+            # every civilian-chain scenario that isn't literally "A").
             raw_openness = (
-                OPENNESS_SCENARIO_A if self.scenario == "A"
+                OPENNESS_SCENARIO_A if self.chain_type == "civilian"
                 else OPENNESS_SCENARIO_C_DEFAULT
             )
 
@@ -124,7 +150,7 @@ class SocialMediaChannel:
         protest_rate = shared_data.get("protest_rate", 0.0)
         shutdown_attempted = False
 
-        if self.scenario == "C" and protest_rate > SHUTDOWN_TRIGGER:
+        if self.chain_type == "military" and protest_rate > SHUTDOWN_TRIGGER:
             # Commander-in-Chief triggers internet shutdown
             raw_openness = min(raw_openness, 0.05)  # Near-zero but not zero
             shutdown_attempted = True
@@ -155,8 +181,12 @@ class SocialMediaChannel:
         ethnic_groups_active = len(shared_data.get("active_ethnic_groups", [
             "Bamar", "Shan", "Karen", "Kachin", "Chin", "Mon", "Rakhine", "Kayah"
         ]))
+        # Normalise against THIS scenario's own total ethnic-group count,
+        # not a hardcoded 8 (Myanmar's own count) — a no-op for A/C (both
+        # resolve to 8), correct for every other scenario (Pakistan=4,
+        # South Korea=1, Chile/Thailand/Germany=0).
         ethnic_bonus = min(
-            ETHNIC_NETWORK_BONUS * (ethnic_groups_active / 8),
+            ETHNIC_NETWORK_BONUS * (ethnic_groups_active / max(self.n_ethnic_total, 1)),
             ETHNIC_NETWORK_BONUS
         )
         ethnic_network_active = ethnic_groups_active > 0
@@ -260,6 +290,7 @@ if __name__ == "__main__":
     for scenario in ["A", "C"]:
         print(f"Scenario {scenario} — 15 year simulation:")
         channel = SocialMediaChannel(scenario=scenario, seed=42)
+        chain_type = channel.chain_type  # demo uses the same resolved chain_type as step()
         shared = {
             "external": {"social_media_signal": 1.5},
             "active_ethnic_groups": [
@@ -269,13 +300,13 @@ if __name__ == "__main__":
         }
 
         for year in range(1, 16):
-            # Simulate protest spike in years 3, 7, 11 for Scenario C
+            # Simulate protest spike in years 3, 7, 11 for the military chain
             shared["protest_rate"] = (
-                0.20 if (scenario == "C" and year in [3, 7, 11]) else 0.05
+                0.20 if (chain_type == "military" and year in [3, 7, 11]) else 0.05
             )
             # Simulate LLM decision
             shared["elite_internet_decision"] = (
-                0.95 if scenario == "A" else 0.10
+                0.95 if chain_type == "civilian" else 0.10
             )
             signal = channel.step(year=year, shared_data=shared)
 

@@ -118,12 +118,20 @@ class FeedbackEngine:
         current_trust = m.shared_data.get("trust_index", 0.22)
         rights_ok = not m.shared_data.get("rights_violated", False)
 
-        # Scenario-aware trust dynamics
-        # Scenario C (military): fear-compliance produces low but non-zero trust.
-        # The full MFU rights violation penalty (0.20) applies only in A/B where
-        # rights violations are constitutional shocks. In C, repression is the
-        # baseline — penalty is smaller and a floor enforces fear-compliance trust.
-        if m.scenario == "C":
+        # Chain-aware trust dynamics (bug #14 fix — migrated from a literal
+        # m.scenario == "C" check, which silently gave every new
+        # military-chain scenario (TH/PK) no fear-compliance branch at all,
+        # since neither matches the "C" literal; and the else branch read
+        # the module-level MFU `CONSTITUTION` singleton's
+        # RIGHTS_VIOLATION_TRUST_DROP for every civilian-chain scenario
+        # (SK/CL/DE), not that constitution's own sourced value).
+        # Military-guardianship chain: fear-compliance produces low but
+        # non-zero trust. The full civilian-chain rights violation penalty
+        # applies only under civilian supremacy, where rights violations
+        # are constitutional shocks. Under military guardianship, repression
+        # is the baseline — penalty is smaller and a floor enforces
+        # fear-compliance trust.
+        if m.chain_type == "military":
             rights_penalty = 0.0 if rights_ok else 0.04   # chronic low-level erosion
             trust_floor    = 0.10                           # fear-compliance floor
             performance_c  = min(performance, 0.25)         # military policy quality capped
@@ -133,7 +141,7 @@ class FeedbackEngine:
             ) - rights_penalty
             new_trust = max(trust_floor, new_trust)
         else:
-            rights_penalty = 0.0 if rights_ok else CONSTITUTION.rights.RIGHTS_VIOLATION_TRUST_DROP
+            rights_penalty = 0.0 if rights_ok else m.CONSTITUTION.rights.RIGHTS_VIOLATION_TRUST_DROP
             # Trust update — recency-biased
             new_trust = (
                 current_trust * 0.70 +
@@ -230,10 +238,19 @@ class FeedbackEngine:
         else:
             new_effectiveness = m.shared_data.get("iig_effectiveness", 0.30)
 
-        # Scenario modifier
-        if m.scenario == "B":
-            new_effectiveness *= 0.85  # no safeguards = IIG weaker
-        elif m.scenario == "C":
+        # Chain-type modifier (bug #14 fix — migrated from literal
+        # m.scenario == "B"/"C" checks. "B" was Phase 2 legacy and
+        # unreachable via the live scenario registry, dropped rather than
+        # migrated. The 0.10 cap below is the exact pre-existing Scenario C
+        # value, kept unchanged here per the task's "literal 1:1 condition
+        # swap" migration scope — NOTE this is the same hardcoded-0.10
+        # mechanism already flagged as bug #10 in .claude/memory.md
+        # (unconditional institutions/iig.py overwrite executing AFTER this
+        # cap, same step() call), not yet fixed, out of scope for this
+        # pass. Flagged in the verification report: this cap will also
+        # apply to Thailand/Pakistan (both chain_type="military") exactly
+        # as it does to Scenario C, pending bug #10's real fix.
+        if m.chain_type == "military":
             new_effectiveness = min(0.10, new_effectiveness)  # no IIG
 
         new_effectiveness = max(0.0, min(1.0, new_effectiveness))
@@ -299,12 +316,15 @@ class FeedbackEngine:
         chancellors = [a for a in m.schedule.agents if isinstance(a, ChancellorAgent)]
         chancellor_approval = chancellors[0].approval_rating if chancellors else 0.45
 
-        # Constitutional commitment by scenario
-        const_commitment = {
-            "A": 0.80,
-            "B": 0.55,
-            "C": 0.25
-        }.get(m.scenario, 0.50)
+        # Constitutional commitment by governance chain (bug #14 fix —
+        # migrated from a literal scenario-code dict, which silently
+        # defaulted every 2-letter scenario code (SK/TH/PK/CL/DE) to a
+        # generic 0.50 fallback, flattening the real civilian/military
+        # divergence this feeds into coup-risk below. "B" was Phase 2
+        # legacy and unreachable via the live scenario registry (not a
+        # registered chain_type), dropped rather than migrated. Values
+        # unchanged for A (civilian, 0.80) / C (military, 0.25).
+        const_commitment = 0.80 if m.chain_type == "civilian" else 0.25
 
         # Trust feeds military loyalty
         trust = m.shared_data.get("trust_index", 0.22)
@@ -320,9 +340,14 @@ class FeedbackEngine:
 
         m.shared_data["military_loyalty"] = new_loyalty
 
-        # Coup risk — inverse of loyalty with threshold
-        coup_threshold_loyalty = CONSTITUTION.military.COUP_TRIGGER_LOYALTY
-        coup_threshold_approval = CONSTITUTION.military.COUP_TRIGGER_APPROVAL
+        # Coup risk — inverse of loyalty with threshold. Bug #14 fix: read
+        # from the model's resolved per-scenario constitution
+        # (m.CONSTITUTION), not the module-level MFU `CONSTITUTION`
+        # singleton — every encoded constitution's `military` section
+        # defines these two fields (confirmed in constitution.py,
+        # constitution_2008.py, constitution_thailand.py).
+        coup_threshold_loyalty = m.CONSTITUTION.military.COUP_TRIGGER_LOYALTY
+        coup_threshold_approval = m.CONSTITUTION.military.COUP_TRIGGER_APPROVAL
 
         if (new_loyalty < coup_threshold_loyalty and
                 chancellor_approval < coup_threshold_approval):
@@ -713,17 +738,19 @@ class FeedbackEngine:
             a.age == 19
         ]
 
-        # Cross-exposure boost
+        # Cross-exposure boost. Bug #14 fix: read from the model's resolved
+        # per-scenario constitution (m.CONSTITUTION), not the module-level
+        # MFU `CONSTITUTION` singleton.
         for agent in ns_completers:
             agent.ethnic_cross_exposure = min(
                 1.0,
                 agent.ethnic_cross_exposure +
-                CONSTITUTION.military.NS_ETHNIC_EXPOSURE_BOOST
+                m.CONSTITUTION.military.NS_ETHNIC_EXPOSURE_BOOST
             )
             agent.constitutional_loyalty = min(
                 1.0,
                 agent.constitutional_loyalty +
-                CONSTITUTION.military.NS_LOYALTY_BOOST
+                m.CONSTITUTION.military.NS_LOYALTY_BOOST
             )
 
         # Cumulative NS loyalty effect on military
@@ -804,10 +831,16 @@ class FeedbackEngine:
             for state in m.states.values():
                 state["protest_activity"] = min(1.0, protest_rate * 2.0)
 
-            # Scenario determines response
-            if m.scenario == "A":
-                # MFU — rights protected, government must address grievances
-                # Policy response reduces grievance
+            # Governance chain determines response (bug #14 fix — migrated
+            # from literal m.scenario == "A"/"B"/"C" checks, which silently
+            # gave every new chain_type-registered scenario (SK/TH/PK/CL/DE)
+            # NO protest response at all, since none of them matched the
+            # "A"/"B"/"C" literals. "B" was Phase 2 legacy and unreachable
+            # via the live scenario registry (not a registered chain_type),
+            # dropped rather than migrated. Behavior for A/C unchanged.
+            if m.chain_type == "civilian":
+                # Civilian-supremacy chain — rights protected, government
+                # must address grievances. Policy response reduces grievance.
                 if hasattr(m, "citizen_array"):
                     m.citizen_array["grievance"] = np.clip(
                         m.citizen_array["grievance"] * 0.90,
@@ -818,23 +851,8 @@ class FeedbackEngine:
                     m.shared_data.get("trust_index", 0.22) - 0.02
                 )
 
-            elif m.scenario == "B":
-                # No safeguards — may suppress
-                if random.random() < 0.40:
-                    # Suppression — grievance worsens
-                    if hasattr(m, "citizen_array"):
-                        m.citizen_array["grievance"] = np.clip(
-                            m.citizen_array["grievance"] * 1.10,
-                            0.0, 1.0
-                        )
-                    m.shared_data["coup_risk"] = min(
-                        1.0,
-                        m.shared_data.get("coup_risk", 0.25) + 0.05
-                    )
-                    m.shared_data["rights_violated"] = True
-
-            elif m.scenario == "C":
-                # Military — suppression is default
+            else:
+                # Military-guardianship chain — suppression is default
                 if hasattr(m, "citizen_array"):
                     m.citizen_array["grievance"] = np.clip(
                         m.citizen_array["grievance"] * 1.15,

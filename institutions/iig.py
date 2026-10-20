@@ -29,7 +29,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import random
 from typing import Dict, List, Optional
-from config.constitution import CONSTITUTION
+from config.constitution import CONSTITUTION  # noqa: F401 -- kept only for the
+# __main__ self-test block below, which has no live `model` instance to read
+# a scenario-aware constitution from. Every live code path (PartnershipCouncil,
+# IIGSystem) must read `self.model.CONSTITUTION`, never this bare singleton,
+# same bug class as model_phase3.py's bug #11/#14 fixes.
 
 
 class PartnershipCouncil:
@@ -69,7 +73,7 @@ class PartnershipCouncil:
         # Check quorum
         quorum_required = max(
             1,
-            int(len(partners) * CONSTITUTION.iig.PARTNERSHIP_COUNCIL_QUORUM)
+            int(len(partners) * self.model.CONSTITUTION.iig.PARTNERSHIP_COUNCIL_QUORUM)
         )
 
         # Simulate voting
@@ -81,11 +85,12 @@ class PartnershipCouncil:
             return False  # no quorum
 
         # Threshold by motion type
+        iig_cfg = self.model.CONSTITUTION.iig
         thresholds = {
-            "open_investigation": CONSTITUTION.iig.OPEN_INVESTIGATION_THRESHOLD,
-            "proceed_prosecution": CONSTITUTION.iig.PROCEED_PROSECUTION_THRESHOLD,
-            "budget": CONSTITUTION.iig.PROCEED_PROSECUTION_THRESHOLD,
-            "director_recommendation": CONSTITUTION.iig.PROCEED_PROSECUTION_THRESHOLD
+            "open_investigation": iig_cfg.OPEN_INVESTIGATION_THRESHOLD,
+            "proceed_prosecution": iig_cfg.PROCEED_PROSECUTION_THRESHOLD,
+            "budget": iig_cfg.PROCEED_PROSECUTION_THRESHOLD,
+            "director_recommendation": iig_cfg.PROCEED_PROSECUTION_THRESHOLD
         }
         threshold = thresholds.get(motion_type, 0.51)
 
@@ -174,7 +179,7 @@ class IIGSystem:
         Investigation Division assigns → Prosecution Prep hands over to Court.
         """
         corruption_log = self.model.shared_data.get("corruption_acts_log", [])
-        trigger = CONSTITUTION.iig.INVESTIGATION_TRIGGER
+        trigger = self.model.CONSTITUTION.iig.INVESTIGATION_TRIGGER
 
         new_cases = [
             act for act in corruption_log
@@ -224,7 +229,33 @@ class IIGSystem:
                     )
 
     def _update_effectiveness(self):
-        """Update IIG effectiveness metric."""
+        """
+        Update IIG effectiveness metric.
+
+        Bug #10 fix: this used to unconditionally overwrite
+        shared_data["iig_effectiveness"] with the raw cases_solved /
+        cases_opened ratio every year, clobbering the floor that
+        model_phase3.py's _apply_scenario_rules() (_civilian_chain_rules()
+        or _military_chain_rules()) had just set moments earlier in the
+        SAME step() call (annual_operations() runs immediately after
+        _apply_scenario_rules(), see model_phase3.py:417-422). Confirmed by
+        trace on Thailand: after_scenario_rules=0.2500, then
+        after_iig_ops=0.0526, collapsing toward 0 within a few years.
+
+        Now reads the active constitution's own iig.EFFECTIVENESS_FLOOR
+        (identical access pattern to model_phase3.py:558,
+        self.CONSTITUTION.iig.EFFECTIVENESS_FLOOR) and refuses to push the
+        metric below it, for both the cases-open branch and the
+        no-cases-open-yet branch below.
+
+        MFU's own IIGConfig (config/constitution.py) has no
+        EFFECTIVENESS_FLOOR field at all — Scenario A relies entirely on
+        _civilian_chain_rules()'s own year-scaled 0.30-0.40 floor instead
+        — so `floor` is None for Scenario A and no cap is applied,
+        preserving its pre-fix behavior exactly (confirmed: every other
+        encoded constitution, military or civilian chain, defines this
+        field; only MFU does not).
+        """
         from agents.oversight import IIGAgent
 
         all_iig = [a for a in self.model.schedule.agents
@@ -238,14 +269,21 @@ class IIGSystem:
         self.total_cases_solved = total_solved
         self.total_cases_opened = total_opened
 
+        floor = getattr(self.model.CONSTITUTION.iig, "EFFECTIVENESS_FLOOR", None)
+
         if total_opened > 0:
-            effectiveness = total_solved / max(1, total_opened)
-            self.model.shared_data["iig_effectiveness"] = min(1.0, effectiveness)
-        elif self.model.scenario == "A":
+            effectiveness = min(1.0, total_solved / max(1, total_opened))
+            if floor is not None:
+                effectiveness = max(floor, effectiveness)
+            self.model.shared_data["iig_effectiveness"] = effectiveness
+        elif self.model.chain_type == "civilian":
             # IIG exists and is operational even before cases open
             # Floor rises slowly to reflect institutional presence
             current = self.model.shared_data.get("iig_effectiveness", 0.30)
-            self.model.shared_data["iig_effectiveness"] = min(0.40, current + 0.01)
+            target = min(0.40, current + 0.01)
+            if floor is not None:
+                target = max(floor, target)
+            self.model.shared_data["iig_effectiveness"] = target
 
     def get_summary(self) -> Dict:
         return {

@@ -32,18 +32,22 @@ from mesa import Model
 from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 
-# ── Constitution import switch ────────────────────────────────────────────────
-# Scenario A: MFU Constitution (v7)
-# Scenario C: 2008 Myanmar Military Constitution (D's file — wired when ready)
-# model_phase3 resolves this at __init__ time based on scenario argument
+# ── Constitution registry ─────────────────────────────────────────────────────
+# Which constitution module backs a given scenario code, and whether it uses
+# a civilian-supremacy or military-guardianship governance chain, now comes
+# from config/scenario_registry.py instead of a hardcoded A/C binary (see
+# .claude/memory.md bug #11 — the old `self.CONSTITUTION` switch here used to
+# be written and never actually read by the 11 modules that import the
+# module-level MFU `CONSTITUTION` singleton directly; this registry-driven
+# switch is step 1 of making that propagate for real).
+#
+# CONSTITUTION_MFU is still imported directly here ONLY for self.max_years
+# below — the 50-year simulation horizon is a locked experimental-design
+# constant shared by every scenario (100 Monte Carlo runs/scenario, 50-year
+# horizon), not something any individual constitution's own
+# SimulationConfig.TIME_STEPS should be able to vary.
 from config.constitution import CONSTITUTION as CONSTITUTION_MFU
-
-try:
-    from config.constitution_2008 import CONSTITUTION_2008
-    CONSTITUTION_2008_AVAILABLE = True
-except ImportError:
-    CONSTITUTION_2008_AVAILABLE = False
-    CONSTITUTION_2008 = None
+from config.scenario_registry import get_scenario, AVAILABLE_SCENARIO_CODES
 
 # ── Agent imports ─────────────────────────────────────────────────────────────
 from agents.citizen import CitizenAgent, CitizenPopulation
@@ -65,6 +69,11 @@ from feedback.loops import FeedbackEngine
 # ── Phase 3 engine imports ────────────────────────────────────────────────────
 from engine.external_layer import ExternalLayer
 from engine.social_media import SocialMediaChannel
+# Bug #16: reused by _initialize_shared_data() to size active_ethnic_groups
+# to the active constitution's real ethnic-group count instead of always
+# Myanmar's 8 — same resolution logic CVES uses for its own L1/L3 fixes
+# (bug #17), imported rather than re-duplicated a third time here.
+from engine.cves import _get_ethnic_group_count
 
 # ── Elite agent import switch ─────────────────────────────────────────────────
 # Phase 3: Sam's elite_agents_v3.py (wired when ready)
@@ -159,16 +168,21 @@ class KaNovaModelPhase3(Model):
         self.seed = seed
         self.scenario = scenario
 
-        # ── Constitution switch ───────────────────────────────────────────────
-        if scenario == "C" and CONSTITUTION_2008_AVAILABLE:
-            self.CONSTITUTION = CONSTITUTION_2008
-            self.constitution_name = "2008_myanmar_military"
-        else:
-            self.CONSTITUTION = CONSTITUTION_MFU
-            self.constitution_name = "mfu_v7"
-            if scenario == "C" and not CONSTITUTION_2008_AVAILABLE:
-                print("WARNING: constitution_2008.py not found — "
-                      "Scenario C using rule-based military baseline")
+        # ── Constitution switch (registry-driven) ─────────────────────────────
+        # get_scenario() raises a clear, loud error (KeyError for an unknown
+        # code, ImportError for a known-but-not-yet-encoded code) rather than
+        # silently falling back to MFU — the old fallback-with-warning here
+        # was flagged in .claude/MINDMAP.md as "worth hardening before the
+        # reproducibility package ships." For A and C (both fully encoded)
+        # this is a no-behaviour-change swap.
+        entry = get_scenario(scenario)
+        self.CONSTITUTION       = entry.constitution
+        self.chain_type         = entry.chain_type    # "civilian" | "military"
+        self.constitution_name  = entry.slug           # unchanged literal
+                                                         # strings for A/C:
+                                                         # "mfu_v7" /
+                                                         # "2008_myanmar_military"
+        self.constitution_label = entry.label
 
         # ── Configuration ─────────────────────────────────────────────────────
         self.n_citizens = n_citizens
@@ -179,7 +193,17 @@ class KaNovaModelPhase3(Model):
         self.schedule = RandomActivation(self)
 
         # ── Elite agent layer ─────────────────────────────────────────────────
-        self.elite_layer = EliteAgentLayer(use_llm=use_llm)
+        # Bug #13: thread the active constitution/chain_type/scenario
+        # through so CVES validates every decision against the scenario's
+        # OWN constitution (self.CONSTITUTION, set above by the registry),
+        # not always the MFU singleton it used to default to regardless of
+        # scenario. See engine/elite_agents_v3.py / engine/cves.py.
+        self.elite_layer = EliteAgentLayer(
+            use_llm=use_llm,
+            constitution=self.CONSTITUTION,
+            chain_type=self.chain_type,
+            scenario=self.scenario,
+        )
         if ELITE_V3_AVAILABLE:
             print("Elite agents: v3")
         else:
@@ -218,7 +242,7 @@ class KaNovaModelPhase3(Model):
                 "trust_index":           get_trust_index,
                 "grievance_index":       get_grievance_index,
                 "iig_effectiveness":     get_institution_effectiveness,
-                "institution_label":     lambda m: "iig_effectiveness" if m.scenario == "A" else "intel_effectiveness",
+                "institution_label":     lambda m: "iig_effectiveness" if m.chain_type == "civilian" else "intel_effectiveness",
                 "coup_probability":      get_coup_probability,
                 "north_star_progress":   get_north_star_progress,
                 "gini_coefficient":      get_gini_coefficient,
@@ -236,37 +260,124 @@ class KaNovaModelPhase3(Model):
         self.datacollector.collect(self)
 
     def _initialize_states(self) -> dict:
-        """14 states with year-zero conditions."""
-        states = {}
+        """
+        States with year-zero conditions, read from the active constitution
+        (bug #16) instead of Myanmar's 14 hardcoded state names and
+        Myanmar-shaped random ranges regardless of scenario.
+
+        State list: kept as Myanmar's 14 hardcoded names, NOT swapped to
+        self.CONSTITUTION.simulation.SIMULATION_STATES, despite that field
+        existing on every constitution module. Reason, found while testing
+        this fix against Pakistan: agents/citizen.py's
+        CitizenPopulation._assign_state() (a @staticmethod with no
+        constitution access) independently hardcodes this exact same
+        14-Myanmar-name list to assign every citizen's state_id, for every
+        scenario, and agents/citizen.py is out of scope here (not one of
+        this task's owned files). Swapping ONLY this dict's keys to
+        Pakistan's/Chile's/etc.'s own SIMULATION_STATES names produces a
+        live KeyError the first time any citizen agent (assigned a
+        Myanmar-named state_id by citizen.py) looks itself up in
+        self.states (confirmed by a real crash: `ERROR r=0: 'yangon'` when
+        testing Scenario PK). This is the SAME already-flagged, deliberately-
+        deferred architectural question noted in .claude/memory.md bug #11's
+        correction ("constitution_2008.py's archetype distribution and
+        14-state list were deliberately kept identical to MFU... flag to
+        Kaung whether that separate question needs its own task") — population
+        composition (which states exist, how citizens map to them) is a
+        distinct research question from year-zero VALUES, deliberately kept
+        Myanmar-shaped for every scenario until Kaung decides otherwise, not
+        something to silently change scenario-by-scenario inside this
+        narrower bug #16 fix. Only the per-state random VALUES below are
+        made constitution-aware; the state KEYS are not.
+
+        Random ranges: centred on the constitution's own
+        SimulationConfig.YEAR_ZERO_CORRUPTION/TRUST/ETHNIC_TENSION/
+        EMPLOYMENT, using the SAME range widths the old Myanmar-only
+        literals implied (corruption/trust/employment ±0.075,
+        ethnic_tension ±0.125), rather than Myanmar's fixed centres
+        (corruption~0.725, trust~0.225, ethnic_tension~0.625,
+        employment~0.575) for every scenario. MFU and 2008 Myanmar's own
+        YEAR_ZERO_CORRUPTION/TRUST/EMPLOYMENT (0.72/0.22/0.58) are close to
+        but not bit-identical to the old literal centres, so this is a
+        small (not zero) change to Scenario A/C's year-zero state draws —
+        see .claude/memory.md bug #16 for the measured before/after sizes.
+        gdp_growth and resource_revenue have no YEAR_ZERO_* counterpart in
+        any constitution module, so those two ranges are left exactly as
+        they were (no encoded value exists to read instead).
+        """
+        sim = self.CONSTITUTION.simulation
+        # NOT sim.SIMULATION_STATES — see docstring above (agents/citizen.py
+        # coupling, out of this fix's scope).
         state_list = [
             "sagaing", "mandalay", "magway", "bago",
             "yangon", "ayeyarwady", "tanintharyi", "shan",
             "kachin", "kayah", "kayin", "chin",
             "mon", "rakhine",
         ]
+
+        corruption_base = sim.YEAR_ZERO_CORRUPTION
+        trust_base       = sim.YEAR_ZERO_TRUST
+        ethnic_base      = sim.YEAR_ZERO_ETHNIC_TENSION
+        employment_base  = sim.YEAR_ZERO_EMPLOYMENT
+
+        states = {}
         for state_id in state_list:
             states[state_id] = {
-                "corruption":       random.uniform(0.65, 0.80),
-                "trust":            random.uniform(0.15, 0.30),
+                "corruption":       random.uniform(corruption_base - 0.075, corruption_base + 0.075),
+                "trust":            random.uniform(trust_base - 0.075, trust_base + 0.075),
                 "gdp_growth":       random.uniform(-0.02, 0.04),
-                "ethnic_tension":   random.uniform(0.50, 0.75),
+                "ethnic_tension":   random.uniform(ethnic_base - 0.125, ethnic_base + 0.125),
                 "resource_revenue": random.uniform(0.10, 0.40),
-                "employment":       random.uniform(0.50, 0.65),
+                "employment":       random.uniform(employment_base - 0.075, employment_base + 0.075),
             }
         return states
 
     def _initialize_shared_data(self) -> dict:
-        """Year Zero shared state — real Myanmar baselines."""
+        """
+        Year Zero shared state (bug #16) — read from the active
+        constitution's SimulationConfig.YEAR_ZERO_* fields instead of
+        hardcoded Myanmar literals for every scenario. MFU's own
+        SimulationConfig predates YEAR_ZERO_COUP_RISK/YEAR_ZERO_STABILITY
+        (only 2008 Myanmar and the 5 new constitutions define them), so
+        those two fall back to the original literals (0.25/0.18) via
+        getattr when absent — a no-op for Scenario A specifically.
+
+        Fields with NO YEAR_ZERO_* counterpart in any constitution module
+        (grievance_index, employment_rate, iig_effectiveness,
+        brain_drain_rate, military_loyalty, policy_quality, ethnic_harmony
+        — the last confirmed a dead/never-written key independently, see
+        .claude/memory.md bug #3's side note) are left as the same
+        literals as before; there is no encoded value to read instead, and
+        inventing one would be guessing, not fixing.
+        """
+        sim = self.CONSTITUTION.simulation
+        n_ethnic = _get_ethnic_group_count(self.CONSTITUTION)
+        if n_ethnic == 8:
+            # Real Myanmar names — unchanged for Scenario A (MFU, via the
+            # ChamberConfig.ETHNIC_SEATS=8 fallback) and Scenario C (2008
+            # Myanmar, via FederalConfig.ETHNIC_GROUPS=8). No other
+            # encoded constitution currently resolves to 8.
+            active_ethnic_groups = [
+                "Bamar", "Shan", "Karen", "Kachin",
+                "Chin", "Mon", "Rakhine", "Kayah"
+            ]
+        else:
+            # No real ethnic-group names are encoded for the other 5
+            # constitutions (only a count), so generic placeholder labels
+            # of the correct LENGTH are used rather than borrowing
+            # Myanmar's 8 real names — see bug #17 in .claude/memory.md.
+            active_ethnic_groups = [f"ethnic_group_{i}" for i in range(n_ethnic)]
+
         return {
-            "corruption_index":     0.72,
-            "trust_index":          0.22,
+            "corruption_index":     sim.YEAR_ZERO_CORRUPTION,
+            "trust_index":          sim.YEAR_ZERO_TRUST,
             "grievance_index":      0.60,
-            "gini_coefficient":     0.55,
-            "employment_rate":      0.58,
+            "gini_coefficient":     sim.YEAR_ZERO_GINI,
+            "employment_rate":      sim.YEAR_ZERO_EMPLOYMENT,
             "ethnic_harmony":       0.35,
             "iig_effectiveness":    0.30,
-            "coup_risk":            0.25,
-            "stability_index":      0.18,
+            "coup_risk":            getattr(sim, "YEAR_ZERO_COUP_RISK", 0.25),
+            "stability_index":      getattr(sim, "YEAR_ZERO_STABILITY", 0.18),
             "brain_drain_rate":     0.35,
             "north_star_progress":  0.0,
             "protest_rate":         0.0,
@@ -276,10 +387,7 @@ class KaNovaModelPhase3(Model):
             "policy_quality":       0.50,
             "rights_violated":      False,
             "simulation_failed":    False,
-            "active_ethnic_groups": [
-                "Bamar", "Shan", "Karen", "Kachin",
-                "Chin", "Mon", "Rakhine", "Kayah"
-            ],
+            "active_ethnic_groups": active_ethnic_groups,
             "external":             {},
             "social_media":         {},
             "citizen_information_exposure": 1.0,
@@ -386,7 +494,7 @@ class KaNovaModelPhase3(Model):
 
         # Handle coup signal
         if self.shared_data.get("elite_coup_signal", False):
-            if self.scenario == "A":
+            if self.chain_type == "civilian":
                 self.shared_data["coup_risk"] = max(
                     0.0, self.shared_data.get("coup_risk", 0.25) - 0.05
                 )
@@ -411,6 +519,20 @@ class KaNovaModelPhase3(Model):
         self.chambers.generate_annual_policy(self.current_year)
         self.chambers.process_votes(self.current_year)
         self.iig_system.annual_operations(self.current_year)
+        # Bug #12 fix: ConstitutionalCourtSystem.annual_session() was fully
+        # implemented (Total Ruin certification, rights-complaint
+        # processing, methodology challenges, emergency certification, the
+        # 10-year constitutional review) but never called anywhere in this
+        # loop — the entire judicial layer was dead code for every
+        # scenario. Judicial constraint is a core axis in the comparative
+        # design (V-Dem judicial-constraints-on-the-executive index is a
+        # cited validation point for several of the 7 constitutions), so a
+        # mechanically inert judiciary undermined that argument across the
+        # board, not just for new scenarios. See court.py's
+        # REVIEW_INTERVAL == 0 guard (added alongside this call site) for
+        # why this is now safe to call for every constitution, including
+        # the several that encode no mandatory review cycle.
+        self.court.annual_session(self.current_year)
 
         # ── 8. State environment update ───────────────────────────────────────
         self._update_states()
@@ -451,14 +573,23 @@ class KaNovaModelPhase3(Model):
         self.shared_data["environment"] = env
 
     def _apply_scenario_rules(self):
-        """Apply constitutional rules based on active scenario."""
-        if self.scenario == "A":
-            self._scenario_a_rules()
-        elif self.scenario == "C":
-            self._scenario_c_rules()
+        """
+        Apply chain-type rules (civilian-supremacy vs military-guardianship
+        governance chain), read from the scenario registry rather than a
+        literal scenario-code check — this is what lets SK/TH/PK/CL/DE plug
+        into the same two branches as A/C once their constitution modules
+        exist, with zero new code here. Bias lives only in each
+        constitution's own parameter values (thresholds, probabilities,
+        bonuses — all read fresh via self.CONSTITUTION, never hardcoded in
+        this dispatch), per the engine-symmetry principle.
+        """
+        if self.chain_type == "civilian":
+            self._civilian_chain_rules()
+        else:
+            self._military_chain_rules()
 
-    def _scenario_a_rules(self):
-        """Full MFU — all constitutional safeguards enforced."""
+    def _civilian_chain_rules(self):
+        """Civilian-supremacy governance chain (A/MFU and future civilian-chain comparators)."""
         self.shared_data["rights_violated"] = False
         # IIG effectiveness floor — institution is operational even before cases open
         current_iig = self.shared_data.get("iig_effectiveness", 0.30)
@@ -473,8 +604,22 @@ class KaNovaModelPhase3(Model):
                         0.0, agent.corruption_tolerance - 0.005
                     )
 
-        # Article 19 — Tatmadaw transition trust gain
-        transition = CONSTITUTION_MFU.tatmadaw_transition
+        # Shared coup-attempt/success roll (bug #6 fix — see
+        # _coup_risk_check docstring). Must run BEFORE the Article 19 /
+        # transition trust-gain check below, same year, same order the old
+        # _scenario_a_rules() implicitly assumed.
+        self._coup_risk_check()
+
+        # Article 19 — Tatmadaw transition trust gain, gated on no coup
+        # attempt THIS year. self.CONSTITUTION.tatmadaw_transition is read
+        # from whichever constitution the active run actually uses (fixed
+        # from the old hardcoded CONSTITUTION_MFU.tatmadaw_transition read,
+        # which — given bug #11 — made no practical difference for
+        # Scenario A, but would have been silently wrong for any other
+        # civilian-chain scenario). Every civilian-chain constitution module
+        # must define a `tatmadaw_transition` section with at least
+        # TRUST_GAIN_PER_CLEAN_YEAR (see field-contract note for SK/CL/DE).
+        transition = self.CONSTITUTION.tatmadaw_transition
         if not self.shared_data.get("coup_attempted", False):
             self.shared_data["trust_index"] = min(
                 1.0,
@@ -482,21 +627,69 @@ class KaNovaModelPhase3(Model):
                 transition.TRUST_GAIN_PER_CLEAN_YEAR
             )
 
-    def _scenario_c_rules(self):
-        """2008 Myanmar Military Constitution rules."""
+    def _military_chain_rules(self):
+        """Military-guardianship governance chain (C/2008 Myanmar and future military-chain comparators)."""
         import random as _random
         if _random.random() < 0.05:
             self.shared_data["rights_violated"] = True
+
+        # IIG-equivalent floor/decay — bug #14 fix. Previously hardcoded as
+        # literal numbers (0.05 floor, -0.002 annual decay) for EVERY
+        # military-chain scenario regardless of constitution, silently
+        # overriding each country's deliberately-sourced anti-corruption
+        # parameters (e.g. Thailand's real, entrenched NACC
+        # EFFECTIVENESS_FLOOR=0.25, chosen specifically per the realism
+        # requirement to NOT copy Myanmar's near-zero 0.05 floor). Now reads
+        # self.CONSTITUTION.iig.EFFECTIVENESS_FLOOR, which every encoded
+        # constitution's IIGConfig defines (confirmed in constitution.py,
+        # constitution_2008.py, constitution_thailand.py).
+        #
+        # No constitution currently defines a corresponding decay-rate
+        # field under EFFECTIVENESS_DECAY_RATE or any similar name
+        # (verified against constitution_2008.py and constitution_thailand.py
+        # IIGConfig sections — neither has one), so the decay rate falls
+        # back to the original hardcoded -0.002/year unless/until a
+        # constitution author adds that field. This is a real gap in the
+        # field contract, not silently papered over: flagged here and in
+        # the task report for senior-researcher/whoever encodes future
+        # military-chain constitutions to add if the decay RATE (not just
+        # the floor) needs to differ by country.
+        floor = self.CONSTITUTION.iig.EFFECTIVENESS_FLOOR
+        decay = getattr(self.CONSTITUTION.iig, "EFFECTIVENESS_DECAY_RATE", -0.002)
         self.shared_data["iig_effectiveness"] = max(
-            0.05, self.shared_data.get("iig_effectiveness", 0.05) - 0.002
+            floor, self.shared_data.get("iig_effectiveness", floor) + decay
         )
+        self._coup_risk_check()
+
+    def _coup_risk_check(self):
+        """
+        Shared coup-attempt/success roll for BOTH chain types (fixes bug #6:
+        `coup_attempted` used to be read-only in the old _scenario_a_rules()
+        and never written anywhere in the file; `coup_succeeded` was
+        write-only in the old _scenario_c_rules(). Unifying the mechanic
+        here makes both keys real and symmetric across chain types —
+        the SAME 0.70 risk threshold / 70% success-conditional roll applies
+        to every scenario; only each constitution's own coup_risk
+        trajectory (itself driven by that constitution's military-config
+        thresholds elsewhere in the pipeline) determines whether this ever
+        actually fires. This is why Scenario A's locked coup probability
+        stays at 0.0000 — not because this check is skipped for it, but
+        because MFU's parameters never drive coup_risk above 0.70.
+
+        coup_attempted is reset to False every year it does not trigger, so
+        it reads as "an attempt happened THIS year," not "ever happened."
+        """
+        import random as _random
         coup_risk = self.shared_data.get("coup_risk", 0.25)
         if coup_risk > 0.70:
+            self.shared_data["coup_attempted"] = True
             if _random.random() < 0.70:
                 self.shared_data["coup_succeeded"]    = True
                 self.shared_data["simulation_failed"] = True
                 self.shared_data["failure_year"]      = self.current_year
-                self.shared_data["failure_reason"]    = "coup_succeeded_2008_constitution"
+                self.shared_data["failure_reason"]    = f"coup_succeeded_{self.constitution_name}"
+        else:
+            self.shared_data["coup_attempted"] = False
 
     def _update_states(self):
         """Update state-level economic and social variables."""
@@ -512,13 +705,13 @@ class KaNovaModelPhase3(Model):
                 (fdi * 0.005),
                 -0.10, 0.15
             ))
-            if self.scenario == "A":
-                # MFU: IIG actively reduces corruption
+            if self.chain_type == "civilian":
+                # Civilian-supremacy chain: IIG actively reduces corruption
                 state["corruption"] = float(np.clip(
                     state["corruption"] - (iig * 0.02), 0.0, 1.0
                 ))
             else:
-                # 2008 constitution: no accountability, corruption drifts up
+                # Military-guardianship chain: no accountability, corruption drifts up
                 state["corruption"] = float(np.clip(
                     state["corruption"] + 0.01, 0.0, 1.0
                 ))
@@ -529,7 +722,7 @@ class KaNovaModelPhase3(Model):
             self.shared_data["corruption_index"] = round(float(avg_corruption), 4)
 
         # IIG effectiveness floor — enforce after all other writes
-        if self.scenario == "A":
+        if self.chain_type == "civilian":
             year_bonus = 0.01 * (self.current_year / max(1, self.max_years))
             floor = min(0.30 + year_bonus, 0.40)
             current = self.shared_data.get("iig_effectiveness", 0.30)
@@ -607,7 +800,9 @@ class KaNovaModelPhase3(Model):
 if __name__ == "__main__":
     print("model_phase3.py — quick test (200 citizens, 5 steps)")
     print()
-    for scenario in ["A", "C"]:
+    for scenario in AVAILABLE_SCENARIO_CODES:  # currently ["A", "C"]; grows
+                                                # automatically as SK/TH/PK/CL/DE
+                                                # get encoded
         print(f"Testing Scenario {scenario}...")
         model = KaNovaModelPhase3(
             scenario=scenario,

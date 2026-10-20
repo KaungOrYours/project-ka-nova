@@ -273,9 +273,31 @@ class ChamberConfig:
     ANALYSIS_THRESHOLD: float = 1.00   # Constitutional Tribunal — unanimous (9 members, all must agree per Section 320)
     ANALYSIS_VETO_TIME_LIMIT: int = 90  # Section 335 — Tribunal term = Hluttaw term (5 yrs); 90 days per ruling
 
+    # Backfilled 2026-10-20 (engine field-parity audit — see constitution.py's
+    # equivalent fields for the MFU semantics these mirror).
+    # GUESS — no merit exam for Tribunal appointment; appointees are
+    # Hluttaw/Commander-in-Chief nominees (Section 46/299), not merit-tested.
+    ANALYSIS_MERIT_MIN: float = 0.0
+    # CONFIDENT — Section 335: Tribunal term = Pyidaungsu Hluttaw term (5 yrs),
+    # already cited above for ANALYSIS_VETO_TIME_LIMIT's own comment.
+    ANALYSIS_TERM: int = 5
+
     # Ka-Nova simulation — military bloc controls legislative outcomes
     MILITARY_BLOC_VOTE_DISCIPLINE: float = 1.0  # Military nominees vote as a bloc (100%)
     CIVILIAN_EFFECTIVE_MAJORITY_NEEDED: float = 0.667  # Civilian majority needed to overcome 25% military bloc
+
+    # GUESS — no fixed term-limit mechanism for ethnic-state Hluttaw seats
+    # under the 2008 constitution (standard re-electable 5-yr terms, no cap
+    # analogous to MFU's Article 5.4 Ethnic Leaders Council 2-term rule).
+    # Set high (effectively unlimited) rather than fabricating a cap.
+    ETHNIC_MAX_TERMS: int = 99
+    # GUESS — the 2008 constitution has no "Ethnic Leaders Council to
+    # presidency" pathway at all (no such body exists; ethnic Hluttaw seats
+    # are not a recognised presidential qualifying track under Section 59).
+    # Set deliberately out of practical reach rather than fabricate a real
+    # pathway, mirroring this file's own idiom elsewhere (e.g.
+    # JudiciaryConfig.TOTAL_RUIN_THRESHOLD = 0.0 for "mechanism absent").
+    ETHNIC_PRESIDENTIAL_MIN_TERMS: int = 99
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -304,6 +326,28 @@ class JudiciaryConfig:
     # Ka-Nova: court effectiveness reduced under military dominance
     COURT_CORRUPTION_RESISTANCE: float = 0.20   # Low — military appointees dominate
     TOTAL_RUIN_THRESHOLD: float = 0.0           # No Total Ruin mechanism in 2008 constitution
+
+    # Backfilled 2026-10-20 (engine field-parity audit). Live engine code
+    # reads JUDGE_COUNT / JUDGE_TERM / JUDGE_MAX_TERMS / BUDGET_FIXED (not
+    # this class's existing COURT_JUDGES_COUNT / COURT_TERM_YEARS, which
+    # were named differently — both sets of fields now coexist so neither
+    # the original author's intent nor the live code's literal attribute
+    # names are lost).
+    # CONFIDENT — same figure as COURT_JUDGES_COUNT above, same Section 300 proxy.
+    JUDGE_COUNT: int = 11
+    # GUESS — Section 301 caps tenure by AGE (70), not a fixed term length;
+    # the engine models term_remaining as an annual countdown, which has no
+    # literal textual equivalent here. 15 years is an estimated typical
+    # effective incumbency for a judge appointed in their 50s under this
+    # system, NOT a cited constitutional figure.
+    JUDGE_TERM: int = 15
+    # GUESS — no multi-term/re-election concept exists (age-capped single
+    # continuous appointment, not a renewable fixed term). Set to 1 to model
+    # "one continuous appointment," not a count of renewable cycles.
+    JUDGE_MAX_TERMS: int = 1
+    # CONFIDENT — follows directly from COURT_INDEPENDENCE = False above;
+    # no constitutionally protected judicial budget exists.
+    BUDGET_FIXED: bool = False
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -334,6 +378,83 @@ class IIGConfig:
     INITIAL_EFFECTIVENESS: float = 0.05
     MAX_EFFECTIVENESS: float = 0.15
 
+    # Backfilled 2026-10-20 (engine field-parity audit). Live engine code
+    # (agents/oversight.py, institutions/iig.py) reads these exact field
+    # names on EVERY IIGAgent/oversight path regardless of scenario, so they
+    # must exist here too even though the real-world institution this class
+    # models (military intelligence) is a loose, non-literal proxy for an
+    # anti-corruption body — flagged throughout as Ka-Nova simulation
+    # parameters, not literal constitutional citations, same caveat this
+    # file's own docstring already carries for this class.
+    # CONFIDENT — mirrors ENTRY_MERIT = 0.0 above (same field, live code's
+    # literal name is ENTRY_MERIT_MIN).
+    ENTRY_MERIT_MIN: float = 0.0
+    # GUESS — commissioned officer / Defence Services Academy entry age
+    # proxy; no constitutional citation (MFU's own ENTRY_MIN_AGE = 22 is
+    # likewise a Ka-Nova design choice, not literal Article 7 text).
+    ENTRY_MIN_AGE: int = 20
+    # CONFIDENT — mirrors ACADEMY_MONTHS = 0 above (no academy exists).
+    ACADEMY_DURATION_MONTHS: int = 0
+    # GUESS — no fixed-tenure protection; intelligence chief serves at the
+    # Commander-in-Chief's pleasure. Shorter than MFU's 6 years to reflect
+    # insecurity of tenure, not textually cited.
+    DIRECTOR_TERM: int = 3
+    # CONFIDENT direction — opposite of MFU's single-term rule, consistent
+    # with "no safeguards" framing (SafeguardConfig.IIG_SINGLE_TERM = False
+    # is the MFU-only safeguard this constitution does not carry).
+    DIRECTOR_RENEWABLE: bool = True
+    # GUESS — no Partnership Council / seniority-gated voting body exists;
+    # set to 0 so every officer is immediately "eligible," modeling the
+    # absence of a seniority safeguard rather than fabricating one.
+    PARTNER_ELIGIBILITY_YEARS: int = 0
+    # GUESS — no two-stage evidentiary process (open investigation vs.
+    # proceed-to-prosecution) exists under REPORTS_TO="commander_in_chief"
+    # chain-of-command decision-making. Deliberately collapsed to the SAME
+    # high bar as INVESTIGATION_TRIGGER (0.90) rather than inventing a
+    # graduated due-process structure MFU has and this constitution does
+    # not — the collapse itself is the modeling point, not an oversight.
+    OPEN_INVESTIGATION_THRESHOLD: float = 0.90
+    PROCEED_PROSECUTION_THRESHOLD: float = 0.90
+    # GUESS — no Partnership Council quorum concept; 1.0 models "quorum ==
+    # sole chain-of-command authority," not a committee threshold.
+    PARTNERSHIP_COUNCIL_QUORUM: float = 1.0
+    # CONFIDENT — real documented practice: former military/intelligence
+    # officers routinely move into the military's constitutionally
+    # guaranteed nominated seats (Sections 109(b)/141(b)), unlike MFU's
+    # permanent post-service chamber ban (Article 7.9).
+    CHAMBER_ELIGIBLE_POST_SERVICE: bool = True
+    # GUESS — proxy reintegration paths; no Article-7.9-equivalent section
+    # names these explicitly for Myanmar's military intelligence apparatus.
+    PERMITTED_POST_SERVICE: Tuple[str, ...] = (
+        "armed_forces",
+        "military_nominated_parliamentary_seat",
+        "state_administration",
+        "military_owned_enterprises",
+    )
+    # GUESS — no official headcount is publicly documented (classified);
+    # set larger than MFU's 600 to reflect a sprawling surveillance
+    # apparatus rather than "small, elite, accountable" — directional
+    # characterisation grounded in real-world reporting on Myanmar's
+    # military intelligence network, exact figure is not sourced.
+    MAX_AGENTS: int = 2000
+    # GUESS — division names invented for simulation structure; the 2008
+    # constitution's text does not name intelligence sub-divisions.
+    FUNCTIONAL_DIVISIONS: Tuple[str, ...] = (
+        "signals_intelligence",
+        "human_intelligence",
+        "internal_security_screening",
+    )
+    MANDATE_DIVISIONS: Tuple[str, ...] = (
+        "regime_protection_division",
+        "dissent_monitoring_division",
+        "political_loyalty_division",
+    )
+    OPERATIONAL_DIVISIONS: Tuple[str, ...] = (
+        "surveillance_division",
+        "detention_division",
+        "censorship_division",
+    )
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER II — STATE STRUCTURE / FEDERAL STRUCTURE (Sections 49–56)
@@ -360,6 +481,28 @@ class FederalConfig:
 
     # Section 17 — Defence Services in executive at all levels
     MILITARY_IN_REGIONAL_EXECUTIVE: bool = True   # Section 17(b)
+
+    # Backfilled 2026-10-20 (engine field-parity audit).
+    # CONFIDENT direction — Section 36(b)'s anti-monopoly clause is already
+    # noted elsewhere (EconomicConfig.ANTI_MONOPOLY = True "on paper") as
+    # unenforced in practice; crony conglomerates are explicitly tolerated
+    # (CRONY_CAPITAL_SHARE = 0.40). Set to 1.0 (no effective cap) rather
+    # than reusing MFU's enforced 0.30 cap, consistent with that framing.
+    SECTOR_MONOPOLY_CAP: float = 1.00
+
+    # Backfilled 2026-10-20. MFU's Article VIII trust-acceleration
+    # mechanic is a genuine "virtuous cycle": N consecutive low-corruption
+    # years multiply trust growth. The 2008 constitution has no analogous
+    # accountability safeguard, so these three fields are set to NULLIFY
+    # the mechanic through parameter values alone (not a scenario-specific
+    # code branch) — keeping feedback/loops.py's formula identical across
+    # scenarios, with the constitution layer alone deciding whether the
+    # cycle can ever fire. This is a deliberate calibration choice, not a
+    # sourced constitutional figure — flagged for sanity-check once Phase 2
+    # trajectories are available.
+    TRUST_ACCELERATION_TRIGGER_CORRUPTION: float = 0.0   # effectively unreachable
+    TRUST_ACCELERATION_TRIGGER_YEARS: int = 99            # effectively unreachable
+    TRUST_ACCELERATION_MULTIPLIER: float = 1.00           # no-op even if reached
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -402,6 +545,37 @@ class MilitaryConfig:
     DOMESTIC_FORCE_AUTHORIZED: bool = True
     DOMESTIC_FORCE_TRIGGER: str = "president_or_commander_in_chief_declaration"
 
+    # Backfilled 2026-10-20 (engine field-parity audit). Live code reads
+    # COUP_TRIGGER_LOYALTY / COUP_TRIGGER_APPROVAL (distinct from this
+    # class's existing COUP_TRIGGER_CORRUPTION / COUP_TRIGGER_TRUST above,
+    # which feed a different mechanic — whether the Commander-in-Chief acts
+    # against the civilian government). These two model the military
+    # turning against ITSELF/its own leadership, which is structurally
+    # near-meaningless here: the military IS the regime
+    # (COUP_PROBABILITY_MULTIPLIER = 0.0 above already encodes this).
+    # CONFIDENT direction, grounded directly in that existing field's own
+    # comment — set to an unreachable floor so this specific trigger
+    # mechanically cannot fire on its own.
+    COUP_TRIGGER_LOYALTY: float = 0.0
+    COUP_TRIGGER_APPROVAL: float = 0.0
+
+    # Backfilled 2026-10-20. National Service cross-exposure/loyalty
+    # boosts (agents/citizen.py). GUESS — directionally grounded in the
+    # real, well-documented post-2021 forced-conscription dynamic (the
+    # 2024 People's Military Service Law's disproportionate impact on
+    # ethnic-minority communities), which plausibly builds coerced
+    # compliance rather than genuine cross-ethnic trust or civic capital.
+    # Exact magnitudes are this file's own calibration estimate, not
+    # sourced from a specific study — flag for sanity-check.
+    NS_CIVILIAN_TRACK_THRESHOLD: float = 0.65   # kept neutral — a citizen-
+                                                  # side sorting criterion,
+                                                  # not itself constitution-
+                                                  # dependent
+    NS_LOYALTY_BOOST: float = 0.05               # vs MFU 0.15 — coerced, weaker
+    NS_ETHNIC_EXPOSURE_BOOST: float = 0.02       # vs MFU 0.20 — coercive conscription
+                                                  # does not build cross-ethnic trust
+    NS_CIVIC_CONTRIBUTION_BOOST: float = 0.02    # vs MFU 0.10
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER I (Economic) — Sections 35-37 + CHAPTER V Economic provisions
@@ -434,6 +608,38 @@ class EconomicConfig:
     CORRUPTION_GDP_DRAG: float = 0.03   # High corruption drag
     CRONY_CAPITAL_SHARE: float = 0.40   # ~40% of economy to military-connected cronies
 
+    # Backfilled 2026-10-20 (engine field-parity audit). Foreign-ownership
+    # caps/sector lists come from Myanmar's Foreign Investment Law 2012 /
+    # Myanmar Investment Law 2016, not the constitution text itself (the
+    # constitution only establishes Section 37's state-resource-ownership
+    # principle) — flagged as a sourcing-limitation, not a constitutional
+    # citation, consistent with this class's own CRONYISM_ENABLED comment
+    # style ("Ka-Nova parameter — not in constitution text").
+    # GUESS — restricted-sector list adjusted from MFU's to match Myanmar's
+    # actual historical restricted list (telecommunications swapped in for
+    # "technology").
+    STRATEGIC_SECTORS: Tuple[str, ...] = (
+        "natural_resources",
+        "defence",
+        "media",
+        "telecommunications",
+        "banking",
+    )
+    OPEN_SECTORS: Tuple[str, ...] = (
+        "manufacturing",
+        "retail",
+        "tourism",
+        "services",
+        "agriculture_non_resource",
+    )
+    # GUESS — lower than MFU's 0.49, reflecting the tighter joint-venture
+    # minority-stake practice historically required in restricted sectors,
+    # plus a crony-protection motive; not a single precise citation.
+    FOREIGN_CAP_STRATEGIC: float = 0.35
+    # CONFIDENT — matches MFU; open sectors were liberalised to full
+    # foreign ownership under the 2016 Investment Law.
+    FOREIGN_CAP_OPEN: float = 1.00
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER I — Education provisions (Sections 28, 366)
@@ -456,6 +662,16 @@ class ScienceConfig:
     # Ka-Nova: knowledge capital parameters under military governance
     BRAIN_DRAIN_RATE_BASE: float = 0.15   # High — educated leave
     ACADEMIC_FREEDOM: float = 0.20        # Low — political control of universities
+
+    # Backfilled 2026-10-20 (engine field-parity audit).
+    # CONFIDENT — mirrors RESEARCHER_ROYALTY = 0.0 above (same field, live
+    # code's literal name is RESEARCHER_ROYALTY_RATE).
+    RESEARCHER_ROYALTY_RATE: float = 0.0
+    # GUESS magnitude, confident direction — consistent with this class's
+    # own docstring ("minimal science investment") and
+    # KNOWLEDGE_CAPITAL_GROWTH = 0.005 already being far below MFU's
+    # implied rate. Set well below MFU's 0.25 per-graduate boost.
+    PHD_KNOWLEDGE_CAPITAL_BOOST: float = 0.05
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -497,6 +713,30 @@ class AmendmentConfig:
         "chapter_12_amendment"
     )
     REVIEW_INTERVAL: int = 0   # No mandatory review cycle — amendment is exceptionally hard
+    # NOTE (not a backfill — flagging for whoever next touches
+    # institutions/court.py): REVIEW_INTERVAL = 0 is the factually correct
+    # encoding (the 2008 constitution genuinely has no 10-year review
+    # mechanism, unlike MFU Article 12.3). institutions/court.py:63 does
+    # `year % CONSTITUTION.amendment.REVIEW_INTERVAL == 0`, which would
+    # raise ZeroDivisionError if ever reached. Confirmed harmless today —
+    # ConstitutionalCourtSystem.annual_session() (the only caller of that
+    # line) is never invoked anywhere in model_phase3.py's step() loop, so
+    # this is live but currently unreachable dead code. Do NOT "fix" this
+    # by changing REVIEW_INTERVAL's value — the correct fix if
+    # annual_session() is ever wired in is a guard clause in court.py
+    # (`if REVIEW_INTERVAL > 0 and year % REVIEW_INTERVAL == 0`), not a
+    # constitutional-encoding change.
+
+    # Backfilled 2026-10-20 (engine field-parity audit). Reused rather than
+    # varied — institutions/court.py's 10-year-review sampling and
+    # institutions/chambers.py's Citizens Assembly veto-confirmation path
+    # are themselves MFU-specific civic-lottery mechanisms loosely mapped
+    # onto this constitution (no real equivalent exists under the 2008
+    # system at all — REVIEW_INTERVAL = 0 above already says so). Kept at
+    # the same canonical 320 value used elsewhere rather than inventing a
+    # different number for a mechanism that doesn't textually exist,
+    # minimising unnecessary divergence beyond the wiring fix itself.
+    CITIZENS_ASSEMBLY_SIZE: int = 320
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -549,6 +789,11 @@ class SafeguardConfig:
     COMMANDER_IN_CHIEF_VETO: bool = True    # Implicit throughout
     NDSC_OVERSIGHT: bool = True             # National Defence and Security Council
 
+    # Backfilled 2026-10-20 (engine field-parity audit). CONFIDENT — follows
+    # directly from ANALYSIS_TRANSPARENCY = False above; no publish-before-
+    # veto transparency window exists.
+    ANALYSIS_PUBLISH_BEFORE_VETO_DAYS: int = 0
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # NO CRYPTOGRAPHIC JUSTICE
@@ -565,6 +810,16 @@ class CryptoJusticeConfig:
     TOTAL_RUIN_MECHANISM: bool = False
     TOTAL_RUIN_STEPS: int = 0
 
+    # Backfilled 2026-10-20 (engine field-parity audit).
+    # GUESS value — chosen to equal JUDGE_COUNT (11 of 11, unanimous),
+    # effectively unreachable, consistent with TOTAL_RUIN_MECHANISM = False
+    # above. Same idiom as JudiciaryConfig.TOTAL_RUIN_THRESHOLD = 0.0:
+    # nullify the mechanism via parameter value rather than a special-cased
+    # code branch.
+    COURT_SUPERMAJORITY_FOR_TOTAL_RUIN: int = 11
+    # CONFIDENT — no Shame Register exists under this constitution at all.
+    SHAME_REGISTER_CORRUPTION_REDUCTION: float = 0.0
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER XI — EMERGENCY POWERS (Sections 410–432)
@@ -575,6 +830,16 @@ class CryptoJusticeConfig:
 @dataclass(frozen=True)
 class EmergencyConfig:
     """Chapter XI — Provisions on State of Emergency"""
+
+    # Backfilled 2026-10-20 (engine field-parity audit).
+    # CONFIDENT — directly derived from this class's own existing
+    # POWER_TRANSFER_TRIGGER = "disintegration_or_insurgency" (Section 417)
+    # cited below; just expressed as a tuple to match the live field name.
+    TRIGGER_SCENARIOS: Tuple[str, ...] = (
+        "national_disintegration_threat",
+        "insurgency_or_armed_conflict",
+        "commander_in_chief_discretionary_declaration",
+    )
 
     # Section 414(a) — Emergency duration specified in ordinance
     EMERGENCY_MAX_DAYS: int = 365    # Section 417 — initial declaration = 1 year
@@ -626,6 +891,12 @@ class ROEConfig:
 
     EXTERNAL_ROE: str = "defensive_unless_declared_war"
 
+    # Backfilled 2026-10-20 (engine field-parity audit). CONFIDENT — follows
+    # directly from this class's own EXTERNAL_ROE = "defensive_unless_
+    # declared_war" above, the opposite framing of MFU's Article 17
+    # "scorched earth" doctrine (EXTERNAL_FULL_FORCE = True).
+    EXTERNAL_FULL_FORCE: bool = False
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER I — Psychological Health (Section 18)
@@ -645,6 +916,56 @@ class PsychConfig:
     POPULATION_TRAUMA_BASE: float = 0.45   # High baseline trauma
     TRAUMA_ACCUMULATION_RATE: float = 0.02  # Annual increase
     ETHNIC_TRAUMA_MULTIPLIER: float = 1.5   # Higher for ethnic minorities
+
+    # Backfilled 2026-10-20 (engine field-parity audit). agents/official.py
+    # runs the psych-screening cycle unconditionally for every OfficialAgent
+    # regardless of scenario ("unchanged from Phase 1," not gated) — so
+    # these fields must exist here even though this class's own docstring
+    # says no psychological health mandate exists under this constitution.
+    # GUESS — modelled as "never triggers within the 50-year/600-month
+    # simulation horizon" (600 months = 50 years x 12) rather than 0, which
+    # the engine would otherwise treat as "triggers every single call"
+    # (the comparison is `psych_screen_months >= SCREENING_INTERVAL_MONTHS`,
+    # not a modulo, so 0 is NOT a crash risk here but would be the opposite
+    # of the intended "no mandate" meaning). Consistent with
+    # BIANNUAL_SCREENING = False above.
+    SCREENING_INTERVAL_MONTHS: int = 9999
+    # GUESS — same reasoning: no genuine rehabilitation/return-to-service
+    # pathway exists (TRAUMA_CARE_MANDATED = False), so probation never
+    # completes within the simulation horizon.
+    SEVERE_PROBATION_MONTHS: int = 9999
+    # CONFIDENT (kept neutral) — these are diagnostic-scale thresholds, not
+    # a constitutional design choice; what varies between constitutions is
+    # WHETHER screening/probation ever functionally happens (the two fields
+    # above), not the severity scale itself. Reused from MFU unchanged.
+    OUTCOME_STABLE_THRESHOLD: float = 0.40
+    OUTCOME_SEVERE_THRESHOLD: float = 0.70
+    # GUESS, deliberate — chosen to NOT match the engine's literal string
+    # check (`if consequence == "automatic_temporary_disqualification"`),
+    # so agents/official.py's stop_treatment() becomes a no-op for this
+    # constitution. This is intentional, not an oversight: it models the
+    # absence of ANY formal psychological-health mandate (there is nothing
+    # to formally "stop"), consistent with TRAUMA_CARE_MANDATED = False
+    # above. Flag if this no-op behaviour is not the intended modelling
+    # choice — the alternative is reusing MFU's exact string, which would
+    # apply MFU's supportive consequence here instead.
+    STOP_CONSEQUENCE: str = "no_formal_consequence_mechanism_exists"
+    # CONFIDENT — trauma origin categories describe citizen lived
+    # experience, not a constitution-specific design choice; reused
+    # unchanged from MFU (arguably MORE applicable here given Myanmar's
+    # real history of conflict and ethnic suppression under military rule).
+    TRAUMA_CATEGORIES: Tuple[str, ...] = (
+        "warfare_conflict",
+        "family_domestic_abuse",
+        "educational_authoritarian",
+        "environmental_displacement",
+        "self_identity_ethnic_suppression",
+    )
+    # GUESS magnitude, confident direction — higher than MFU's (0.10, 0.30)
+    # range, reflecting trauma's larger undistorted impact on decision
+    # quality in the absence of any care infrastructure
+    # (TRAUMA_CARE_MANDATED = False).
+    TRAUMA_DISTORTION_RANGE: Tuple[float, float] = (0.20, 0.45)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -702,6 +1023,62 @@ class SimulationConfig:
     MILITARY_CONTROLS_EXECUTIVE: bool = True
     MILITARY_CONTROLS_JUDICIARY: bool = True
     RIGHTS_ENFORCEABLE: bool = False    # Rights exist on paper, not in practice
+
+    # Backfilled 2026-10-20 (engine field-parity audit). These five fields
+    # are the locked experimental-design constants (same population size,
+    # same 50-year horizon, same real-Myanmar geography for every
+    # scenario) — NOT constitution-driven parameters, so deliberately NOT
+    # varied from MFU's values.
+    # CONFIDENT — same 11,000-citizen population size as MFU (locked
+    # Monte Carlo design, not a constitutional choice).
+    CITIZEN_AGENTS: int = 11_000
+    # CONFIDENT — same 50-year horizon as MFU (locked design). NOTE:
+    # model_phase3.py's self.max_years intentionally still reads this
+    # value from constitution.py's CONSTITUTION_MFU directly, not from
+    # whichever scenario is active, specifically so that no individual
+    # constitution's SimulationConfig can accidentally change the
+    # simulation horizon. This field is included here only for schema
+    # completeness/consistency with the field contract, not because
+    # anything currently reads it from this object.
+    TIME_STEPS: int = 50
+    # CONFIDENT — real geography: both scenarios simulate the same
+    # country, Myanmar, under different constitutions. Identical to MFU.
+    SIMULATION_STATES: Tuple[str, ...] = (
+        "sagaing", "mandalay", "magway", "bago",
+        "yangon", "ayeyarwady", "tanintharyi", "shan",
+        "kachin", "kayah", "kayin", "chin",
+        "mon", "rakhine",
+    )
+    # DELIBERATELY UNCHANGED from MFU, not a guess by omission — the
+    # population's psychological/behavioural archetype distribution is a
+    # real, legitimate research question (does a military constitution's
+    # socialisation produce a different archetype mix — e.g. more
+    # disillusioned_youth/trauma_carrier, fewer civic_champion/ambitious_
+    # meritocrat?) but changing it would be a NEW modelling decision with
+    # large, hard-to-isolate effect-size consequences on every citizen-level
+    # outcome, well beyond a missing-field backfill. Under the pre-fix code,
+    # Scenario C already used these exact MFU proportions (bug #11 made
+    # every scenario read the MFU singleton) — reusing them here keeps this
+    # specific field's contribution to Scenario C's post-fix trajectory
+    # IDENTICAL to its pre-fix contribution, isolating the wiring fix's
+    # effect from this separate, unresolved research question. Flagged for
+    # Kaung / senior-researcher if archetype-distribution-by-constitution
+    # is worth pursuing later.
+    ARCHETYPES: Dict = field(default_factory=lambda: {
+        "civic_champion": 0.15,
+        "pragmatic_survivor": 0.30,
+        "ethnic_loyalist": 0.20,
+        "ambitious_meritocrat": 0.15,
+        "disillusioned_youth": 0.10,
+        "rural_traditionalist": 0.07,
+        "trauma_carrier": 0.03,
+    })
+    # CONFIDENT — matches constitution.py's SimulationConfig.
+    # CITIZENS_ASSEMBLY_SIZE backfill (320) for the same reasons: no real
+    # civic-lottery/Citizens-Assembly mechanism exists under the 2008
+    # constitution at all, so there is no principled different number to
+    # use. Kept identical rather than invented.
+    CITIZENS_ASSEMBLY_SIZE: int = 320
 
 
 # ══════════════════════════════════════════════════════════════════════════════

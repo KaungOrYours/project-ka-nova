@@ -47,6 +47,18 @@ try:
 except ImportError:
     CONSTITUTION_2008 = None
 
+# ── Scenario registry ─────────────────────────────────────────────────────────
+# chain_type / label lookups now come from the registry instead of a literal
+# scenario == "A"/"C" check scattered through this file (see
+# .claude/memory.md bug #11 and the model_phase3.py registry refactor this
+# mirrors). Scenarios not yet encoded (SK/TH/PK/CL/DE) simply do not appear
+# in SCENARIO_CHAIN_TYPE below until their constitution module lands —
+# nothing here crashes on their absence.
+from config.scenario_registry import SCENARIOS
+
+SCENARIO_CHAIN_TYPE = {code: entry.chain_type for code, entry in SCENARIOS.items()}
+SCENARIO_LABEL      = {code: entry.label      for code, entry in SCENARIOS.items()}
+
 # ── Ollama env-var pattern (mirrors Phase 2) ──────────────────────────────────
 ELITE_LLM_BASE_URL = os.getenv("ELITE_LLM_BASE_URL", "http://localhost:11434/v1")
 ELITE_LLM_API_KEY  = os.getenv("ELITE_LLM_API_KEY",  "ollama")
@@ -64,7 +76,13 @@ ETHNIC_GROUP_NAMES = ["bamar", "shan", "karen", "kachin", "chin", "mon", "rakhin
 RESULTS_DIR = Path("results_phase3")
 
 # ── 7-agent chain rosters ─────────────────────────────────────────────────────
-CHAIN_ORDER_A = [
+# Renamed from CHAIN_ORDER_A/_C (kept below as aliases for any external
+# caller) — these are now keyed by chain_type, the structural pattern every
+# scenario of that type reuses, not a scenario-code literal. Country-
+# accurate elite role TITLES differ per scenario (AGENT_DISPLAY_NAMES_BY_
+# SCENARIO below); the chain STRUCTURE (which 7 role-function slots run, in
+# which order) does not.
+CHAIN_ORDER_CIVILIAN = [
     "senior_general",
     "finance_minister",
     "central_bank_governor",
@@ -74,7 +92,7 @@ CHAIN_ORDER_A = [
     "chancellor",
 ]
 
-CHAIN_ORDER_C = [
+CHAIN_ORDER_MILITARY = [
     "general",
     "crony_finance_minister",
     "controlled_cb_governor",
@@ -84,7 +102,11 @@ CHAIN_ORDER_C = [
     "commander_in_chief",
 ]
 
-AGENT_DISPLAY_NAMES_A = {
+# Backward-compatible aliases (same list objects — not copies).
+CHAIN_ORDER_A = CHAIN_ORDER_CIVILIAN
+CHAIN_ORDER_C = CHAIN_ORDER_MILITARY
+
+AGENT_DISPLAY_NAMES_CIVILIAN_DEFAULT = {
     "senior_general":        "Senior General",
     "finance_minister":      "Finance Minister",
     "central_bank_governor": "Central Bank Governor",
@@ -94,7 +116,7 @@ AGENT_DISPLAY_NAMES_A = {
     "chancellor":            "Chancellor",
 }
 
-AGENT_DISPLAY_NAMES_C = {
+AGENT_DISPLAY_NAMES_MILITARY_DEFAULT = {
     "general":                      "General",
     "crony_finance_minister":       "Crony Finance Minister",
     "controlled_cb_governor":       "Controlled CB Governor",
@@ -103,6 +125,36 @@ AGENT_DISPLAY_NAMES_C = {
     "military_president":           "Military President",
     "commander_in_chief":           "Commander-in-Chief",
 }
+
+# Backward-compatible aliases.
+AGENT_DISPLAY_NAMES_A = AGENT_DISPLAY_NAMES_CIVILIAN_DEFAULT
+AGENT_DISPLAY_NAMES_C = AGENT_DISPLAY_NAMES_MILITARY_DEFAULT
+
+# Per-scenario display names. A country-specific constitution module MAY
+# override these with country-accurate titles (e.g. Thailand's NCPO, King,
+# PM; Pakistan's President, Army Chief, PM) by exposing an
+# `ELITE_ROLE_TITLES: Dict[str, str]` attribute keyed by the SAME
+# role-function ids as CHAIN_ORDER_CIVILIAN/_MILITARY — see
+# _build_system_prompts() below, which reads it. Falls back to the generic
+# chain-type default label set if the constitution module does not supply
+# one. Built once per available registry entry below (module-load time).
+AGENT_DISPLAY_NAMES_BY_SCENARIO: dict[str, dict] = {}
+for _code, _entry in SCENARIOS.items():
+    if not _entry.available:
+        continue
+    if _code == "A":
+        AGENT_DISPLAY_NAMES_BY_SCENARIO[_code] = AGENT_DISPLAY_NAMES_CIVILIAN_DEFAULT
+    elif _code == "C":
+        AGENT_DISPLAY_NAMES_BY_SCENARIO[_code] = AGENT_DISPLAY_NAMES_MILITARY_DEFAULT
+    else:
+        _default_names = (
+            AGENT_DISPLAY_NAMES_CIVILIAN_DEFAULT if _entry.chain_type == "civilian"
+            else AGENT_DISPLAY_NAMES_MILITARY_DEFAULT
+        )
+        _override = getattr(_entry.constitution, "ELITE_ROLE_TITLES", None)
+        AGENT_DISPLAY_NAMES_BY_SCENARIO[_code] = (
+            {**_default_names, **_override} if _override else _default_names
+        )
 
 # ── Per-role defaults ─────────────────────────────────────────────────────────
 # Ethnic weights order: bamar, shan, karen, kachin, chin, mon, rakhine, kayah (indices 0..7)
@@ -126,6 +178,54 @@ ROLE_DEFAULTS = {
 }
 
 
+# ── Ethnic-group count resolution (bug #17, elite-layer side) ─────────────────
+# ROLE_DEFAULTS above is hardcoded to Myanmar's 8-group frame for every role
+# in every scenario, including Pakistan/South Korea/Chile/Thailand/Germany's
+# real 4/1/0/0/0-group counts. Mirrors engine/cves.py's
+# _get_ethnic_group_count (duplicated rather than cross-imported, to keep
+# cves.py <-> elite_agents_v3.py's existing lazy-import boundary intact —
+# cves.py's lazy-imports of this module stay inside function bodies, this
+# module should not eagerly import cves.py at the top level in return).
+def _resolve_ethnic_group_count(constitution) -> int:
+    federal = getattr(constitution, "federal", None)
+    if federal is not None and hasattr(federal, "ETHNIC_GROUPS"):
+        return int(federal.ETHNIC_GROUPS)
+    chambers = getattr(constitution, "chambers", None)
+    if chambers is not None and hasattr(chambers, "ETHNIC_SEATS"):
+        return int(chambers.ETHNIC_SEATS)
+    return 8
+
+
+SCENARIO_N_ETHNIC = {
+    code: _resolve_ethnic_group_count(entry.constitution)
+    for code, entry in SCENARIOS.items() if entry.available
+}
+
+
+def _resize_ethnic_weights(weights: list, n: int) -> list:
+    """
+    Resize a hardcoded ROLE_DEFAULTS ethnic_weights vector (always written
+    in Myanmar's 8-group frame) to the active scenario's real ETHNIC_GROUPS
+    count (bug #17). n==8 (Myanmar A/C) is a no-op — preserves existing
+    rule-based-mode behaviour exactly, so the already-published A/C numbers
+    cannot be affected by this change. For n<8 (Pakistan=4, South Korea=1,
+    Chile/Thailand/Germany=0), truncates to the first n elements — index 0
+    remains the "majority/reference group" slot, consistent with L3's
+    Acemoglu/Robinson convention in engine/cves.py. For n>8 (not currently
+    used by any encoded constitution), pads with 1.0 (neutral weight).
+    This is only exercised by the rule-based fallback path and by L1's
+    persistent-parse-failure default in cves.py — never by real LLM output,
+    which always carries its own ethnic_weights list.
+    """
+    if n == len(weights):
+        return list(weights)
+    if n <= 0:
+        return []
+    if n < len(weights):
+        return list(weights[:n])
+    return list(weights) + [1.0] * (n - len(weights))
+
+
 # ── Status report (mirrors Phase 2 shape) ────────────────────────────────────
 def build_status_report(shared_data: dict, year: int, scenario: str) -> str:
     gini         = shared_data.get("gini_coefficient",  0.55)
@@ -142,10 +242,21 @@ def build_status_report(shared_data: dict, year: int, scenario: str) -> str:
     china        = ext.get("china_influence", 0.75)
     western      = ext.get("western_pressure", 0.30)
 
-    scenario_desc = {
+    # Registry-driven label (was a hardcoded {"A": ..., "C": ...} dict).
+    # SCENARIO_LABEL comes straight from each constitution's registry entry
+    # (config/scenario_registry.py) — A/C keep their exact existing
+    # descriptive strings below; any other scenario falls back to its
+    # registry label plus chain_type, rather than "Unknown".
+    _scenario_desc_overrides = {
         "A": "Full MFU — all 18 articles + 7 safeguards active",
         "C": "2008 Military Constitution — coup safeguards absent",
-    }.get(scenario, "Unknown")
+    }
+    if scenario in _scenario_desc_overrides:
+        scenario_desc = _scenario_desc_overrides[scenario]
+    elif scenario in SCENARIO_LABEL:
+        scenario_desc = f"{SCENARIO_LABEL[scenario]} ({SCENARIO_CHAIN_TYPE[scenario]} chain)"
+    else:
+        scenario_desc = "Unknown"
 
     return f"""
 ANNUAL STATE BRIEFING — YEAR {year}
@@ -326,13 +437,37 @@ Always end with:
 }
 
 
-# ── System prompts — Scenario C (2008 Military Constitution) ─────────────────
-def _build_system_prompts_c() -> dict:
+# ── System prompts — military-guardianship chain ──────────────────────────────
+def _build_system_prompts_military(constitution) -> dict:
     """
-    Build Scenario C system prompts using live CONSTITUTION_2008 parameters.
-    Called once at module level so the dict is ready before any agent step.
+    Build military-chain system prompts using a live constitution object's
+    parameters. Renamed/generalised from the original `_build_system_
+    prompts_c()` (which closed over the global CONSTITUTION_2008 directly)
+    as part of the scenario-registry refactor — the dynamic-getattr-with-
+    fallback pattern below was ALREADY the right, constitution-agnostic
+    approach; this change only makes `constitution` an explicit parameter
+    so the same function can build Scenario C's prompts (unchanged output —
+    see SYSTEM_PROMPTS_C below, built by calling this with CONSTITUTION_2008,
+    byte-identical to the old call site) and, in principle, any other
+    military-chain scenario's numeric parameters.
+
+    KNOWN LIMITATION, flagged for whoever encodes Thailand/Pakistan next:
+    the PROSE below is still Myanmar-2008-specific text (named sections —
+    "Section 40(c)", "Section 417-419" — and "2008 Military Constitution"
+    framing), not just parameter substitution. Calling this with a
+    different country's constitution object will pull in THAT country's
+    correct numeric values (field names match — see the field-contract
+    confirmed during this refactor) but will still narrate Myanmar's own
+    legal citations, which would be factually wrong for Thailand/Pakistan.
+    A follow-up country-encoding agent should supply real, country-accurate
+    prompt text — either by exposing an `ELITE_SYSTEM_PROMPTS: dict`
+    attribute directly on their constitution module (preferred over this
+    generic fallback — see the dispatcher below), or by writing a
+    country-specific sibling to this function. This function's job is to
+    guarantee the pipeline still RUNS with mechanically-correct values even
+    before that bespoke content exists, not to BE that bespoke content.
     """
-    c = CONSTITUTION_2008
+    c = constitution
 
     # Safe accessors — read live values; fall back to spec defaults if import failed
     coup_legal       = getattr(getattr(c, "military",   None), "COUP_LEGAL_MECHANISM",       True)  if c else True
@@ -535,7 +670,74 @@ Always end with:
     }
 
 
-SYSTEM_PROMPTS_C = _build_system_prompts_c()
+SYSTEM_PROMPTS_C = _build_system_prompts_military(CONSTITUTION_2008)
+
+
+def _build_system_prompts_civilian(constitution) -> dict:
+    """
+    Build civilian-supremacy-chain system prompts.
+
+    For Scenario A specifically (constitution is the live MFU singleton),
+    returns the existing hand-written SYSTEM_PROMPTS_A content UNCHANGED —
+    this preserves Scenario A's exact locked LLM prompt wording (zero risk
+    to already-published Scenario A numbers; those prompts were
+    deliberately hand-crafted per-role, not template-generated, and
+    rewriting them for genericisation's own sake would be an unnecessary,
+    uncharacterised behaviour change this refactor does not need to make).
+
+    For any OTHER civilian-chain scenario (South Korea, Chile, Germany —
+    not yet encoded), falls back to that SAME MFU prose as a structural
+    placeholder, with the same known-limitation caveat as
+    _build_system_prompts_military(): the text will say "Meritocratic
+    Federal Union" / "MFU" / "Article ..." regardless of which country is
+    actually running, until a follow-up country-encoding agent supplies
+    real content via `ELITE_SYSTEM_PROMPTS` on their own constitution
+    module (preferred over this fallback — see the dispatcher below).
+    """
+    return SYSTEM_PROMPTS_A
+
+
+def _build_system_prompts(constitution, chain_type: str) -> dict:
+    """
+    Generalised prompt builder — generalises `_build_system_prompts_c()`
+    (now `_build_system_prompts_military`) into the signature the
+    scenario-registry refactor calls for, dispatching on chain_type instead
+    of a scenario-code literal. Called once per available registry entry
+    below to build SCENARIO_PROMPTS.
+    """
+    if chain_type == "civilian":
+        return _build_system_prompts_civilian(constitution)
+    return _build_system_prompts_military(constitution)
+
+
+# ── Per-scenario prompts/chains/names, built once per registry entry ─────────
+# A country-specific constitution module may override the generic fallback
+# entirely by exposing `ELITE_SYSTEM_PROMPTS: Dict[str, str]` (role-function
+# id -> full system prompt text, matching CHAIN_ORDER_CIVILIAN/_MILITARY's
+# keys for that scenario's chain_type) — if present, that is used verbatim
+# instead of the generic builder above. This is the contract follow-up
+# country-encoding agents should fill in for a country-accurate LLM
+# experiment; absent it, the pipeline still runs on generic/fallback
+# content rather than crashing or silently reusing a wrong country's data.
+SCENARIO_CHAINS: dict[str, list] = {}
+SCENARIO_PROMPTS: dict[str, dict] = {}
+SCENARIO_NAMES: dict[str, dict] = AGENT_DISPLAY_NAMES_BY_SCENARIO
+
+for _code, _entry in SCENARIOS.items():
+    if not _entry.available:
+        continue
+    SCENARIO_CHAINS[_code] = (
+        CHAIN_ORDER_CIVILIAN if _entry.chain_type == "civilian" else CHAIN_ORDER_MILITARY
+    )
+    if _code == "A":
+        SCENARIO_PROMPTS[_code] = SYSTEM_PROMPTS_A
+    elif _code == "C":
+        SCENARIO_PROMPTS[_code] = SYSTEM_PROMPTS_C
+    else:
+        _override_prompts = getattr(_entry.constitution, "ELITE_SYSTEM_PROMPTS", None)
+        SCENARIO_PROMPTS[_code] = _override_prompts or _build_system_prompts(
+            _entry.constitution, _entry.chain_type
+        )
 
 
 # ── JSONL logging ─────────────────────────────────────────────────────────────
@@ -597,8 +799,19 @@ def _rule_based_decision(agent_role: str, shared_data: dict, scenario: str) -> d
     harmony    = shared_data.get("ethnic_harmony",   0.35)
 
     base = ROLE_DEFAULTS.get(agent_role, ROLE_DEFAULTS["chancellor"]).copy()
+    # Bug #17: resize ROLE_DEFAULTS' hardcoded 8-group ethnic_weights to the
+    # active scenario's real ETHNIC_GROUPS count — no-op for n==8 (A/C).
+    base["ethnic_weights"] = _resize_ethnic_weights(
+        base["ethnic_weights"], SCENARIO_N_ETHNIC.get(scenario, 8)
+    )
 
-    if scenario == "A":
+    # Dispatch on chain_type (registry-driven), not a literal scenario=="A"
+    # check — role_ids themselves already disambiguate civilian-chain vs
+    # military-chain rosters (they don't overlap), so this branch exists
+    # only to pick the right formula family per chain_type.
+    chain_type = SCENARIO_CHAIN_TYPE.get(scenario, "civilian")
+
+    if chain_type == "civilian":
         if agent_role == "senior_general":
             # Hardcoded threshold allowed ONLY in rule-based path
             coup = bool(corruption > COUP_CORRUPTION_TRIGGER and trust < COUP_TRUST_TRIGGER)
@@ -629,7 +842,7 @@ def _rule_based_decision(agent_role: str, shared_data: dict, scenario: str) -> d
             return {**base, "budget_weight": bw,
                     "reason": f"Rule-based: Trust={trust:.2f}"}
 
-    else:  # Scenario C — military baseline
+    else:  # military-guardianship chain (Scenario C and future military-chain comparators)
         if agent_role in ("general", "commander_in_chief"):
             # Hardcoded threshold allowed ONLY in rule-based path
             coup = bool(corruption > COUP_CORRUPTION_TRIGGER and trust < COUP_TRUST_TRIGGER)
@@ -685,7 +898,14 @@ class EliteAgentLayerV3:
         elite_decisions_log    list of dicts
     """
 
-    def __init__(self, use_llm: bool = False):
+    def __init__(self, use_llm: bool = False, constitution=None, chain_type=None, scenario=None):
+        # Bug #13: constitution/chain_type/scenario now threaded through
+        # from model_phase3.py (self.CONSTITUTION/self.chain_type/
+        # self.scenario, set by the registry at model construction) instead
+        # of CVES always defaulting to the MFU singleton. All three are
+        # optional for backward compatibility with any caller that still
+        # constructs this layer without them (CVES falls back to MFU/
+        # "civilian"/"unknown" respectively — see engine/cves.py).
         self.use_llm = use_llm and LANGCHAIN_AVAILABLE  # bool, read directly by model
         self._llm = None
 
@@ -709,7 +929,12 @@ class EliteAgentLayerV3:
 
         # Lazy import to avoid circular dependency at module load time
         from engine.cves import CVES
-        self.cves = CVES(llm=self._llm)
+        self.cves = CVES(
+            llm=self._llm,
+            constitution=constitution,
+            chain_type=chain_type,
+            scenario=scenario,
+        )
 
     def _invoke_llm(self, system_prompt: str, user_message: str) -> str:
         prompt = ChatPromptTemplate.from_messages([
@@ -726,9 +951,24 @@ class EliteAgentLayerV3:
         Coup signal emerges from LLM reasoning in LLM path; hardcoded threshold only in fallback.
         """
         run_id  = shared_data.get("run_id", 0)
-        chain   = CHAIN_ORDER_A   if scenario == "A" else CHAIN_ORDER_C
-        prompts = SYSTEM_PROMPTS_A if scenario == "A" else SYSTEM_PROMPTS_C
-        names   = AGENT_DISPLAY_NAMES_A if scenario == "A" else AGENT_DISPLAY_NAMES_C
+        # Registry-driven (was `scenario == "A"` ternaries). Falls back to
+        # the civilian/military chain-type defaults for any scenario code
+        # not yet present in SCENARIO_CHAINS/PROMPTS/NAMES (i.e. not yet
+        # encoded), so this never raises even before SK/TH/PK/CL/DE exist —
+        # though in practice model_phase3.py's own registry lookup
+        # (get_scenario()) already refuses to run an unencoded scenario
+        # before step() is ever called.
+        chain_type = SCENARIO_CHAIN_TYPE.get(scenario, "civilian")
+        chain   = SCENARIO_CHAINS.get(scenario) or (
+            CHAIN_ORDER_CIVILIAN if chain_type == "civilian" else CHAIN_ORDER_MILITARY
+        )
+        prompts = SCENARIO_PROMPTS.get(scenario) or (
+            SYSTEM_PROMPTS_A if chain_type == "civilian" else SYSTEM_PROMPTS_C
+        )
+        names   = SCENARIO_NAMES.get(scenario) or (
+            AGENT_DISPLAY_NAMES_CIVILIAN_DEFAULT if chain_type == "civilian"
+            else AGENT_DISPLAY_NAMES_MILITARY_DEFAULT
+        )
 
         status_report = build_status_report(shared_data, year, scenario)
         all_decisions: dict[str, dict] = {}
@@ -846,18 +1086,32 @@ class EliteAgentLayerV3:
         budget_weights = [d["budget_weight"] for d in decisions_list]
         budget_weight  = float(np.mean(budget_weights))
 
+        # Bug #17: default length must match the active scenario's real
+        # ETHNIC_GROUPS count, not a hardcoded 8 — otherwise a decision
+        # missing the "ethnic_weights" key entirely (distinct from the
+        # schema-validated case, which CVES L1 already resizes) would
+        # build a ragged array against every other decision's correctly-
+        # sized (possibly empty, for Chile/Thailand/Germany) vector.
+        n_ethnic_agg = SCENARIO_N_ETHNIC.get(scenario, 8)
         ethnic_arrays = np.array(
-            [d.get("ethnic_weights", [1.0] * 8) for d in decisions_list],
+            [d.get("ethnic_weights", [1.0] * n_ethnic_agg) for d in decisions_list],
             dtype=np.float32,
         )
         ethnic_weights = ethnic_arrays.mean(axis=0)
-        ethnic_weights = ethnic_weights / ethnic_weights.mean()  # normalise mean=1.0
+        if n_ethnic_agg > 0 and float(ethnic_weights.mean()) > 1e-9:
+            ethnic_weights = ethnic_weights / ethnic_weights.mean()  # normalise mean=1.0
 
-        # Coup signal: any agent can raise it; Scenario A suppression is double-locked
-        # (CVES L2 catches it first; explicit suppression here is defence-in-depth)
+        # Coup signal: any agent can raise it; the civilian-supremacy chain's
+        # suppression is double-locked (CVES L2 catches it first; explicit
+        # suppression here is defence-in-depth). Generalised from the old
+        # `scenario == "A"` literal to chain_type — every civilian-chain
+        # scenario (A today; SK/CL/DE once encoded) gets the same structural
+        # suppression, consistent with the engine-symmetry principle: this
+        # models "civilian supremacy over the military" as a STRUCTURAL
+        # feature of the chain, not a Scenario-A-only special case.
         coup_signal = any(d.get("coup_signal", False) for d in decisions_list)
-        if scenario == "A" and coup_signal:
-            logger.info(f"Year {year}: Coup signal suppressed by MFU Scenario A safeguards")
+        if chain_type == "civilian" and coup_signal:
+            logger.info(f"Year {year}: Coup signal suppressed by civilian-chain safeguards (scenario={scenario})")
             coup_signal = False
 
         budget_impact = float(np.clip(budget_weight * 0.15, 0.0, 0.15))
