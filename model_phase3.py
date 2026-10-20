@@ -415,6 +415,12 @@ class KaNovaModelPhase3(Model):
         # ── 8. State environment update ───────────────────────────────────────
         self._update_states()
 
+        # ── 8b. North-star composite KPI ──────────────────────────────────────
+        # Computed last, after every other metric has taken its final value
+        # for the year, so it reflects the year's settled state rather than
+        # a mid-step snapshot.
+        self._update_north_star_progress()
+
         # ── 9. Data collection ────────────────────────────────────────────────
         self.datacollector.collect(self)
 
@@ -529,6 +535,69 @@ class KaNovaModelPhase3(Model):
             current = self.shared_data.get("iig_effectiveness", 0.30)
             if current < floor:
                 self.shared_data["iig_effectiveness"] = floor
+
+    def _update_north_star_progress(self):
+        """
+        Compute and write shared_data["north_star_progress"] for this year.
+
+        Historically this key was seeded once at Year Zero (0.0) and read in
+        several places (_broadcast_environment, feedback/loops.py's loop
+        summary, the datacollector) but never actually recomputed — a
+        missing write path, not a formula bug (see .claude/MINDMAP.md #3).
+
+        Formula: reuses the composite weights from the Phase 2 legacy
+        engine (engine/hybrid_engine.py:300-312, recompute_kpis), which is
+        the only prior formula definition in the codebase and is what the
+        README's Phase 2 table (North Star progress 0.557 vs 0.242) already
+        reports. config/constitution.py's NorthStarConfig and
+        config/constitution_2008.py's NorthStarConfig both define only
+        decade targets/metadata (TARGET_CORRUPTION_INDEX, PROGRESS_METRIC
+        label, etc.) — neither contains an actual formula, so there was
+        nothing formula-wise to "wire in" from the constitution layer
+        itself; the composite below is the project's own pre-existing
+        design, just finally connected to the live shared_data pipeline.
+
+        Weights (sum to 1.0, unchanged from the Phase 2 source):
+            (1 - corruption_index)        * 0.20
+          + trust_index                   * 0.15
+          + (1 - coup_risk)               * 0.15
+          + iig_effectiveness             * 0.15
+          + min(gdp_growth_rate*5.0, 1.0) * 0.15
+          + ethnic_harmony_component      * 0.10
+          + (1 - gini_coefficient)        * 0.10
+
+        One judgment call: ethnic harmony. shared_data["ethnic_harmony"]
+        (the key the datacollector/elite-agent layer reads) is seeded at
+        0.35 and never written anywhere in the live Phase 3 pipeline — a
+        separate dead-key gap from this one, out of scope to fix here.
+        shared_data["ethnic_harmony_index"] IS written every year by
+        feedback/loops.py's S1 loop (national-service cross-exposure), so
+        it is used here (with a fallback chain) to keep this composite a
+        real trajectory rather than silently averaging in a frozen
+        constant.
+        """
+        corruption  = self.shared_data.get("corruption_index", 0.72)
+        trust       = self.shared_data.get("trust_index", 0.22)
+        coup_risk   = self.shared_data.get("coup_risk", 0.25)
+        iig         = self.shared_data.get("iig_effectiveness", 0.30)
+        gdp_growth  = self.shared_data.get("gdp_growth_rate", 0.0)
+        harmony     = self.shared_data.get(
+            "ethnic_harmony_index", self.shared_data.get("ethnic_harmony", 0.35)
+        )
+        gini        = self.shared_data.get("gini_coefficient", 0.55)
+
+        north_star = (
+            (1.0 - corruption) * 0.20
+            + trust * 0.15
+            + (1.0 - coup_risk) * 0.15
+            + iig * 0.15
+            + min(gdp_growth * 5.0, 1.0) * 0.15
+            + harmony * 0.10
+            + (1.0 - gini) * 0.10
+        )
+        self.shared_data["north_star_progress"] = round(
+            float(np.clip(north_star, 0.0, 1.0)), 4
+        )
 
     def get_results(self):
         """Return results DataFrame — same interface as KaNovaModel."""

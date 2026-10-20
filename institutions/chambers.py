@@ -281,7 +281,7 @@ class ThreeChamberSystem:
 
         yes_votes = 0
         for citizen in sample:
-            trust = getattr(citizen, "trust", 0.50)
+            trust = getattr(citizen, "trust_score", 0.50)
             grievance = getattr(citizen, "grievance", 0.30)
             # Higher grievance + lower trust = more likely to confirm veto
             veto_support = (grievance * 0.60) + ((1.0 - trust) * 0.40)

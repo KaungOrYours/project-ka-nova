@@ -46,6 +46,13 @@ import pandas as pd
 from scipy import stats
 from scipy.stats import mannwhitneyu, kruskal, shapiro
 
+try:
+    from SALib.sample import sobol as salib_sobol_sample
+    from SALib.analyze import sobol as salib_sobol_analyze
+    SALIB_AVAILABLE = True
+except ImportError:
+    SALIB_AVAILABLE = False
+
 from config.constitution import CONSTITUTION
 
 # ── PATHS ─────────────────────────────────────────────────────────────────────
@@ -105,6 +112,57 @@ NORTH_STAR_TARGETS = {
 }
 
 SIGNIFICANCE_LEVEL = 0.05
+
+# ── GSA PARAMETER SPACE ───────────────────────────────────────────────────────
+# Same 10 constitutionally-plausible parameters as tests/salib_gsa/feasibility_check.py
+# (that script only verifies SALib infra readiness with a synthetic Y and a cost
+# estimate — this maps each parameter onto the live CONSTITUTION attribute it
+# actually drives, so Sobol indices below are computed from real Phase 3 model
+# output, not a synthetic placeholder).
+GSA_PROBLEM = {
+    "num_vars": 10,
+    "names": [
+        "merit_performance_weight",
+        "analysis_threshold",
+        "state_share",
+        "ethnic_direct_share",
+        "trust_acceleration_multiplier",
+        "trust_acceleration_trigger_corruption",
+        "iig_investigation_trigger",
+        "iig_entry_merit_min",
+        "coup_trigger_loyalty",
+        "year_zero_corruption",
+    ],
+    "bounds": [
+        [0.25, 0.45],   # merit_performance_weight
+        [0.60, 0.90],   # analysis_threshold (veto)
+        [0.25, 0.45],   # state_share
+        [0.20, 0.40],   # ethnic_direct_share
+        [1.00, 2.00],   # trust_acceleration_multiplier
+        [0.10, 0.30],   # trust_acceleration_trigger_corruption
+        [0.55, 0.85],   # iig_investigation_trigger
+        [0.75, 0.95],   # iig_entry_merit_min
+        [0.20, 0.40],   # coup_trigger_loyalty
+        [0.60, 0.85],   # year_zero_corruption
+    ],
+}
+
+# Maps each GSA parameter name to the live CONSTITUTION attribute it overrides
+# (section, attribute) — section is an attribute of the CONSTITUTION singleton
+# (config/constitution.py:MFUConstitution.__init__), attribute is the dataclass
+# field actually read by the Phase 3 model at runtime.
+GSA_PARAM_MAP = {
+    "merit_performance_weight":              ("merit", "PERFORMANCE_WEIGHT"),
+    "analysis_threshold":                    ("chambers", "ANALYSIS_THRESHOLD"),
+    "state_share":                           ("federal", "RESOURCE_STATE_SHARE"),
+    "ethnic_direct_share":                    ("federal", "RESOURCE_ETHNIC_DIRECT_SHARE"),
+    "trust_acceleration_multiplier":          ("federal", "TRUST_ACCELERATION_MULTIPLIER"),
+    "trust_acceleration_trigger_corruption":  ("federal", "TRUST_ACCELERATION_TRIGGER_CORRUPTION"),
+    "iig_investigation_trigger":              ("iig", "INVESTIGATION_TRIGGER"),
+    "iig_entry_merit_min":                    ("iig", "ENTRY_MERIT_MIN"),
+    "coup_trigger_loyalty":                    ("military", "COUP_TRIGGER_LOYALTY"),
+    "year_zero_corruption":                    ("simulation", "YEAR_ZERO_CORRUPTION"),
+}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -860,6 +918,133 @@ class SensitivityAnalyzer:
         print(f"MoS 6 — Internal Consistency: {consistent_count}/{total} correlations in expected direction")
 
         return result
+
+    def run_sobol_gsa(
+        self,
+        kpi: str = "corruption_index",
+        scenario: str = "A",
+        n_sample: int = 64,
+        n_citizens: int = 1000,
+        n_steps: int = 50,
+        use_llm: bool = False,
+        output: Optional[Path] = None,
+    ) -> dict:
+        """
+        MoS 3 — Sensitivity Analysis (real Sobol GSA, not a feasibility stub).
+
+        Runs the live Phase 3 model (`model_phase3.KaNovaModelPhase3`) once per
+        Sobol sample point, overriding the 10-parameter space defined in
+        `GSA_PROBLEM`/`GSA_PARAM_MAP` directly on the live `CONSTITUTION`
+        singleton for the duration of each run, then computes first-order (S1)
+        and total-order (ST) Sobol indices from the real final-year `kpi`
+        output.
+
+        This supersedes `tests/salib_gsa/feasibility_check.py`, which only
+        verifies SALib sampling/analysis wiring against a synthetic Y and
+        reports a cost estimate — it does not run the simulation. This method
+        is the actual sensitivity-analysis deliverable referenced in the
+        module docstring and requested by both IEEE Access reviewers.
+
+        Total runs = n_sample x (2k + 2), k = GSA_PROBLEM["num_vars"] (10).
+        Defaults (n_sample=64, n_citizens=1000) match the RunPod-scale design
+        in feasibility_check.py — reduce both for a fast local smoke test.
+
+        Only overrides parameters on scenario "A" (MFU) — the 10 parameters
+        are MFU-specific tunable constants; Scenario C's 2008 Myanmar
+        constitution is a separately-sourced, fixed historical encoding and
+        is not a free parameter space to perturb.
+        """
+        if not SALIB_AVAILABLE:
+            raise ImportError(
+                "SALib is not installed — run_sobol_gsa requires SALib==1.5.1 "
+                "(see requirements.txt). Install it before calling this method."
+            )
+
+        import dataclasses
+        from model_phase3 import KaNovaModelPhase3
+
+        param_values = salib_sobol_sample.sample(GSA_PROBLEM, n_sample, calc_second_order=False)
+        total_runs = param_values.shape[0]
+        print(f"\nSobol GSA: {total_runs} model runs "
+              f"(n_sample={n_sample}, k={GSA_PROBLEM['num_vars']}, kpi={kpi}, scenario={scenario})")
+
+        # Each CONSTITUTION section (merit, chambers, federal, iig, military,
+        # simulation) is a frozen dataclass — individual fields can't be
+        # mutated in place. Snapshot the whole section objects so every
+        # override is reverted exactly, even if a run raises.
+        section_names = sorted({section for section, _ in GSA_PARAM_MAP.values()})
+        originals = {section: getattr(CONSTITUTION, section) for section in section_names}
+
+        Y = np.zeros(total_runs)
+        try:
+            for row_idx, row in enumerate(param_values):
+                overrides_by_section = {}
+                for col_idx, name in enumerate(GSA_PROBLEM["names"]):
+                    section, attr = GSA_PARAM_MAP[name]
+                    overrides_by_section.setdefault(section, {})[attr] = float(row[col_idx])
+                for section, field_overrides in overrides_by_section.items():
+                    setattr(CONSTITUTION, section, dataclasses.replace(originals[section], **field_overrides))
+
+                seed = row_idx * 100 + ord(scenario)
+                model = KaNovaModelPhase3(
+                    scenario=scenario,
+                    seed=seed,
+                    n_citizens=n_citizens,
+                    use_llm=use_llm,
+                )
+                for _ in range(n_steps):
+                    model.step()
+                    if model.shared_data.get("simulation_failed", False):
+                        break
+
+                df = model.get_results()
+                final = df.iloc[-1]
+                Y[row_idx] = final[kpi] if kpi in final else np.nan
+
+                if (row_idx + 1) % max(1, total_runs // 10) == 0:
+                    print(f"    {row_idx + 1}/{total_runs} runs complete")
+        finally:
+            # Always restore — a GSA run must not leave CONSTITUTION mutated
+            # for any other analysis that imports the singleton afterward.
+            for section, original_section in originals.items():
+                setattr(CONSTITUTION, section, original_section)
+
+        if np.isnan(Y).any():
+            raise ValueError(
+                f"KPI '{kpi}' missing from final-year model output on "
+                f"{int(np.isnan(Y).sum())}/{total_runs} runs — check KPI_COLUMNS / model_phase3.get_results()."
+            )
+
+        Si = salib_sobol_analyze.analyze(GSA_PROBLEM, Y, calc_second_order=False, print_to_console=False)
+
+        rows = []
+        for i, name in enumerate(GSA_PROBLEM["names"]):
+            rows.append({
+                "parameter": name,
+                "S1": round(float(Si["S1"][i]), 4),
+                "S1_conf": round(float(Si["S1_conf"][i]), 4),
+                "ST": round(float(Si["ST"][i]), 4),
+                "ST_conf": round(float(Si["ST_conf"][i]), 4),
+            })
+        result_df = pd.DataFrame(rows).sort_values("ST", ascending=False).reset_index(drop=True)
+
+        print(f"\n    {'Parameter':<42} {'S1':>8} {'ST':>8}")
+        print(f"    {'-'*42} {'-'*8} {'-'*8}")
+        for _, r in result_df.iterrows():
+            flag = " <-- dominant" if r["ST"] > 0.10 else ""
+            print(f"    {r['parameter']:<42} {r['S1']:>8.4f} {r['ST']:>8.4f}{flag}")
+
+        out_path = output or (RESULTS_DIR / f"sobol_sensitivity_{scenario}_{kpi}.csv")
+        result_df.to_csv(out_path, index=False)
+        print(f"\nSobol sensitivity indices saved: {out_path}")
+
+        return {
+            "kpi": kpi,
+            "scenario": scenario,
+            "n_sample": n_sample,
+            "total_runs": int(total_runs),
+            "indices": result_df,
+        }
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -119,28 +119,23 @@ echo "Telegram bot PID: $BOT_PID"
 # ── 6. Launch simulation ──────────────────────────────────────────────────────
 echo ""
 echo "[5/5] Launching Phase 3 simulation..."
-wandb disabled
+export WANDB_MODE=disabled
 echo "Scenario: ${SCENARIO:-A}"
 
 mkdir -p logs
 
-python3 -u run_phase3.py \
-    --scenario C \
-    --runs ${RUNS:-100} \
-    --citizens ${CITIZENS:-11000} \
-    --steps ${STEPS:-50} \
-    --model ${LLM_MODEL:-llama3.2:3b} \
-    --use-llm >> logs/paper_C.log 2>&1
-echo '=== SCENARIO C COMPLETE ===' >> logs/paper_C.log
-
-python3 -u run_phase3.py \
-    --scenario A \
-    --runs ${RUNS:-100} \
-    --citizens ${CITIZENS:-11000} \
-    --steps ${STEPS:-50} \
-    --model ${LLM_MODEL:-llama3.2:3b} \
-    --use-llm >> logs/paper_A.log 2>&1
-echo '=== SCENARIO A COMPLETE ===' >> logs/paper_A.log
+IFS=',' read -ra SCENARIO_LIST <<< "${SCENARIO:-A}"
+for SCEN in "${SCENARIO_LIST[@]}"; do
+    echo "Running scenario: ${SCEN}"
+    python3 -u run_phase3.py \
+        --scenario "${SCEN}" \
+        --runs ${RUNS:-100} \
+        --citizens ${CITIZENS:-11000} \
+        --steps ${STEPS:-50} \
+        --model ${LLM_MODEL:-llama3.2:3b} \
+        --use-llm >> "logs/paper_${SCEN}.log" 2>&1
+    echo "=== SCENARIO ${SCEN} COMPLETE ===" >> "logs/paper_${SCEN}.log"
+done
 
 echo ""
 echo "============================================================"
