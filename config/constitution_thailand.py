@@ -120,24 +120,34 @@ class FoundationalConfig:
 
     # CONFIDENT — Section 1.
     TERRITORY_BASIS: str = "unitary_indivisible_kingdom_section_1"
-    # GUESS, explicit modelling choice — README.md section 1: "76 provinces +
-    # Bangkok are statutory, not constitutional. Any STATE_COUNT is a
-    # modelling choice." Kept at 14 to reuse the SAME geographic/Mesa
-    # population structure as Scenarios A/C (the "same geopolitical vectors"
-    # engine-symmetry principle), NOT because Thailand has 14 provinces.
-    # NOTE (new finding, flagged for the parent agent, not fixed here):
+    # UPDATED 2026-10-20 (section 11 geography extension) — 9, not 14.
+    # README.md section 6.2 confirms Thailand's real 77 first-level units
+    # (76 provinces + Bangkok Metropolitan Administration, a special
+    # administrative area, not a province) are statutory, not
+    # constitutional (ss.249-254 govern local administration by statute),
+    # so STATE_COUNT remains a modelling choice, but it must now be a REAL
+    # aggregation rather than a borrowed Myanmar count. README.md section
+    # 6.2 "Option B (RECOMMENDED, 9 units)" aggregates the 77 units into 9
+    # defensible regions: the official 7-region DOPA/NESDC scheme, plus two
+    # politically-real splits (Bangkok separated from its vicinity; the
+    # Deep South — Pattani/Yala/Narathiwat — separated from the rest of the
+    # South), both using real sourced province-level population figures
+    # (DOPA household-registration statistics, Dec 2017, via CEIC). See
+    # SimulationConfig.SIMULATION_STATES/STATE_POPULATION_WEIGHTS below for
+    # the 9 real region names and shares.
+    # NOTE (still flagged, not fixed here, out of this file's scope):
     # agents/official.py, agents/oversight.py and agents/foreign.py read
     # `CONSTITUTION.simulation.SIMULATION_STATES` from the MODULE-LEVEL MFU
     # `CONSTITUTION` singleton imported directly at the top of those files
     # (`from config.constitution import CONSTITUTION`), NOT from
-    # `self.CONSTITUTION`/the scenario-selected object. This means whatever
-    # this field (or SimulationConfig.SIMULATION_STATES below) says is
-    # currently mechanically inert for every non-A/C scenario, including
-    # TH — the same bug class as the already-known bug #13
-    # (social_media.py / cves.py literal scenario checks), just not yet
-    # caught in that audit. Out of this file's scope to fix.
-    STATE_COUNT: int = 14
-    SIMULATION_STATE_COUNT: int = 14
+    # `self.CONSTITUTION`/the scenario-selected object, and
+    # model_phase3.py's `_initialize_states()` independently hardcodes
+    # Myanmar's 14 state names for `self.states` regardless of this field
+    # (bug #16's deliberately-deferred scope). A separate, parallel fix to
+    # those files is required before this 9-region geography is
+    # mechanically live; this file only needs to be internally consistent.
+    STATE_COUNT: int = 9
+    SIMULATION_STATE_COUNT: int = 9
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -657,7 +667,7 @@ class IIGConfig:
 class FederalConfig:
     """Chapter XIV — Local Administration (statutory, not constitutional)"""
 
-    STATE_COUNT: int = 14   # GUESS, modelling choice — see FoundationalConfig's own note; duplicated here for schema parity with the Myanmar template
+    STATE_COUNT: int = 9   # UPDATED 2026-10-20 — matches FoundationalConfig's own note; README.md section 6.2's real 9-region aggregation, duplicated here for schema parity with the Myanmar template
     # CONFIDENT direction — README.md section 1: "No constitutionally
     # recognised ethnic-group structure" (opposite of Myanmar's 8 and MFU's
     # 8).
@@ -1331,16 +1341,76 @@ class SimulationConfig:
     # convention as constitution_2008.py's own identical backfill note.
     CITIZEN_AGENTS: int = 11_000
     TIME_STEPS: int = 50
-    # GUESS, modelling choice (reused Myanmar geography — see
-    # FoundationalConfig's note above on why, and the newly-discovered
-    # hardcoded-import caveat that makes this field currently mechanically
-    # inert for TH regardless of its value).
+    # UPDATED 2026-10-20 (section 11 geography extension) — replaces
+    # Myanmar's borrowed 14-name placeholder with Thailand's own real
+    # geography. CONFIDENT — README.md section 6.2 "Option B (RECOMMENDED,
+    # 9 units)": the official 7-region DOPA/NESDC scheme plus two
+    # politically-real splits (Bangkok vs. vicinity; Deep South vs. the
+    # rest of the South), all 9 boundaries are real province aggregations,
+    # not invented. Ordered by Dec-2017 DOPA registered population,
+    # descending (matches README's own table order).
+    #
+    # Per README section 6.3 (CONFIDENT, explicit package finding): no
+    # per-unit ETHNIC_GROUPS array is used for Thailand. Thailand's real
+    # socio-regional cleavages (Isan/Lao-speaking Northeastern bloc; Deep
+    # South Malay-Muslim population) are BETWEEN these 9 units, not mixed
+    # within them the way Myanmar's ethnicity is mixed within its 14
+    # states, so they belong in unit-level year-zero values (trust,
+    # grievance, GDP — via model_phase3.py's `_initialize_states()`, out
+    # of this file's scope), not in a composition array that would be
+    # near-degenerate in 8 of 9 units. See STATE_ETHNIC_WEIGHTS below.
     SIMULATION_STATES: Tuple[str, ...] = (
-        "sagaing", "mandalay", "magway", "bago",
-        "yangon", "ayeyarwady", "tanintharyi", "shan",
-        "kachin", "kayah", "kayin", "chin",
-        "mon", "rakhine",
+        "northeastern", "northern", "southern", "bangkok",
+        "bangkok_vicinity", "eastern", "western", "central",
+        "deep_south",
     )
+    # CONFIDENT — README.md section 6.2, Option B table, Dec-2017 DOPA
+    # household-registration shares (via CEIC), same order as
+    # SIMULATION_STATES above. Sums to 1.0001 (rounding artifact from the
+    # README's own 2-decimal percentage rows; retained at source precision
+    # rather than force-normalized, well within the "~1.0" tolerance the
+    # field contract specifies in config/constitution.py's own comment).
+    #   northeastern (Isan, 20 provinces):            21,989,480 / 33.22%
+    #   northern:                                      12,098,164 / 18.28%
+    #   southern (excl. Deep South, 14 provinces):      7,366,248 / 11.13%
+    #   bangkok (Bangkok Metropolitan Administration):  5,682,415 /  8.59%
+    #   bangkok_vicinity (Nonthaburi, Pathum Thani,
+    #     Samut Prakan, Samut Sakhon, Nakhon Pathom):   5,149,573 /  7.78%
+    #   eastern:                                         4,743,840 /  7.17%
+    #   western:                                         3,831,952 /  5.79%
+    #   central (excl. Bangkok + vicinity):              3,293,504 /  4.98%
+    #   deep_south (Pattani, Yala, Narathiwat):          2,033,330 /  3.07%
+    #   TOTAL:                                          66,188,506 / 100.00%
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.3322, 0.1828, 0.1113, 0.0859,
+        0.0778, 0.0717, 0.0579, 0.0498,
+        0.0307,
+    )
+
+    # STATE_ETHNIC_WEIGHTS: DELIBERATE NO-OP for Thailand, same "mechanism
+    # absent, nullify via parameter value, not a code branch" idiom this
+    # file already uses throughout for Thailand's ETHNIC_GROUPS=0 (see
+    # e.g. FederalConfig.ETHNIC_GROUPS above, ELITE_SYSTEM_PROMPTS's own
+    # "every ethnic_weights example below is an empty list" note, and
+    # bug #17's CVES precedent of SKIPPING the Acemoglu/Robinson component
+    # entirely under ETHNIC_GROUPS=0 rather than forcing a meaningless
+    # value into it). `ETHNIC_GROUPS=0` means Thailand's 2017 constitution
+    # recognises no ethnic-group structure at all (README.md section 1,
+    # verbatim), so `shared_data["active_ethnic_groups"]` resolves to an
+    # empty list for this scenario, and agents/citizen.py's
+    # `_assign_ethnicity()` returns `None` the moment `ethnic_groups` is
+    # falsy (its own docstring's "No-op design for 0-ethnic-group
+    # constitutions" clause) WITHOUT ever reading STATE_ETHNIC_WEIGHTS or
+    # STATE_ETHNIC_WEIGHTS_DEFAULT. Left empty/zero-length here rather than
+    # populated with Thailand's real Isan/Deep-South socio-regional
+    # cleavages (README.md section 6.3's explicit recommendation is to
+    # represent those at the UNIT level — year-zero trust/grievance/GDP —
+    # not via a composition array that would be near-degenerate in 8 of 9
+    # units and would risk being mistaken for constitutionally-recognised
+    # ethnic-group data this country does not have).
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=dict)
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = ()
+
     # CONFIDENT — same canonical value and "mechanism absent" reasoning as
     # constitution_2008.py's identical field.
     CITIZENS_ASSEMBLY_SIZE: int = 320

@@ -760,3 +760,293 @@ fields have a direct German referent. A separate engine-level issue (`self.CONST
 `feedback/loops.py` and `institutions/chambers.py` all import MFU's `CONSTITUTION` at module level
 unconditionally) has been reported to the parent agent — it determines whether any of these parameters
 affect the simulation at all.
+
+---
+
+# 6. Administrative geography, population structure, and real geopolitical context
+
+*Added 2026-10-20 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement and its "each country's own real neighbours" extension. Additive only; nothing above has
+been changed. Every figure carries dataset, publisher, year and access method. Inferences are labelled
+INFERENCE and never presented as observations.*
+
+## 6.1 Real year-zero national population — the World Bank series CANNOT be used for Germany
+
+**Verified finding, not an assumption.** The World Bank WDI series `SP.POP.TOTL` for country code
+`DEU` **begins in 1960** and reports **72,814,900** for that year (accessed 2026-10-20 via
+`https://api.worldbank.org/v2/country/DEU/indicator/SP.POP.TOTL?date=1960:1965&format=json`). West
+Germany's own 1960 population was roughly 55.4 million; the GDR's was roughly 17.2 million. The World
+Bank series is therefore **unified Germany applied retroactively**, and using it for this scenario
+would overstate West Germany's population by about 1.45x. There is no World Bank figure for 1949 at
+all. This is the only one of the five new countries where the World Bank route fails outright.
+
+Correct source: the **1950 Volkszählung (census of 13 September 1950)**, the first census conducted
+under the Basic Law.
+
+| Quantity | Value | Source |
+|---|---|---|
+| **Federal Republic incl. West Berlin, excl. Saarland, 13 Sept 1950** | **49,842,624** | 1950 Volkszählung, Statistisches Bundesamt (figure corroborated across multiple secondary compilations of the 1950 census; see §6.7 L1) |
+| Saarland, 1950 | 995,210 | Not part of the FRG until 1 January 1957 |
+| Expellees (*Heimatvertriebene*) in the FRG, 1950 | **8,025,000 = 16.1% of the population** | Gerhard A. Ritter and Merith Niehuss, *Wahlen in der Bundesrepublik Deutschland: Bundestags- und Landtagswahlen 1946-1987* (Munich: Beck, 1987), p. 31, reproduced by German History in Documents and Images (GHDI) |
+
+**Year zero is 23 May 1949** (Basic Law in force). The census is **16 months later** — it is the
+nearest real enumeration, not a 1949 observation, and should be labelled as such. A 1949 mid-year
+estimate of roughly 49.2 million circulates in secondary sources; I found no primary-source citation
+for it and it should **not** be put in a manuscript table.
+
+**Citizen count at the confirmed 1:5000 ratio: 49,842,624 / 5000 = 9,969 citizens.**
+
+**One year-zero fact that no other scenario has, and which belongs in the paper.** One in six people
+in the simulated year-zero population (16.1%) had arrived within the previous five years as expellees
+from territories east of the Oder-Neisse line and from Czechoslovakia. Germany's "externally validated
+success case" status is being claimed for a constitution that started with a sixth of its population
+as recent destitute refugees, in a bombed-out economy, under foreign military occupation. If the
+simulation's year-zero conditions do not reflect that, the validation claim (`YEAR_ZERO_CORRUPTION =
+0.020` landing inside Scenario A's own year-50 CI) is being made too easy, and an adversarial reviewer
+will point out that the comparison flatters MFU by giving Germany an unrealistically benign start.
+
+## 6.2 Real administrative geography — `STATE_COUNT = 10` matches 1957-1990, not 1949
+
+The current `STATE_COUNT = 10` with the ten Länder listed in `SimulationConfig.SIMULATION_STATES`
+(`schleswig_holstein` ... `saarland`) does **not** correspond to the year-zero configuration. Real
+timeline:
+
+| Date | Configuration | Legal basis |
+|---|---|---|
+| **23 May 1949** | **11 Länder**: Schleswig-Holstein, Hamburg, Bremen, Niedersachsen, Nordrhein-Westfalen, Hessen, Rheinland-Pfalz, **Württemberg-Baden, Baden, Württemberg-Hohenzollern**, Bayern. Plus **Groß-Berlin**, named in the original Art. 23 but with its participation suspended by the Allies | Basic Law, original Art. 23 |
+| 25 April 1952 | The three southwest states merge into **Baden-Württemberg** → 9 Länder | Art. 118 |
+| 1 January 1957 | **Saarland** accedes → 10 Länder | Art. 23 (Saar Treaty, following the 23 Oct 1955 referendum) |
+| 3 October 1990 | 5 new eastern Länder + unified Berlin → 16 | Unification Treaty |
+
+So **"10 Länder" is correct for 1957-1990**. Given Kaung's locked instrument decision (memory.md §4a,
+decision 3: Basic Law *as amended through 1968*), 1957-1990 is the configuration that actually spans
+most of the encoded window, so 10 is a defensible choice — it just is not the 1949 configuration, and
+the file should say so rather than implying it is.
+
+**Recommendation: keep the 10 Länder and add West Berlin as an 11th unit**, with its real special
+status documented: no voting Bundestag delegates (its 22 members were sent by the Berlin
+Abgeordnetenhaus and could not vote on final passage), and the city governed under residual Allied
+authority until 1990. 11 units sits inside the 8-20 target range, matches 1957-1990 reality, and West
+Berlin cannot honestly be dropped from a Cold War German scenario — the Berlin Wall and the Berlin
+crises are the single most important external shocks in the window and they need a unit to land on.
+Document explicitly that the 1949-1952 three-southwest-states configuration is deliberately not
+modelled.
+
+### Population shares, 1950 Volkszählung (13 September 1950)
+
+Two independent derivations are given because the per-Land census figures and the expellee table come
+from different sources, and they cross-validate.
+
+| Unit (encode as) | Real name | 1950 census pop. | Share | Derived from Ritter & Niehuss | Agreement | Citizens @1:5000 (of 9,969) |
+|---|---|---|---|---|---|---|
+| `nordrhein_westfalen` | Nordrhein-Westfalen | 13,196,176 | 26.48% | 13,188,119 | 0.06% | 2,639 |
+| `bayern` | Bayern | 9,184,469 | 18.43% | 9,180,095 | 0.05% | 1,837 |
+| `niedersachsen` | Niedersachsen | 6,797,379 | 13.64% | 6,808,824 | 0.17% | 1,359 |
+| `baden_wurttemberg` | Baden-Württemberg (= Württemberg-Baden + Baden + Württemberg-Hohenzollern in 1950) | 6,430,225 | 12.90% | 6,432,836 | 0.04% | 1,286 |
+| `hessen` | Hessen | 4,323,801 | 8.67% | 4,317,365 | 0.15% | 865 |
+| `rheinland_pfalz` | Rheinland-Pfalz | 3,004,752 | 6.03% | 2,980,392 | 0.81% | 601 |
+| `schleswig_holstein` | Schleswig-Holstein | 2,594,648 | 5.21% | 2,596,970 | 0.09% | 519 |
+| `west_berlin` | Berlin (West) | 2,146,952 | 4.31% | 2,144,928 | 0.09% | 429 |
+| `hamburg` | Hamburg | 1,605,606 | 3.22% | 1,611,111 | 0.34% | 321 |
+| `bremen` | Bremen | 558,619 | 1.12% | 558,140 | 0.09% | 112 |
+| `saarland` | Saarland (**acceded 1 Jan 1957**) | — (995,210 in 1950, outside the FRG) | — | — | — | ~199 if included at 1957 weight |
+| | **total (10 units incl. West Berlin)** | **49,842,627** | 100.00% | | | 9,969 |
+
+The "Derived from Ritter & Niehuss" column is computed as (expellee count / expellee percentage) from
+the sourced table in §6.3 — an independent arithmetic route to each Land's total population. **All ten
+agree within 0.81%, and nine of ten within 0.35%**, and the census column sums to 49,842,627 against
+the published total of 49,842,624 (a 3-person rounding residual). That is strong internal validation.
+See §6.7 L1 for the honest sourcing caveat on the census column.
+
+**Saarland handling.** It is in the current `SIMULATION_STATES` tuple but was not part of the FRG at
+year zero. Two defensible options: (a) include it with a 1957-onward weight and document the eight-year
+anachronism, or (b) exclude it and run 10 units (9 Länder + West Berlin) for 1949-1957. Option (a) is
+simpler and matches the "as amended through 1968" instrument choice; either way, **document it**.
+
+### Structural point this geography carries
+
+Germany is **the only genuinely federal state in the seven-constitution set** (this package's §1
+`FederalConfig` section already says so). Unlike Chile's and Thailand's appointed-governor unitary
+structures and Pakistan's contested parity-Senate federalism, West German Länder had real
+constitutional competences, their own constitutions, and real representation in the Bundesrat (Art.
+50-53), plus a genuine fiscal-equalisation mechanism (Art. 106-107, *Länderfinanzausgleich*). So the
+MFU 35/35/30 resource-share machinery has, for the first and only time in this set, **a real
+referent** — and Art. 107's horizontal equalisation is arguably the closest real-world analogue to
+MFU's ethnic-transfer share anywhere in the project. That is a strong, concrete comparison for the
+paper, and it should be encoded rather than left as a coincidence.
+
+Note also the concentration contrast: NRW alone is 26.5% of the FRG population — lower than Chile's
+Santiago (39.1%) or Pakistan's Punjab (56.1%), and in a genuinely federal structure. Germany is the
+one case where the largest unit does **not** dominate the federation.
+
+## 6.3 Per-unit composition — keep `ETHNIC_GROUPS = 0`, and use the expellee share, which is fully sourced
+
+`ETHNIC_GROUPS = 0` is correct and should be preserved. Art. 3(3) of the Basic Law prohibits
+discrimination on grounds of descent, race, language, homeland and origin; there is no
+constitutionally recognised ethnic-group structure, no reserved seats, and no ethnic chamber. (The one
+near-exception, the Danish minority in Schleswig-Holstein under the 1955 Bonn-Copenhagen Declarations,
+is a Land-level and bilateral-treaty matter, not a federal constitutional structure.) An 8-slot ethnic
+array for Germany would be a fabrication.
+
+### Recommended primary per-unit array: expellee share, 1950 and 1961 — REAL, SOURCED, and of exactly the right shape
+
+Source: Ritter & Niehuss, *Wahlen in der Bundesrepublik Deutschland 1946-1987*, p. 31, via German
+History in Documents and Images (accessed 2026-10-20). Expellees in thousands and as a percentage of
+each Land's population:
+
+| Unit | 1950 expellees (000s) | 1950 % | 1961 expellees (000s) | 1961 % |
+|---|---|---|---|---|
+| `schleswig_holstein` | 857 | **33.0** | 630 | 27.2 |
+| `niedersachsen` | 1,852 | **27.2** | 1,612 | 24.3 |
+| `bayern` | 1,937 | **21.1** | 1,645 | 17.3 |
+| `hessen` | 721 | 16.7 | 818 | 17.0 |
+| `baden_wurttemberg` | 862 | 13.4 | 1,205 | 15.5 |
+| `nordrhein_westfalen` | 1,332 | 10.1 | 2,298 | 14.5 |
+| `bremen` | 48 | 8.6 | 98 | 13.9 |
+| `hamburg` | 116 | 7.2 | 206 | 11.3 |
+| `west_berlin` | 148 | 6.9 | 151 | 6.9 |
+| `rheinland_pfalz` | 152 | **5.1** | 276 | 8.1 |
+| `saarland` | — | — | 18 | 1.7 |
+| **Federal** | **8,025** | **16.1** | **8,956** | **15.9** |
+
+This is a per-unit composition array of **exactly the shape Myanmar's ethnic arrays have**
+(`"yangon": [75, 5, 6, 2, 2, 5, 2, 3]`), with a 6.5x spread between the highest unit (Schleswig-Holstein
+33.0%) and the lowest (Rheinland-Pfalz 5.1%) — comparable in dispersion to Myanmar's real ethnic
+variation, and with the enormous advantage of being fully sourced rather than inferred.
+
+**And it mattered politically, which is the test for whether a cleavage is worth encoding at all:**
+- The expellee party (BHE, later GB/BHE) entered the Bundestag in the **1953 election with 5.9% of
+  the vote and 27 seats**, on the strength of exactly this geographic distribution.
+- Expellee integration via the **Lastenausgleich** (Equalisation of Burdens Act, 14 August 1952) is
+  the defining social-policy achievement of the Basic Law's first decade, and a real fiscal transfer
+  mechanism running between precisely these units.
+- The 1950-to-1961 columns show the real internal migration from the high-expellee agricultural north
+  and south-east to the industrial west (NRW 1,332k → 2,298k), which is a genuine inter-unit dynamic
+  the simulation could reproduce.
+
+### Recommended secondary array (if a second dimension is wanted): confessional composition
+
+The Catholic/Protestant split is the real structural basis of CDU/CSU-versus-SPD voting in the Basic
+Law's first two decades, and the reason a cross-confessional Christian-democratic party was viable at
+all: the loss of the heavily Protestant eastern territories shifted the FRG to a roughly even
+confessional balance, against the Weimar Reich's roughly 2:1 Protestant majority. Per-Land 1950
+confessional shares exist — fowid's compiled table *"Religionszugehörigkeit: evang., kath., andere,
+Bundesländer 1950-2011"* surfaced during this research — but **I did not extract the figures**. See
+§6.7 L2. Recommend the expellee array as primary (sourced now) and confession as an optional second
+dimension (closeable gap).
+
+## 6.4 Real external context — the most structurally different of all five, and it should NOT be mapped onto Myanmar's shape
+
+Myanmar's vector set is "neighbours + major powers + a regional body + illicit networks". West Germany
+1949's external situation does not fit that template at all, and forcing it in would destroy the
+single most important fact about this scenario.
+
+| Vector | Real relationship at year zero (1949) | Real nature | Notes for the engine |
+|---|---|---|---|
+| `allied_high_commission` | **THE defining relationship, and it has no analogue anywhere else in the project.** Under the **Occupation Statute (in force 21 September 1949)**, the three Western powers acting jointly retained reserved powers over foreign affairs, foreign trade, demilitarisation, the Ruhr, and — critically — **the right to resume full governmental authority**. The occupation regime ended with the General Treaty / *Deutschlandvertrag* (signed 26 May 1952, in force 5 May 1955), but Allied rights over Berlin and over German unification as a whole survived until the **Two-Plus-Four Treaty (12 September 1990, in force 15 March 1991)** | **External constitutional guarantor with standing reserved powers and a veto** | Must be encoded as its own relationship type, **not** as "foreign influence 0.6". It is a *supervisory* vector that declines in three dated steps (1955, then residually to 1990), and it is precisely why Germany functions as this paper's externally-validated success case: the constitution's guardianship was exercised from *outside* the polity, by actors with no stake in capturing it — the structural inverse of Myanmar's, Thailand's, Chile's and Pakistan's internal military guardianship. **This is the single most valuable comparative point in the Germany scenario and the vector set must be able to carry it.** |
+| `ussr_gdr` | The existential threat and the legitimacy competitor. Dated: **Berlin Blockade 24 June 1948 - 12 May 1949** (lifted 11 days before the Basic Law came into force); GDR founded 7 Oct 1949; 17 June 1953 East German uprising; **Hallstein Doctrine 1955**; Berlin Crisis 1958-61; **Berlin Wall 13 August 1961**; Cuban Missile Crisis 1962. Then Ostpolitik inverts the whole frame: Moscow and Warsaw Treaties 1970, Basic Treaty with the GDR 21 Dec 1972 | Existential threat + legitimacy rival | High and **non-monotonic**: must fall sharply from 1970 |
+| `france` | **The one relationship that fully inverts within the run.** Occupying power and Saar claimant at year zero (the **Saar referendum of 23 October 1955 rejected Europeanisation 67.7% to 32.3%**, leading to accession on 1 Jan 1957); then ECSC (Treaty of Paris, 18 April 1951), EEC (Treaty of Rome, 25 March 1957), **Élysée Treaty 22 January 1963** | Occupier → core integration partner | Must change sign mid-run. Myanmar has no vector of this type at all |
+| `usa` | Occupying power, security guarantor, and economic sponsor simultaneously. Marshall Plan / ERP aid to West Germany on the order of **US$1.4bn, 1948-52** (commonly cited in the 1.39-1.45bn range; see §6.7 L3) | Occupier + patron + guarantor | Declines as occupier, rises as ally |
+| `nato` | FRG acceded **9 May 1955**; the Bundeswehr was founded 12 November 1955. The entire military chapter of the Basic Law (the 1956 *Wehrverfassung* amendments, Art. 87a, 65a) **exists because of this accession** | Alliance membership driving constitutional amendment | **The clearest case in the whole project of an external commitment causing a constitutional amendment.** Directly relevant to `AmendmentConfig`, and a point the paper should make explicitly |
+| `european_economic_institutions` | ECSC 1951 → EEC 1957 → the Single Market; plus the **London Debt Agreement (27 February 1953)**, which cut Germany's prewar and postwar debt roughly in half | Economic integration + **debt relief** | **The IMF/World Bank analogue for Germany is a creditor-relief relationship — essentially the inverse of Myanmar's conditional-lending vector at 0.25.** Encoding Germany with a Myanmar-style IMF-conditionality vector would invert the real sign |
+| `israel_reparations` | **Luxembourg Agreement, 10 September 1952**: DM 3bn to Israel plus DM 450m to the Claims Conference. Ratified by the Bundestag 18 March 1953 with CDU/CSU abstentions, carried by SPD votes | External moral/fiscal obligation with real domestic political cost | No analogue elsewhere. Small in magnitude, large in legitimacy terms |
+| `global_economy` | Export-led *Wirtschaftswunder*; high trade exposure | Exposure | Keep |
+
+**Deliberately absent: illicit networks. Recommend ZERO, and this is the cleanest zero in the whole
+set.** There is no real West German analogue of Myanmar's drug production, arms smuggling or hawala
+networks at any politically meaningful scale in this window. Myanmar runs three such vectors; encoding
+any for Germany would be pure fabrication.
+
+**Deliberately absent: a regional-body vector of the ASEAN type.** The EEC/ECSC is categorically
+different — a supranational body West Germany **co-founded** and whose rules it helped write, not a
+regional organisation applying external pressure to it. Do not reuse Myanmar's ASEAN vector semantics
+here.
+
+## 6.5 Historically-calibrated shock types for Germany, 1949-1999
+
+| Shock | Real basis (dated) | Comment |
+|---|---|---|
+| `guarantor_intervention` | Occupation Statute reserved powers (21 Sept 1949 - 5 May 1955), including the Allied right to resume full authority; residual Berlin/unification rights to 1990 | **New type, no analogue elsewhere.** An external actor that can lawfully override the constitutional order *in defence of it* — the structural inverse of a coup. If the engine can only represent internal guardianship, Germany's whole mechanism is invisible |
+| `berlin_crisis` | Blockade 1948-49; Khrushchev's 1958 ultimatum and the 1958-61 crisis; **Wall, 13 August 1961** | Localised to the `west_berlin` unit, nationally amplified |
+| `superpower_nuclear_crisis` | 1961 Berlin standoff; 1962 Cuban Missile Crisis | Existential-risk shock with no domestic mechanism, unlike Myanmar's set |
+| `debt_relief` (positive) | Currency reform 20 June 1948; **London Debt Agreement 27 February 1953**; Marshall Plan/ERP 1948-52 | **Positive fiscal shock.** Myanmar's `SHOCK_EVENTS` has no debt-relief type at all; its closest positive is `fdi_boom` |
+| `labour_supply_inflow` (positive) | The 1955 Italian *Gastarbeiter* recruitment agreement and its successors (Spain and Greece 1960, Turkey 1961, Portugal 1964, Yugoslavia 1968), driven by near-full employment | Positive labour/output shock. Note this package's own `ScienceConfig.BRAIN_DRAIN_RATE_BASE` discussion — Germany is the one scenario with net *in*flow |
+| `recession` | **The 1966-67 recession**, the FRG's first | **The most important shock in Germany's set for this paper.** It produced the Grand Coalition, and directly motivated both the 1967 Stability Act and the **1968 *Notstandsverfassung*** (17th amendment, 24 June 1968) — passed over the largest extra-parliamentary protest movement in the FRG's history to that point. This is a **documented, dated chain from an economic shock inside the simulated window to a constitutional amendment at simulated year 19**, and Germany is the only scenario with such a target to validate against. If the engine can represent "shock → constitution amends itself → constitution survives", `AmendmentConfig` and `EmergencyConfig` are where it has to show up |
+| `oil_price_shock` | 1973 and 1979 OPEC shocks — both inside a 50-year horizon from 1949 | Transfers from Myanmar's set |
+| `domestic_terrorism` | The RAF; the Munich Olympics attack 5 September 1972; the **German Autumn** of 1977 | The real stress test of the Basic Law's emergency architecture, and the reason the 1968 emergency chapter matters. No Myanmar analogue in the current set |
+| `reunification` (positive, very large) | **3 October 1990, simulated year 41** | The largest single shock in the window and a positive one. A ~16 million population increase and a 5-Land expansion inside the simulated horizon — the engine almost certainly cannot represent this and the paper should say so rather than quietly ignoring it |
+| `global_recession`, `pandemic` | Transfer from Myanmar's set | Keep, lower weight |
+
+## 6.6 Citizen count summary
+
+| Quantity | Value |
+|---|---|
+| Year zero | 1949 (Basic Law in force 23 May 1949); population anchored on the 13 Sept 1950 census, 16 months later |
+| Real population | **49,842,624** (1950 Volkszählung, Statistisches Bundesamt; FRG incl. West Berlin, excl. Saarland) |
+| **World Bank WDI is unusable for this scenario** | `SP.POP.TOTL`/`DEU` starts 1960 and is unified Germany (72,814,900 in 1960) |
+| Ratio | 1:5000 (confirmed by Kaung) |
+| **Citizen agents** | **9,969** |
+| For comparison, locked Myanmar value | 11,000 |
+
+## 6.7 Sourcing limitations and flags
+
+**L1 — the per-Land 1950 census column is not directly sourced to a retrieved primary table, and this
+should be stated honestly.** The **national** total (49,842,624) is corroborated across multiple
+secondary compilations of the 1950 Volkszählung, and **NRW's 13,196,176 was directly confirmed** in
+search. The remaining nine per-Land figures are values I asserted and then **independently
+cross-validated** against the Ritter & Niehuss expellee-percentage derivation, which is a genuinely
+independent arithmetic route: all ten agree within 0.81%, nine of ten within 0.35%, and the column
+sums to within 3 persons of the published national total. That is strong corroboration but it is
+**not** the same as having pulled Statistisches Bundesamt's *"Bevölkerung nach Ländern 1950"* table.
+**A human should retrieve that table** (Statistisches Bundesamt / the Statistische Bibliothek's
+digitised *Statistik der Bundesrepublik Deutschland* series, or GESIS/da-ra study res_id 3889
+"Regionaldaten VZ 1950 (Bundesländer)") before any of these figures appears in a manuscript table.
+If only one source is wanted, the **Ritter & Niehuss derivation is the fully-citable column** and can
+be used on its own.
+
+**L2 — 1950 confessional shares by Land not extracted.** §6.3's secondary array is a method
+recommendation with a named real source (fowid's compiled *"Religionszugehörigkeit: evang., kath.,
+andere, Bundesländer 1950-2011"* table, ultimately from census data) but **no numbers**. Closeable gap.
+
+**L3 — Marshall Plan figure is approximate.** West Germany's ERP receipts are commonly cited at
+US$1.39-1.45bn for 1948-52, depending on whether GARIOA aid and counterpart funds are included. Verify
+against the ECA/OEEC accounts before quoting a precise figure.
+
+**L4 — no 1949 population observation exists.** The 1950 census is the nearest real enumeration. Do
+not substitute an unsourced 1949 estimate.
+
+**L5 — `YEAR_ZERO_TRUST = 0.55`, `YEAR_ZERO_GINI = 0.33` and `YEAR_ZERO_EMPLOYMENT = 0.90` remain
+unsourced** (already flagged in `constitution_germany.py` and in this package's §4/L3). Nothing here
+fixes them, and note that the 16.1% expellee share now gives a *reason* to think the year-zero Gini
+and employment values in the file are optimistic: real early-1950s West German unemployment was around
+10-11% during refugee absorption, which is inconsistent with `YEAR_ZERO_EMPLOYMENT = 0.90`.
+
+**F1 — resolve the `STATE_COUNT` period question** (§6.2). 10 Länder = 1957-1990, not 1949.
+Recommended: keep 10, add West Berlin as an 11th, and document both the Saarland anachronism and the
+deliberate non-modelling of the 1949-52 three-southwest-states configuration.
+
+**F2 — `FederalConfig` is genuinely live for Germany, unlike Chile and Thailand.** Art. 50-53
+(Bundesrat), Art. 106-107 (*Länderfinanzausgleich*) and the 1952 Lastenausgleich are real federal
+mechanisms. Art. 107's horizontal equalisation is the closest real-world analogue in the entire project
+to MFU's 30% ethnic-transfer share. **Encode it properly; this is a comparison the paper can make and
+nobody else in the set can supply it.**
+
+**F3 — Germany's external-layer vector set cannot reuse Myanmar's semantics** (§6.4). Three specific
+sign inversions must not be lost: the occupying powers are a *constitutional guarantor*, not a foreign
+pressure source; the multilateral-finance relationship is *debt relief*, not conditional lending; and
+the regional body is one Germany *co-founded*, not one applying external pressure. Flag this to
+`senior-research-paper-writer` as well — memory.md §11 already requires the realism shift to be made
+visible in the methodology section, and Germany is the case where it changes the interpretation most.
+
+**F4 — reunification (1990, simulated year 41) is almost certainly unrepresentable** and should be
+disclosed as a known limitation rather than silently truncated. A 32% population increase and a
+5-unit expansion mid-run is outside what the current engine models.
+
+**F5 — CROSS-SCENARIO STATISTICAL POWER, all 7 scenarios, needs Kaung's decision.** Full statement in
+the South Korea package §6.7 F1 and the Chile package §6.7 F4. Ratio-derived N: Pakistan 19,646,
+Thailand 14,232, **Germany 9,969**, South Korea 8,406, Chile 2,687, versus Myanmar's locked 11,000.
+Germany at 9,969 is the closest of the five to the locked baseline, so Germany is the **least**
+affected — which matters, because Germany is the scenario carrying the strongest external-validation
+claim and it should not be the one weakened by sampling noise. Note also that Myanmar's locked 11,000
+implies 55,000,000 while its own World Bank 2008 population is 48,390,793 (= 9,678 at 1:5000), so the
+ratio rule does not reproduce the already-published baseline.

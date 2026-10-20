@@ -711,3 +711,247 @@ engine reads**. **Use `config/constitution.py` as the field-name contract.** A s
 issue (`self.CONSTITUTION` assigned at `model_phase3.py:164/167` but never read elsewhere; agent and
 feedback modules import MFU's `CONSTITUTION` at module level unconditionally) has been reported to
 the parent agent — it determines whether any of these parameters affect the simulation at all.
+
+---
+
+# 6. Administrative geography, population structure, and real geopolitical context
+
+*Added 2026-10-20 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement and its "each country's own real neighbours" extension. Additive only; nothing above has
+been changed. Every figure carries dataset, publisher, year and access method. Inferences are labelled
+INFERENCE and never presented as observations.*
+
+## 6.1 Real year-zero national population — and an unresolved year-zero inconsistency
+
+| Quantity | Value | Source |
+|---|---|---|
+| Population, 1990 | **13,437,176** | World Bank World Development Indicators, indicator `SP.POP.TOTL`, country `CHL`, year 1990. Accessed 2026-10-20 via `https://api.worldbank.org/v2/country/CHL/indicator/SP.POP.TOTL?date=1990&format=json` |
+| Population, 1981 | **11,678,717** | Same series, year 1981 |
+| 1992 Census (22 April 1992), effectively-censused regional sum | 13,231,803 | Instituto Nacional de Estadísticas (INE) 1992 census, regional figures via statoids.com's INE-sourced population-history table (accessed 2026-10-20) |
+| 1992 Census, published "población total" | 13,348,401 | INE 1992 census (the difference from the line above is the standard *población efectivamente censada* versus omission-adjusted total distinction) |
+| 1982 Census (21 April 1982), regional sum | 11,275,440 | INE 1982 census, same table |
+
+**INCONSISTENCY TO RESOLVE BEFORE ENCODING (flag F1).** Kaung's locked decision (memory.md §4a,
+decision 4) was to encode the **1990-2005 elected-Congress era**. But
+`config/constitution_chile.py`'s `YEAR_ZERO_CORRUPTION = 0.283` is sourced to **V-Dem Chile 1981**,
+and this package's own §2.6 and flag F5 both treat 1981 as year zero. The two are nine years apart
+and they give materially different populations (13,437,176 versus 11,678,717), different V-Dem values,
+and different state-GDP baselines. The task brief for this appendix specifies **Chile 1990**, so 1990
+is used below — but the corruption, trust, stability and GDP year-zero values in the Python file are
+all still on the 1981 basis and must be moved to 1990 if 1990 is the chosen year zero. **Do not leave
+the population on 1990 and the corruption on 1981.** This is the kind of mismatch a reviewer checking
+the reproducibility package will find.
+
+**Citizen count at the confirmed 1:5000 ratio: 13,437,176 / 5000 = 2,687 citizens** (2,336 if 1981 is
+used instead). **This is by far the smallest of the seven scenarios — roughly one quarter of
+Myanmar's locked 11,000 and one seventh of Pakistan's 19,646.** See flag F4; this is the most serious
+problem surfaced by this whole task.
+
+## 6.2 Real administrative geography — 13 regions is exactly correct for 1990-2005
+
+Good news: `FoundationalConfig.STATE_COUNT = 13` and `FederalConfig.STATE_COUNT = 13` are **already
+right**, and right for a real reason. Chile's regionalisation (DL 575 of 1974, completed by the 1976
+reorganisation) created 12 numbered regions plus the Región Metropolitana de Santiago, and that
+structure stood unchanged for the entire encoded window. The three later regions are all outside it:
+
+| Later region | Created by | In force |
+|---|---|---|
+| Los Ríos (XIV), split from Los Lagos | Law 20,174 | 2 October 2007 |
+| Arica y Parinacota (XV), split from Tarapacá | Law 20,175 | 2 October 2007 |
+| Ñuble (XVI), split from Biobío | Law 21,033 | 6 September 2018 |
+
+Two things to fix:
+- **`FoundationalConfig.SIMULATION_STATE_COUNT = 14` is a Myanmar leftover** (its own comment says it
+  was kept at 14 to avoid diverging from constitution_2008.py). It should be **13**.
+- **`SimulationConfig.SIMULATION_STATES` still holds Myanmar's 14 state names verbatim**
+  (`sagaing`, `mandalay`, ... `rakhine`). It must be replaced with the 13 real regions.
+
+### Population shares, 1992 Census (the first census of the elected-Congress era)
+
+Source: INE 1992 Census (22 April 1992), regional figures via statoids.com's INE-sourced population
+history table (accessed 2026-10-20). Shares computed on the effectively-censused sum of 13,231,803.
+
+| Unit (encode as) | Real name | 1992 census pop. | Share | Citizens @1:5000 (of 2,687) |
+|---|---|---|---|---|
+| `metropolitana` | Región Metropolitana de Santiago (RM) | 5,170,293 | 39.07% | 1,050 |
+| `biobio` | Región del Biobío (VIII) | 1,729,920 | 13.07% | 351 |
+| `valparaiso` | Región de Valparaíso (V) | 1,373,967 | 10.38% | 279 |
+| `los_lagos` | Región de Los Lagos (X) | 953,330 | 7.20% | 194 |
+| `maule` | Región del Maule (VII) | 834,053 | 6.30% | 169 |
+| `araucania` | Región de La Araucanía (IX) | 774,959 | 5.86% | 157 |
+| `ohiggins` | Región del Libertador General Bernardo O'Higgins (VI) | 688,385 | 5.20% | 140 |
+| `coquimbo` | Región de Coquimbo (IV) | 502,460 | 3.80% | 102 |
+| `antofagasta` | Región de Antofagasta (II) | 407,409 | 3.08% | 83 |
+| `tarapaca` | Región de Tarapacá (I) | 341,112 | 2.58% | 69 |
+| `atacama` | Región de Atacama (III) | 230,786 | 1.74% | 47 |
+| `magallanes` | Región de Magallanes y de la Antártica Chilena (XII) | 143,058 | 1.08% | 29 |
+| `aysen` | Región de Aysén del General Carlos Ibáñez del Campo (XI) | 82,071 | 0.62% | 17 |
+| | **total** | **13,231,803** | 100.00% | 2,687 |
+
+### The structural point this geography carries
+
+**Santiago is 39.1% of the national population in a 13-region *unitary* state whose regional
+*intendentes* were appointed by the President** (Art. 100-101 of the 1980 text), not elected. Chile's
+"states" had no autonomous political authority whatsoever — the first direct election of regional
+governors was in 2021, sixteen years after the encoded window closes. So:
+
+- The MFU 35/35/30 federal-resource-share machinery has **no Chilean referent at all** and
+  `FederalConfig` should be near-inert by design for CL. If it runs on MFU-like values, the simulation
+  will model a decentralisation that did not exist.
+- But the **geographic Gini** (memory.md bug #2: Phase 3's live Gini is computed from the 14 states'
+  GDP levels, not citizen income) becomes *more* meaningful for Chile than for Myanmar, because
+  Chile's regional output concentration — Santiago's services economy against Antofagasta/Atacama's
+  copper enclaves against Araucanía's poverty — is extreme and well documented. Worth telling
+  `senior-data-analyst`: the 13 real regions with real population weights make Chile's Gini
+  interpretable in a way Myanmar's 14 equally-sized synthetic states are not.
+- Aysén at 17 citizen agents and Magallanes at 29 are **very small samples**. At 2,687 total agents
+  the smallest regions become statistically meaningless. This is a direct argument against
+  ratio-derived N (flag F4).
+
+## 6.3 `ETHNIC_GROUPS = 0` is correct — use socioeconomic strata instead, not a fabricated ethnic array
+
+`ETHNIC_GROUPS = 0` is correct and should be preserved. The 1980 Constitution recognised **no**
+indigenous peoples; the Ley Indígena 19,253 was enacted only on 5 October 1993 (simulated year 3-4 on
+a 1990 start) and is ordinary legislation, not constitutional; and **constitutional recognition has
+failed twice**, with voters rejecting the 2022 draft (which would have established a plurinational
+state) and the 2023 draft. The 1992 Census was the first to ask an indigenous-identification question
+at all, returning 998,385 self-identified Mapuche among respondents aged 14 and over (~10%). An
+8-slot ethnic array for Chile would be a fabrication.
+
+### Recommended primary composition: socioeconomic stratum
+
+Chile's documented first-order cleavage in this window is **class**, not ethnicity. The file already
+encodes `YEAR_ZERO_GINI = 0.56` — among the highest income Ginis in the world at the time, and the
+highest in this seven-country set by a wide margin. That is the cleavage the composition array should
+carry.
+
+Real sources, both retrievable and both Chilean-official:
+- **CASEN** (Encuesta de Caracterización Socioeconómica Nacional), MIDEPLAN / later Ministerio de
+  Desarrollo Social, biennial from **1987**. Gives poverty headcount and income distribution **by
+  region**, which is exactly the per-unit array shape needed, and it begins before year zero.
+- The **ABC1 / C2 / C3 / D / E** socioeconomic classification standard in Chilean survey research,
+  which gives a defensible 5-category stratum scheme.
+
+Recommended per-unit array: 3-5 income/socioeconomic strata from CASEN, with CASEN 1990 as the
+year-zero anchor. **I did not extract CASEN figures** — see §6.7 L2. Do not substitute invented
+numbers; this is a genuine, closeable gap, not an unanswerable one.
+
+### Recommended secondary composition: indigenous share in the southern macrozone
+
+Genuinely real and genuinely consequential within the window: the **Mapuche land conflict**,
+concentrated in Araucanía (IX) with spillover into Biobío (VIII) and Los Lagos (X). Dated within or
+just after the window: the Lumaco arson attacks (December 1997), the application of the Pinochet-era
+Ley Antiterrorista (18,314) to Mapuche defendants, the killing of Matías Catrileo (2008) and Jaime
+Mendoza Collío (2009), the killing of Camilo Catrillanca (14 November 2018), and the *macrozona sur*
+state of emergency from 2021. Indigenous-population shares by region are available from the 1992
+census question onward (INE).
+
+Encode this as a **regional composition category explicitly labelled non-constitutional**, never as a
+constitutional ethnic group — because the entire point about Chile is that the 1980 Constitution gave
+indigenous peoples no standing, and encoding them as a recognised group would erase the finding.
+
+## 6.4 Real neighbours and major-power relationships — replacing Myanmar's vector set
+
+Chile's external situation is the most different in kind from Myanmar's of all five new countries.
+There is no large neighbouring hegemon, no regional bloc that matters much, no significant illicit
+economy, and the dominant external variable is **not a country at all** — it is the copper price.
+
+| Vector | Real relationship in 1990 | Real nature | Notes for the engine |
+|---|---|---|---|
+| `copper_price` | **The single most important external variable, and it is a commodity, not a state.** Copper was ~30% of Chile's export value in 1991; Codelco's four mines produced 1.14 million tonnes in 1990. Critically: **Law 13,196 ("Ley Reservada del Cobre", 29 October 1958, amended under the military government and in force until its 2019 replacement) directed 10% of Codelco's gross copper sales directly to the armed forces, with a US$180m floor, bypassing Congress entirely** | Commodity dependence **coupled to the military budget by law** | **Strong recommendation to encode this explicitly as a vector.** It is the only case in the 7-constitution set where an external *price* is legally wired into the guardianship institution's budget. The military's fiscal autonomy from the elected Congress — the heart of the reserved-powers design — literally varied with the LME copper price |
+| `argentina` | The primary historical security relationship, and a real near-war: the Beagle Channel dispute brought both to the brink in December 1978 (*Operativo Soberanía*), resolved by papal mediation and the Treaty of Peace and Friendship signed 29 Nov 1984, in force 2 May 1985. By 1990 the relationship had inverted into Chile's deepest bilateral tie, but 24 of 26 boundary disputes were still unresolved at year zero (settled through the 1990s: Laguna del Desierto arbitration 1994, Campo de Hielo Sur partial agreement 1998). Also Chile's largest import source (7.16% of imports in 1990, World Bank WITS) and its gas supplier | Former near-adversary turned partner and energy supplier | Must **invert** mid-run, and carries a real dated shock (the 2004-2008 gas cutoffs) |
+| `peru_bolivia` | War of the Pacific (1879-83) legacy. **Bolivia has had no full diplomatic relations with Chile since 17 March 1978** — a standing severance across the entire simulated window — over the landlocked sea-access claim; Bolivia sued Chile at the ICJ in 2013 and lost on 1 October 2018. Peru sued Chile over the maritime boundary (2008-2014, judgment 27 January 2014) | **Low-trade, high-grievance, non-military-threat.** A relationship *type* Myanmar's vector set has no slot for | Low magnitude, persistent, occasionally spiking via legal rather than military channels |
+| `usa` | A dated, two-directional relationship: the US imposed an arms embargo under the Kennedy Amendment (1976, following the 21 September 1976 Letelier car-bombing in Washington DC), lifted after the 1990 democratic transition; the US was then Chile's **largest export market, 16.76% in 1990** (World Bank WITS). US-Chile FTA in force 1 January 2004 | Sanctioner at the start of the preceding period, largest market at year zero | Should rise sharply at year zero — the democratic transition's main external dividend |
+| `european_judicial` | **Unique to Chile and genuinely important.** Spain's Judge Baltasar Garzón issued the warrant that led to **Pinochet's arrest in London on 16 October 1998**, and the UK House of Lords ruled on 24 March 1999 that he had no head-of-state immunity for torture | **External judicial intervention against the regime's principals** | No analogue in any other scenario. Should be a *named shock type*, not folded into `sanctions`. It struck the Chilean constitutional settlement directly, at simulated year 8 |
+| `japan_asia_pacific` | Japan was Chile's second-largest export market in 1990 (16.24%, World Bank WITS). Chile joined APEC in November 1994 | Market diversification | Rising |
+| `global_trade_regime` | Chile's strategy was **unilateral opening plus bilateral FTAs, not bloc membership**: FTAs with Canada 1997, the EU 2002, the US 2004, China 2006; OECD accession 7 May 2010; **Mercosur associate member (1996) but never a full member** | Open-economy exposure | **The ASEAN-equivalent vector should be weak.** Chile deliberately avoided deep regional integration, the opposite of Myanmar's ASEAN entanglement |
+| `foreign_investors` | High and rising — Chile was the Latin American FDI success case of the 1990s, largely into mining | FDI | High at year zero, unlike Myanmar's 0.20 |
+
+**Deliberately absent: illicit networks.** Chile has no real mid-window analogue of Myanmar's
+drug-production economy. It is a cocaine-transit country via the northern border with Peru and Bolivia,
+but at a scale and political salience nowhere near Myanmar's three-vector structure.
+**Recommend 0, or at most 1 low-value vector, and state in the methods that this is a real structural
+absence rather than missing data.** Myanmar runs three; copying them to Chile would manufacture a
+similarity that does not exist, which is the exact failure mode section 11 warns about.
+
+**Deliberately absent: China/India/ASEAN/UN-humanitarian as significant vectors.** China becomes
+Chile's largest trade partner later (post-2006 FTA, overtaking the US around 2010) and should rise
+late in the run, but at year zero it is minor.
+
+## 6.5 Historically-calibrated shock types for Chile, 1990-2040
+
+| Shock | Real basis (dated) | Comment |
+|---|---|---|
+| `copper_price_shock` | The dominant shock. Real troughs: the 1998-99 Asian-crisis collapse, the 2008-09 crisis, the 2015-16 decline | **Dual-channel for Chile uniquely**: hits both the fiscal/export economy *and*, via Law 13,196's 10% rule, the armed forces' budget. A copper crash mechanically weakens the guardianship institution |
+| `earthquake_tsunami` | Chile is the most seismically active country in the set. 3 March 1985 Algarrobo M7.8 (just before the 1981-1990 window's end); **27 February 2010 Maule M8.8**, roughly 525 deaths and ~US$30bn in damage, on the order of 18% of GDP (World Bank); 1 April 2014 Iquique M8.2 | Replaces Myanmar's generic `natural_disaster` with a far higher real magnitude and a much higher base rate |
+| `foreign_judicial_action` | Pinochet's London arrest 16 Oct 1998; House of Lords immunity ruling 24 Mar 1999 | **New type, no analogue elsewhere.** The real external test of this constitution's amnesty/immunity architecture — and note this package's own §5 F-flag finding: Chile's immunity was *decreed* (DL 2,191 of 1978), not constitutionalised, and it eroded, unlike Thailand's s.279 and Pakistan's Art. 270A |
+| `gas_supply_cutoff` | Argentine natural-gas export restrictions and cutoffs, 2004-2008 | New type. Energy-security shock from a *partner*, not an adversary |
+| `financial_contagion` | Asian financial crisis 1998-99 — Chile's only recession of the period | Transfers as `global_recession` but with a specific dated instance |
+| `mass_protest_constitutional_crisis` | **18 October 2019 *estallido social*** → the 15 November 2019 cross-party Agreement for Peace and a New Constitution → the 25 October 2020 plebiscite (78% for a new constitution) → the 4 September 2022 draft rejected (62%) → the 17 December 2023 draft rejected (55%) | **The most important shock type for this scenario.** The real within-window stress test of the 1980 Constitution, and the constitution *survived it*. The engine must be able to produce "severe legitimacy crisis, constitution survives" as an outcome — otherwise Chile's documented anti-twin result (§2.4, zero coups in 45 years, constitution still in force) cannot be reproduced no matter what the parameters say |
+| `indigenous_conflict_escalation` | Lumaco arson Dec 1997; Catrillanca killing 14 Nov 2018; *macrozona sur* state of emergency from 2021 | Localised to `araucania` / `biobio` / `los_lagos` |
+| `pandemic` | COVID-19 | Transfers |
+| `drought_water_rights` | The 1981 Water Code's fully tradeable private water rights, constitutionally protected via Art. 19 No. 24; central-Chile megadrought from 2010 | New type. A constitutional-property-rights mechanism meeting an environmental shock — directly relevant to the 2022 draft's water provisions |
+| `fdi_boom` (positive) | 1990s mining FDI surge; OECD accession 2010 | Transfers |
+
+## 6.6 Citizen count summary
+
+| Quantity | Value |
+|---|---|
+| Year zero | **1990** per the task brief and Kaung's decision 4 (elected-Congress era) — but see flag F1, the Python file's own year-zero values are on a 1981 basis |
+| Real population | 13,437,176 (World Bank WDI `SP.POP.TOTL`, CHL, 1990) |
+| Ratio | 1:5000 (confirmed by Kaung) |
+| **Citizen agents** | **2,687** |
+| Alternative on a 1981 year zero | 2,336 (from 11,678,717) |
+| For comparison, locked Myanmar value | 11,000 |
+
+## 6.7 Sourcing limitations and flags
+
+**L1 — 1992 regional figures are via statoids.com, which cites INE but is a secondary compiler.** The
+13 regional figures sum to 13,231,803 against INE's published *población total* of 13,348,401, a
+116,598 gap consistent with the standard effectively-censused-versus-adjusted distinction. citypopulation.de's
+Chile page carries no 1992 column (its earliest is 2002), and the INE 1992 results are held by the
+Biblioteca Nacional Digital (record BND:86209, "Resultados oficiales censo de población 1992:
+población total país, regiones, comunas, por sexo y edad"), which I did not retrieve. **A human should
+pull the INE 1992 regional table directly before these figures appear in a manuscript table.**
+
+**L2 — no CASEN figures extracted.** §6.3's recommended socioeconomic-stratum composition is a
+*method* recommendation with a named, real, retrievable source (CASEN, MIDEPLAN, biennial from 1987,
+regional disaggregation), but **no numbers**. A commonly-cited CASEN 1990 national poverty headcount of
+around 38-39% circulates; I did not verify it against the MIDEPLAN/Ministerio de Desarrollo Social
+series and it should not be used until verified. This is the main closeable gap in Chile's package.
+
+**L3 — indigenous shares by region not extracted.** Available from INE's 1992 census indigenous
+question onward. Only the national Mapuche figure (998,385 aged 14+) is sourced here.
+
+**L4 — `YEAR_ZERO_TRUST = 0.35` and `YEAR_ZERO_EMPLOYMENT = 0.60` remain unsourced** (already flagged
+in `constitution_chile.py` and in this package's §4/L6). Nothing here fixes them. CEP's *Encuesta
+Nacional* (from 1986) remains the right trust source and still requires registered download.
+
+**F1 — YEAR-ZERO YEAR MISMATCH, must be resolved before encoding** (§6.1). Population on 1990 and
+corruption/trust/stability on 1981 is not a defensible combination. Pick one year and apply it to
+population, V-Dem, WGI-derived and state-GDP baselines together.
+
+**F2 — fix `SIMULATION_STATE_COUNT` 14 → 13 and replace Myanmar's state names** in
+`SimulationConfig.SIMULATION_STATES`.
+
+**F3 — encode `FederalConfig` as near-inert for Chile** (§6.2). Chile's regions had zero autonomous
+political authority until 2021. Running MFU-like resource-share values would model a federalism that
+never existed.
+
+**F4 — THE MOST SERIOUS FLAG FROM THIS WHOLE TASK. Chile at 2,687 agents is a statistical-power
+problem, not a detail.** Ratio-derived N across the seven scenarios: Pakistan 19,646, Thailand 14,232,
+Germany 9,969, South Korea 8,406, **Chile 2,687**, versus Myanmar's locked 11,000. Chile would run on
+roughly **one seventh** of Pakistan's population and **one quarter** of Myanmar's. Across 100 Monte
+Carlo runs this guarantees systematically wider confidence intervals for Chile **for reasons that have
+nothing to do with constitutional structure** — which is exactly Reviewer 2's "divergence may be
+parameterisation-driven rather than structural" objection relocated into population size, and it is
+the kind of thing the Stage-5 adversarial reviewer simulation would have caught. It is made worse by
+Chile's own geography: at 2,687 agents, Aysén gets ~17 agents and Magallanes ~29, which are not
+samples in any meaningful sense. Three options, all needing Kaung:
+(a) ratio-derived N everywhere — most realistic, worst comparability, and Chile becomes noisy;
+(b) **11,000 agents for every scenario** — best statistically, abandons the ratio's realism rationale,
+    and is the option this flag recommends on defensibility grounds;
+(c) ratio-derived N **plus** mandatory reporting of per-scenario N and the N-driven component of CI
+    width in every results table — defensible only if stated up front, never discovered by a reviewer.
+Note also that the ratio rule does not reproduce the existing baseline: Myanmar's locked 11,000
+implies 55,000,000, but Myanmar's own World Bank 2008 population is 48,390,793, i.e. 9,678 at 1:5000.

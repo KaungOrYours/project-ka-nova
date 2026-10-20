@@ -116,17 +116,25 @@ class FoundationalConfig:
     # under this instrument; the 16-region configuration is a later change
     # and would be an anachronism for 1990-2005.
     STATE_COUNT: int = 13
-    # CONFIDENT, locked-design note — the Mesa engine's _initialize_states()
-    # (model_phase3.py:247-255) hardcodes the SAME 14 Myanmar state names
-    # for EVERY scenario regardless of this field's value (confirmed by
-    # direct read of that method, 2026-10-20) — "same real geography for
-    # every scenario" is itself the locked experimental design (see
-    # constitution_2008.py's own identical comment on its SIMULATION_STATES
-    # field). Kept at 14 here, NOT 13, so this field stays consistent with
-    # the field it actually mirrors downstream (SimulationConfig.
-    # SIMULATION_STATE_COUNT below), rather than silently diverging from a
-    # geography the engine will not actually change.
-    SIMULATION_STATE_COUNT: int = 14
+    # FIXED 2026-10-20 (research package §6.2, flag F2): this was a
+    # Myanmar leftover at 14, carried over from constitution_2008.py's own
+    # field before the per-country-geography work existed. Chile's real
+    # regionalisation (DL 575 of 1974, completed 1976) was exactly 13
+    # regions for the entire 1990-2005 encoded window — Los Ríos (2007),
+    # Arica y Parinacota (2007) and Ñuble (2018) all postdate it. Now set
+    # to 13, matching STATE_COUNT above and SimulationConfig.
+    # SIMULATION_STATES below, which has also been repopulated with
+    # Chile's own real region names (see that field's comment for the
+    # full population-weight sourcing). The old "kept at 14 for
+    # consistency with model_phase3.py's still-Myanmar-hardcoded
+    # _initialize_states()" rationale no longer applies now that
+    # SIMULATION_STATES itself carries real Chilean names — a parallel
+    # fix to model_phase3.py's state dict is required for this to be
+    # live end-to-end (see .claude/memory.md §5 bug #16's deliberately-
+    # deferred scope and config/constitution.py's own cross-file-
+    # constraint comment); that file is outside this agent's scope
+    # (owned by a parallel effort tonight) and is not touched here.
+    SIMULATION_STATE_COUNT: int = 13
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1330,41 +1338,81 @@ class SimulationConfig:
     SCENARIO_NAME: str = "Chile_1980_Constitution_1989_Reforms_Elected_Congress_Era"
     CONSTITUTIONAL_FRAMEWORK: str = "1980_chile_constitution_with_1989_reforms_1990_2005"
 
-    # CONFIDENT — V-Dem v16 political corruption index, Chile, 1981 — a
-    # REAL observation at the exact year zero (package's own recommended
-    # value, flag F5, encoded even though it undercuts the pure near-twin
-    # hypothesis — see module docstring's headline finding).
-    YEAR_ZERO_CORRUPTION: float = 0.283
+    # FIXED 2026-10-20 (research package §6.1, flag F1 — year-zero
+    # internal-consistency check). Year zero for this file is 1990 (the
+    # elected-Congress era start, per .claude/memory.md §4a decision 4 and
+    # this file's own population figure, World Bank WDI SP.POP.TOTL CHL
+    # 1990 = 13,437,176). The value below was PREVIOUSLY 0.283, V-Dem v16
+    # political corruption, Chile, **1981** — nine years off the chosen
+    # year zero, and population/corruption years must not be mixed (task
+    # brief, confirmed by direct re-read of the research package's own
+    # §2.3 V-Dem table). CORRECTED to the real V-Dem v16 political
+    # corruption observation for Chile at **1990 exactly**: 0.067 — the
+    # precise year the democratic transition occurred and the exact year
+    # this file's population, Gini, and the SIMULATION_STATES population
+    # weights below are already anchored to. (The package's §2.3 table
+    # shows the full before/after: 1981-1989 flat at 0.283 under Junta
+    # rule, then a sharp drop to 0.067 at 1990, 0.061 from 1991 onward —
+    # NOT a smooth trend, a step change coincident with the transition
+    # itself, so 1981's 0.283 and 1990's 0.067 are not interchangeable
+    # approximations of each other.) The 0.283 (1981, authoritarian-phase)
+    # figure remains correct and is still quoted in this module's own
+    # docstring above as a description of the PRECEDING Junta era, which
+    # this file does not simulate — that is a historical-narrative
+    # statement, not this field's value, and the two must not be
+    # conflated.
+    YEAR_ZERO_CORRUPTION: float = 0.067
     # GUESS, flagged honestly — research package flag L6 blocks a real
     # number here: CEP Encuesta Nacional (from 1986) is the earliest
     # trust-survey series covering Chile, but requires registered
-    # download and the package does not quote a figure. Set higher than
-    # Myanmar 2008's 0.22, reflecting that Chile's authoritarian-era
-    # support base (V-Dem polyarchy 0.075-0.135 this period) was, per the
-    # package's own framing, broader than an isolated-junta regime's —
-    # NOT a sourced number.
+    # download and the package does not quote a figure. REVISED 2026-10-20
+    # alongside the year-zero fix above: the magnitude (0.35) is UNCHANGED
+    # because no real 1990 trust figure was found in the research package
+    # (not inventing one to replace it), but the RATIONALE is corrected —
+    # it previously cited Chile's pre-transition "authoritarian-era
+    # support base (V-Dem polyarchy 0.075-0.135)", which is the WRONG
+    # period now that year zero is 1990, not 1981-1989. The real 1990
+    # V-Dem figures are polyarchy 0.721 and liberal democracy 0.630 (a
+    # step change from 0.135/0.075 the year before, coincident with
+    # Aylwin's 55.17% election win and the return to civilian rule) —
+    # i.e. year zero 1990 is a NEWLY-DEMOCRATIC, not an authoritarian,
+    # starting point. 0.35 is left as a flagged placeholder rather than
+    # revised upward to match that stronger legitimacy story, since no
+    # sourced trust NUMBER exists for 1990 either way — this is an honest
+    # gap (L6), not a resolved one.
     YEAR_ZERO_TRUST: float = 0.35
     # GUESS magnitude, CONFIDENT general range — package explicit: "Chile
     # CASEN survey (from 1987) / World Bank — Chile's income Gini was
     # ~0.56 around 1990 — verify the exact survey year before using."
     # Carried forward with that exact verification caveat, not resolved.
+    # Already anchored to 1990 — no year-zero inconsistency here.
     YEAR_ZERO_GINI: float = 0.56
-    YEAR_ZERO_EMPLOYMENT: float = 0.60   # GUESS — not addressed in the research package
+    YEAR_ZERO_EMPLOYMENT: float = 0.60   # GUESS — not addressed in the research package; not year-specific, no 1981/1990 inconsistency to resolve
     # GUESS — no constitutional ethnic-group recognition exists (L8);
     # kept low/neutral as a non-functional placeholder rather than
-    # fabricated.
+    # fabricated. Not year-specific, no 1981/1990 inconsistency to resolve.
     YEAR_ZERO_ETHNIC_TENSION: float = 0.20
     # CONFIDENT direction, GUESS exact magnitude — package explicit: "a
     # judgement call... Powell-Thyne gives 1 success + 1 failure in
     # 1950-1981 ≈ 0.032/yr success rate, which is low. Chile was not a
-    # chronically coup-prone state; it had one catastrophic coup." Set low.
+    # chronically coup-prone state; it had one catastrophic coup." REVISED
+    # 2026-10-20: the real Powell & Thyne coded event history has ZERO
+    # coup events of either outcome between 1981 and 1990 (both of
+    # Chile's only two coded events, the failed 29 Jun 1973 Tanquetazo and
+    # the successful 11 Sep 1973 coup, predate the 1980 Constitution
+    # entirely), so re-basing the window to 1950-1990 instead of 1950-1981
+    # does not change the underlying rate (still 1 success + 1 failure,
+    # ~0.025-0.032/yr depending on exact denominator) — value unchanged,
+    # window reference corrected for year-zero consistency only.
     YEAR_ZERO_COUP_RISK: float = 0.05
     # GUESS, flagged honestly — package explicit: "derive only — WGI
-    # begins 1996; no 1981 observation" (flag L7, the biggest data gap in
-    # this file's backtest window). The real 1996 WGI Political
-    # Stability figure (+0.68, rescaled) exists but is NOT a year-zero
-    # (1981) observation and is not substituted here without flagging
-    # that it is 15 years later than year zero.
+    # begins 1996; no 1990 observation" (flag L7, the biggest data gap in
+    # this file's backtest window; CORRECTED from "1981" — year zero is
+    # 1990, so the real gap is WGI's 1996 start minus the 1990 year zero =
+    # 6 years, not the 15 years the stale 1981-based framing implied). The
+    # real 1996 WGI Political Stability figure (+0.68, rescaled) exists
+    # but is NOT a year-zero (1990) observation and is not substituted
+    # here without flagging that it is 6 years later than year zero.
     YEAR_ZERO_STABILITY: float = 0.40
 
     # CONFIDENT direction — "controls" is the wrong verb for an elected
@@ -1383,20 +1431,125 @@ class SimulationConfig:
     # Myanmar 2008's blanket False.
     RIGHTS_ENFORCEABLE: bool = True
 
-    # Locked experimental-design constants — NOT constitution-driven,
-    # deliberately identical to MFU/Myanmar 2008 for the same reasons both
-    # template files give for their own equivalent fields (same Monte
-    # Carlo design, same real-Myanmar geography the engine actually
-    # simulates regardless of this file's own STATE_COUNT=13 above — see
-    # FoundationalConfig.SIMULATION_STATE_COUNT's comment).
+    # Locked experimental-design constant — NOT constitution-driven.
+    # CITIZEN_AGENTS stays 11,000 for every one of the 7 scenarios per
+    # Kaung's locked decision (.claude/memory.md §4a/§11, decision 1:
+    # "uniform 11,000 citizens for every scenario, not scaled by real
+    # population" — a strict 1:5000 ratio against Chile's real 1990
+    # population of 13,437,176 would give only ~2,687 agents, a 7x
+    # statistical-power gap against Pakistan that the research package's
+    # own flag F4 identifies as the single most serious risk in this
+    # whole task: reintroducing exactly the "divergence may be
+    # parameterisation-driven, not structural" objection Reviewer 2
+    # raised, just relocated into population size). Chile's real
+    # population shares below (STATE_POPULATION_WEIGHTS) are used ONLY to
+    # distribute these 11,000 agents across Chile's own real regions
+    # proportionally, never to change this total.
     CITIZEN_AGENTS: int = 11_000
     TIME_STEPS: int = 50
+
+    # FIXED 2026-10-20 (research package §6.2, flags F2/F3). This tuple
+    # previously held Myanmar's 14 state names verbatim — a leftover from
+    # before the per-country-geography work existed. Replaced with
+    # Chile's own real 13 regions as they existed throughout the encoded
+    # 1990-2005 window (DL 575 of 1974, completed by the 1976
+    # reorganisation; unchanged until Los Ríos and Arica y Parinacota
+    # split off in 2007 and Ñuble in 2018 — all outside this window).
+    # Order matches STATE_POPULATION_WEIGHTS below exactly, descending by
+    # real 1992-census population share (the first census of the
+    # elected-Congress era). Encoded as lowercase snake_case identifiers
+    # following this file's and the MFU/2008 templates' own naming
+    # convention (not the Spanish "Región de/del ..." official names,
+    # which are given in the comment below for traceability).
     SIMULATION_STATES: Tuple[str, ...] = (
-        "sagaing", "mandalay", "magway", "bago",
-        "yangon", "ayeyarwady", "tanintharyi", "shan",
-        "kachin", "kayah", "kayin", "chin",
-        "mon", "rakhine",
+        "metropolitana",   # Región Metropolitana de Santiago (RM)
+        "biobio",          # Región del Biobío (VIII)
+        "valparaiso",      # Región de Valparaíso (V)
+        "los_lagos",       # Región de Los Lagos (X)
+        "maule",           # Región del Maule (VII)
+        "araucania",       # Región de La Araucanía (IX)
+        "ohiggins",        # Región del Libertador General Bernardo O'Higgins (VI)
+        "coquimbo",        # Región de Coquimbo (IV)
+        "antofagasta",     # Región de Antofagasta (II)
+        "tarapaca",        # Región de Tarapacá (I)
+        "atacama",         # Región de Atacama (III)
+        "magallanes",      # Región de Magallanes y de la Antártica Chilena (XII)
+        "aysen",           # Región de Aysén del General Carlos Ibáñez del Campo (XI)
     )
+
+    # NEW 2026-10-20 — per-country geography field contract (defined by
+    # senior-simulation-engineer in config/constitution.py's SimulationConfig,
+    # see that file's comment for the full schema this mirrors). Parallel to
+    # SIMULATION_STATES above (same order, same length), each entry is that
+    # region's real share of Chile's national population, used ONLY to
+    # distribute the uniform 11,000-citizen population across regions —
+    # never to change CITIZEN_AGENTS above.
+    #
+    # CONFIDENT — source: INE (Instituto Nacional de Estadísticas) 1992
+    # Census (22 April 1992), the first census of the elected-Congress era,
+    # regional figures via statoids.com's INE-sourced population-history
+    # table (accessed 2026-10-20; research package §6.2, flag L1 — a
+    # secondary compiler of INE's own figures, not INE's primary release;
+    # the 13 regional figures sum to 13,231,803 against INE's own
+    # published "población total" of 13,348,401, a 116,598-person gap
+    # consistent with the standard effectively-censused-vs-adjusted-total
+    # distinction). Shares computed on the effectively-censused regional
+    # sum of 13,231,803 and rounded to 4 decimal places; they sum to
+    # 0.9998 rather than exactly 1.0 due to that rounding — this is a
+    # rounding artefact of the published percentages, not a missing
+    # region, and random.choices() (the only consumer, agents/citizen.py's
+    # _assign_state()) normalizes weights internally regardless.
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.3907,  # metropolitana   — 5,170,293 / 13,231,803
+        0.1307,  # biobio          — 1,729,920
+        0.1038,  # valparaiso      — 1,373,967
+        0.0720,  # los_lagos       —   953,330
+        0.0630,  # maule           —   834,053
+        0.0586,  # araucania       —   774,959
+        0.0520,  # ohiggins        —   688,385
+        0.0380,  # coquimbo        —   502,460
+        0.0308,  # antofagasta     —   407,409
+        0.0258,  # tarapaca        —   341,112
+        0.0174,  # atacama         —   230,786
+        0.0108,  # magallanes      —   143,058
+        0.0062,  # aysen           —    82,071
+    )
+
+    # TRUE NO-OP, by design — same precedent as bug #17's CVES fix
+    # (skip the Acemoglu/Robinson ethnic-majority component entirely under
+    # ETHNIC_GROUPS=0 rather than force a 0-length array to behave like a
+    # real ethnic taxonomy). FederalConfig.ETHNIC_GROUPS = 0 for Chile is
+    # itself correct and documented (research package §4/§6.3, flag L8):
+    # the 1980 Constitution makes NO mention of indigenous peoples, and
+    # constitutional recognition of the Mapuche and other peoples has
+    # been rejected by voters TWICE (2022, 2023). agents/citizen.py's
+    # _assign_ethnicity() checks `if not ethnic_groups: return None` as
+    # its very first line — with 0 active ethnic groups for this
+    # scenario, that function is never reached with real work to do, so
+    # these two fields below are read defensively (for the generic
+    # length/well-formedness check in that function) but never actually
+    # consulted in practice for CL. Left EMPTY rather than populated with
+    # a fabricated axis.
+    #
+    # The research package's own recommended SUBSTITUTE cleavage for
+    # Chile — socioeconomic stratum via CASEN (Encuesta de
+    # Caracterización Socioeconómica Nacional), biennial from 1987, with
+    # regional disaggregation and a defensible ABC1/C2/C3/D/E 5-category
+    # scheme — is a real, retrievable, named source, but the research
+    # package explicitly states "I did not extract CASEN figures" (flag
+    # L2) and "this is a genuine, closeable gap, not an unanswerable one
+    # ... Do not substitute invented numbers." No real CASEN figures exist
+    # anywhere in the research package for this file to encode, so
+    # STATE_ETHNIC_WEIGHTS is left as the documented no-op below rather
+    # than populated with invented socioeconomic-stratum numbers. If real
+    # CASEN 1990 regional figures are sourced later, this is the field
+    # they belong in (this would also require widening the schema's
+    # single `ethnic_groups` axis to carry a non-ethnic cleavage label,
+    # a separate design decision, not something to force through the
+    # existing ETHNIC_GROUPS=0 contract).
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=dict)
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = ()
+
     # DELIBERATELY UNCHANGED from MFU/Myanmar 2008, same reasoning both
     # template files give: the archetype-distribution-by-constitution
     # question is a real, separate, unresolved research question (does
@@ -1741,7 +1894,8 @@ if __name__ == "__main__":
     print(f"   IIG(Contraloria) eff.:   initial={c.iig.INITIAL_EFFECTIVENESS}, max={c.iig.MAX_EFFECTIVENESS} (deliberately high — flag F2)")
     print(f"   Central Bank independ.:  {c.economic.CENTRAL_BANK_INDEPENDENT}")
     print(f"   Amendment thresholds:    {c.amendment.STANDARD_AMENDMENT_THRESHOLD:.0%} standard / {c.amendment.ENTRENCHED_AMENDMENT_THRESHOLD:.0%} entrenched")
-    print(f"   Year-zero corruption:    {c.simulation.YEAR_ZERO_CORRUPTION} (V-Dem 1981, real observation)")
+    print(f"   Year-zero corruption:    {c.simulation.YEAR_ZERO_CORRUPTION} (V-Dem 1990, real observation, fixed 2026-10-20 from a prior 1981/1990 mismatch)")
+    print(f"   States:                  {len(c.simulation.SIMULATION_STATES)} regions, weights sum {sum(c.simulation.STATE_POPULATION_WEIGHTS):.4f}")
     print(f"   Elite role titles:       {len(c.ELITE_ROLE_TITLES)} roles, {len(c.ELITE_SYSTEM_PROMPTS)} prompts")
     print(f"   Validation:              {'PASS' if c.validate() else 'FAIL'}")
     print()

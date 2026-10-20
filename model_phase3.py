@@ -210,9 +210,15 @@ class KaNovaModelPhase3(Model):
             print("Elite agents: Phase 2 fallback (elite_agents.py)")
 
         # ── Phase 3 engines ───────────────────────────────────────────────────
-        # Same seed for external layer — both scenarios face identical shocks
+        # Same seed-per-run_id convention for every scenario (locked
+        # experimental design). Scenario param threaded through so
+        # ExternalLayer loads THIS scenario's own real geopolitical vector
+        # set (engine/external_layer.py EXTERNAL_LAYER_REGISTRY) instead of
+        # always defaulting to Myanmar's — A/C still resolve to the exact
+        # same Myanmar data as before, so this is a no-behaviour-change
+        # swap for those two.
         external_seed = seed if seed is not None else 42
-        self.external_layer = ExternalLayer(seed=external_seed)
+        self.external_layer = ExternalLayer(scenario=self.scenario, seed=external_seed)
         self.social_media = SocialMediaChannel(
             scenario=scenario, seed=external_seed
         )
@@ -265,30 +271,28 @@ class KaNovaModelPhase3(Model):
         (bug #16) instead of Myanmar's 14 hardcoded state names and
         Myanmar-shaped random ranges regardless of scenario.
 
-        State list: kept as Myanmar's 14 hardcoded names, NOT swapped to
-        self.CONSTITUTION.simulation.SIMULATION_STATES, despite that field
-        existing on every constitution module. Reason, found while testing
-        this fix against Pakistan: agents/citizen.py's
-        CitizenPopulation._assign_state() (a @staticmethod with no
-        constitution access) independently hardcodes this exact same
-        14-Myanmar-name list to assign every citizen's state_id, for every
-        scenario, and agents/citizen.py is out of scope here (not one of
-        this task's owned files). Swapping ONLY this dict's keys to
-        Pakistan's/Chile's/etc.'s own SIMULATION_STATES names produces a
-        live KeyError the first time any citizen agent (assigned a
-        Myanmar-named state_id by citizen.py) looks itself up in
-        self.states (confirmed by a real crash: `ERROR r=0: 'yangon'` when
-        testing Scenario PK). This is the SAME already-flagged, deliberately-
-        deferred architectural question noted in .claude/memory.md bug #11's
-        correction ("constitution_2008.py's archetype distribution and
-        14-state list were deliberately kept identical to MFU... flag to
-        Kaung whether that separate question needs its own task") — population
-        composition (which states exist, how citizens map to them) is a
-        distinct research question from year-zero VALUES, deliberately kept
-        Myanmar-shaped for every scenario until Kaung decides otherwise, not
-        something to silently change scenario-by-scenario inside this
-        narrower bug #16 fix. Only the per-state random VALUES below are
-        made constitution-aware; the state KEYS are not.
+        State list: now built from self.CONSTITUTION.simulation.
+        SIMULATION_STATES, each constitution's own real state/province/
+        region names, instead of a dict literal hardcoding Myanmar's 14
+        names for every scenario. This was previously deferred (see
+        .claude/memory.md bug #16's note and the former version of this
+        docstring) because agents/citizen.py's CitizenPopulation.
+        _assign_state() independently hardcoded the same 14 Myanmar names
+        with no constitution access, so swapping only this dict's keys
+        produced a live KeyError the first time a citizen agent (still
+        Myanmar-named by citizen.py) looked itself up in self.states
+        (confirmed by a real crash: `ERROR r=0: 'yangon'` when testing
+        Scenario PK). That blocker is now resolved: citizen.py's own
+        _assign_state() was generalized (2026-10-20) to read
+        constitution.simulation.SIMULATION_STATES/STATE_POPULATION_WEIGHTS
+        when a constitution supplies them, falling back to Myanmar's
+        legacy hardcoded distribution otherwise. Both sides now derive
+        state_id from the same source (the active constitution's own
+        SIMULATION_STATES), so building self.states from that same tuple
+        here is safe — no more KeyError risk. For MFU and 2008 Myanmar,
+        SIMULATION_STATES is the exact same 14 Myanmar names in the same
+        order as the old literal list, so this is a pure refactor for
+        Scenario A/C, not a behavior change (verified below).
 
         Random ranges: centred on the constitution's own
         SimulationConfig.YEAR_ZERO_CORRUPTION/TRUST/ETHNIC_TENSION/
@@ -301,19 +305,13 @@ class KaNovaModelPhase3(Model):
         but not bit-identical to the old literal centres, so this is a
         small (not zero) change to Scenario A/C's year-zero state draws —
         see .claude/memory.md bug #16 for the measured before/after sizes.
+        This per-state-VALUE logic is unchanged by today's state-KEY fix.
         gdp_growth and resource_revenue have no YEAR_ZERO_* counterpart in
         any constitution module, so those two ranges are left exactly as
         they were (no encoded value exists to read instead).
         """
         sim = self.CONSTITUTION.simulation
-        # NOT sim.SIMULATION_STATES — see docstring above (agents/citizen.py
-        # coupling, out of this fix's scope).
-        state_list = [
-            "sagaing", "mandalay", "magway", "bago",
-            "yangon", "ayeyarwady", "tanintharyi", "shan",
-            "kachin", "kayah", "kayin", "chin",
-            "mon", "rakhine",
-        ]
+        state_list = list(sim.SIMULATION_STATES)
 
         corruption_base = sim.YEAR_ZERO_CORRUPTION
         trust_base       = sim.YEAR_ZERO_TRUST
@@ -405,6 +403,16 @@ class KaNovaModelPhase3(Model):
         Phase 3 agent creation.
         Uses 56 ethnic-archetype combinations via
         CitizenPopulation._calculate_ethnic_archetype_counts().
+
+        NOTE (2026-10-20, per-country geography fix): `_assign_state()` now
+        takes `self.CONSTITUTION` so it can read a scenario's own real
+        STATE_POPULATION_WEIGHTS when encoded (falls back to Myanmar's
+        legacy distribution otherwise — see agents/citizen.py). This is the
+        ONLY change made in this file for that fix; `_calculate_ethnic_
+        archetype_counts()` above (which actually assigns `ethnicity` in
+        this live path, NOT `_assign_ethnicity()` — see agents/citizen.py's
+        own discrepancy note) is still Myanmar-hardcoded and was explicitly
+        out of this fix's scope.
         """
         from agents.citizen import ETHNIC_ARCHETYPE_PROPORTIONS
 
@@ -415,7 +423,7 @@ class KaNovaModelPhase3(Model):
 
         agent_id = 0
         for assignment in assignments:
-            state_id = CitizenPopulation._assign_state()
+            state_id = CitizenPopulation._assign_state(self.CONSTITUTION)
             age = CitizenPopulation._assign_age()
             agent = CitizenAgent(
                 unique_id=agent_id,

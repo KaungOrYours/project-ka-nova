@@ -627,3 +627,260 @@ issue (`self.CONSTITUTION` assigned at `model_phase3.py:164/167` but never read;
 `agents/citizen.py`, `feedback/loops.py` and `institutions/chambers.py` all import MFU's
 `CONSTITUTION` at module level unconditionally) has been reported to the parent agent — it determines
 whether any of these parameters affect the simulation at all.
+
+---
+
+# 6. Administrative geography, population structure, and real geopolitical context
+
+*Added 2026-10-20 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement and its "each country's own real neighbours" extension. Additive only; nothing above has
+been changed. Every figure carries dataset, publisher, year and access method. Inferences are labelled
+INFERENCE and never presented as observations.*
+
+## 6.1 Real year-zero national population
+
+| Quantity | Value | Source |
+|---|---|---|
+| Population, 1985 | **98,229,285** | World Bank World Development Indicators, indicator `SP.POP.TOTL`, country `PAK`, year 1985. Accessed 2026-10-20 via `https://api.worldbank.org/v2/country/PAK/indicator/SP.POP.TOTL?date=1985&format=json` |
+| Population, 1981 (same series) | 85,802,049 | Same series, year 1981 |
+| **1981 Population Census, official total** | **84,253,644** | Pakistan Bureau of Statistics, 1981 Population Census. Per-province figures as tabulated by citypopulation.de (accessed 2026-10-20); the five provincial/territorial figures sum exactly to this published total |
+| 1998 Population Census, official total | 132,352,279 | Pakistan Bureau of Statistics, 1998 Population Census |
+
+**Caveat on the World Bank series.** The WB figure (98,229,285 for 1985) runs about 1.5m above the
+1981 census total extrapolated at census growth, and WB's Pakistan series has historically differed
+from PBS census coverage in its treatment of Azad Jammu & Kashmir and Gilgit-Baltistan, which the PBS
+census explicitly excludes (citypopulation.de's Pakistan page states "The Pakistani-administered parts
+of Kashmir are not tabulated"). For population **shares** this appendix uses the 1981 census, which is
+internally consistent and is the census that was legally in force at year zero. For the **national
+total** it uses WB 1985, which is the actual year-zero year.
+
+**Citizen count at the confirmed 1:5000 ratio: 98,229,285 / 5000 = 19,646 citizens.** This is the
+largest of all seven scenarios, 79% above Myanmar's locked 11,000, and it lands essentially on the
+20,000-citizen figure that memory.md §7 explicitly lists as *deferred, out of scope* for this
+revision. See flag F4 in §6.7 — this is a real compute and scope problem, not a detail.
+
+## 6.2 Real administrative geography — the 6-unit encoding is right, but one name is anachronistic
+
+`FoundationalConfig.STATE_COUNT = 4`, `FederalConfig.STATE_COUNT = 4` and
+`SimulationConfig.SIMULATION_STATES` (6 entries) currently disagree with each other. Pakistan under
+this instrument really had **4 constitutional provinces plus 2 federally administered territories**,
+so a 6-unit geography is correct and the `STATE_COUNT = 4` fields should be read as "constitutional
+provinces" and documented as such, not changed to 6 (the Senate's provincial-parity rule under Art. 59
+genuinely applies to 4 units, not 6 — FATA and ICT had no Senate representation).
+
+### Correction 1 (important): `khyber_pakhtunkhwa` is anachronistic and should be `nwfp`
+
+The province was named **North-West Frontier Province (NWFP)** throughout the entire encoded
+instrument window (1985 to the 1999 coup). It was renamed **Khyber Pakhtunkhwa by the Eighteenth
+Amendment**, assented 19 April 2010 — eleven years after this instrument collapsed. The whole basis of
+this project's realism requirement is period accuracy, and an anachronistic province name in a file
+whose selling point is article-level period fidelity is precisely the kind of detail an adversarial
+reviewer checks. Rename to `nwfp`, with a comment recording the 2010 rename.
+
+### Correction 2 (confirms the current encoding): FATA correctly belongs as a separate unit
+
+FATA was merged into Khyber Pakhtunkhwa by the **Twenty-fifth Amendment, 31 May 2018** — again well
+after the window. Keeping it as its own unit for 1985-1999 is correct.
+
+### Decision 3 (recommend NOT adding): Federally Administered Northern Areas / Gilgit-Baltistan
+
+In 1985 the Northern Areas were administered by Pakistan but had **no constitutional province status
+and no National Assembly representation**. Adding them as a unit would imply constitutional standing
+that did not exist. Recommend leaving them out and documenting why — this is a defensible realism
+decision rather than an omission, and worth a sentence in the methods section.
+
+### Population shares, 1981 Census (the census in force at year zero)
+
+Sources: Pakistan Bureau of Statistics 1981 Population Census, per-province figures via
+citypopulation.de (accessed 2026-10-20). FATA's 1981 figure of 2,198,547 is independently confirmed in
+the literature on FATA's census history; NWFP-proper is then 13,259,875 − 2,198,547 = 11,061,328
+(arithmetic, flagged as derived rather than directly published, see §6.7 L1).
+
+| Unit (encode as) | Real name in 1985 | 1981 census pop. | Share | Citizens @1:5000 (of 19,646) |
+|---|---|---|---|---|
+| `punjab` | Punjab | 47,292,441 | 56.13% | 11,026 |
+| `sindh` | Sindh | 19,028,666 | 22.58% | 4,436 |
+| `nwfp` | North-West Frontier Province (excl. FATA) | 11,061,328 | 13.13% | 2,580 |
+| `balochistan` | Balochistan | 4,332,376 | 5.14% | 1,010 |
+| `fata` | Federally Administered Tribal Areas | 2,198,547 | 2.61% | 513 |
+| `islamabad_capital_territory` | Islamabad Capital Territory | 340,286 | 0.40% | 79 |
+| | **total** | **84,253,644** | 100.00% | 19,646 |
+
+### The structural point this geography carries, and it is the most important one in this section
+
+**Punjab alone is 56.1% of the national population**, in a federation whose Senate (Art. 59) gave
+*equal* representation to all four provinces. Combined with Punjabi over-representation in the officer
+corps, this is Pakistan's real centre-periphery cleavage, and it is **much starker than Myanmar's**
+Bamar majority (~68% of population but spread across a nominally 14-unit federal structure with
+ethnic-seat and ethnic-transfer mechanisms Pakistan has no analogue of). The single-province-majority
+structure is the real reason the 1973 Constitution's federal bargain was chronically contested, and
+the geography encoding should let that asymmetry bite rather than smoothing it.
+
+## 6.3 `ETHNIC_GROUPS = 4` is too few — strong recommendation to raise to 6
+
+Pakistan is the one new country with a genuine, constitutionally-salient multi-ethnic cleavage
+(`ChamberConfig.ETHNIC_SEATS = 10` is already encoded), so the ethnic channel should be live. But the
+current count of 4 drops the two groups that mattered most *inside the encoded window*.
+
+### Real sourced data: 1981 Census mother-tongue shares (national)
+
+Source: Pakistan Bureau of Statistics 1981 Population Census, mother-tongue table. The 1981 census was
+the **first** to count Saraiki, Hindko and Brahui as separate languages — which is itself a dated,
+politically-significant fact one year before year zero.
+
+| Language | 1981 share |
+|---|---|
+| Punjabi | 48.17% |
+| Pashto | 13.15% |
+| Sindhi | 11.77% |
+| **Saraiki** | **9.84%** |
+| **Urdu (Muhajir)** | **7.60%** |
+| Balochi | 3.02% |
+| Hindko | 2.43% |
+| Brahui | 1.21% |
+| other | ~2.81% |
+
+### Why 4 groups loses the mechanism
+
+A 4-group encoding (presumably Punjabi / Pashtun / Sindhi / Baloch) omits:
+
+- **Urdu-speaking Muhajirs, 7.60%.** These are the most politically consequential group in the exact
+  encoded period. The MQM was founded **18 March 1984**, one year before year zero; it swept Karachi
+  and Hyderabad in the 1987 local-body and 1988 general elections; and Karachi's ethnic violence —
+  the April 1985 Bushra Zaidi riots, the December 1986 Sohrab Goth / Aligarh Colony killings, the 1992
+  "Operation Clean-up", the 1995 peak — is arguably the central internal-security story of this
+  instrument's life. **Encoding Pakistan without Muhajirs removes the mechanism**, and with only 4
+  slots the ethnic_weights array cannot represent the Sindhi/Muhajir split *within Sindh* that drove
+  the actual conflict.
+- **Saraikis, 9.84%.** Second-largest group in Punjab and the basis of the South Punjab province
+  movement; larger than Balochi, which *is* in the 4.
+
+### Recommended group list (6 slots)
+
+`[punjabi, pashtun, sindhi, saraiki, urdu_muhajir, baloch]`, with Hindko / Brahui / other as an
+unmodelled residual (~6.5%), documented.
+
+**Cost of this change, flagged honestly:** raising `ETHNIC_GROUPS` from 4 to 6 changes CVES L1's
+dynamic schema length for PK and invalidates the 4-element few-shot `ethnic_weights` examples in
+`constitution_pakistan.py`'s `ELITE_SYSTEM_PROMPTS`, which bug #19 only just fixed. The engine side is
+already generalised (bug #17 made `_get_ethnic_group_count()` dynamic and `_resize_ethnic_weights()`
+count-agnostic), so this is a prompt-text edit plus a count change, not an architecture change — but
+it is real work and it should be a deliberate decision, not a silent one.
+
+### Per-unit composition
+
+**Sourced:** Punjab, 1981 — Punjabi 79%, Saraiki 14.9% (PBS 1981 census; the 14.9% Saraiki-in-Punjab
+figure is explicitly documented in the literature on the 1981 census's new language categories).
+
+**NOT sourced, flagged as a real gap:** I could not retrieve the PBS 1981 Census Report's *provincial*
+mother-tongue table for Sindh, NWFP, Balochistan, FATA or ICT online. Wikipedia's *Languages of
+Pakistan* carries national-level census series only, and PBS's own 1981 report is not available in a
+fetchable form. What **is** well documented qualitatively, and should be treated as structure rather
+than as numbers:
+
+- **Sindh**: Sindhi-majority province-wide, with a very large Urdu-speaking (Muhajir) concentration in
+  Karachi and Hyderabad and a significant Punjabi and Pashtun presence in Karachi. The rural-Sindhi
+  versus urban-Muhajir division is the province's defining cleavage.
+- **NWFP**: Pashto-majority, with a Hindko-speaking minority concentrated in the Hazara division.
+- **Balochistan**: Balochi-plurality (not majority), with a large Pashtun population in the north
+  (Quetta, Zhob, Pishin) and a substantial Brahui-speaking population — the province with the most
+  genuinely contested ethnic arithmetic in the country.
+- **FATA**: overwhelmingly Pashtun.
+- **ICT**: Punjabi-majority with a large Urdu-speaking administrative population; the least
+  ethnically-rooted unit.
+
+**Do not let an engineer fill the Sindh/NWFP/Balochistan arrays from these descriptions and then cite
+them as census figures.** Either pull the real PBS 1981 provincial table (see §6.7 L2) or encode them
+with an explicit `GUESS`/`INFERENCE` tag, following the same convention the rest of
+`constitution_pakistan.py` already uses.
+
+## 6.4 Real neighbours and major-power relationships — replacing Myanmar's vector set
+
+Pakistan's external situation 1985-1999 is the most event-dense of the five new countries, and unlike
+Myanmar's it is the **proximate cause of the instrument's collapse**: the Kargil War precipitated the
+12 October 1999 coup. That is a genuinely different causal structure from Scenario C, where collapse is
+internally driven — and it is a point worth making in the paper, because it means two near-twin
+guardianship constitutions failed through different channels.
+
+| Vector | Real relationship at year zero (1985) | Real nature | Notes for the engine |
+|---|---|---|---|
+| `india` | **The defining relationship.** Three prior wars (1947-48, 1965, 1971). Inside the window: the Siachen Glacier conflict (ongoing from Operation Meghdoot, 13 April 1984), Exercise Brasstacks and the 1986-87 crisis, the Kashmir insurgency from 1989, the 1990 Kashmir nuclear crisis, Pokhran-II (11 and 13 May 1998) answered by Chagai-I (28 May 1998), and the **Kargil War (May-July 1999)** | Existential security rival | High, persistent, and the trigger channel for the terminal coup. Should be able to *cause* a chain-type transition, not just degrade trust |
+| `afghanistan_ussr` | At year zero Pakistan was the frontline state of the Soviet-Afghan War: **2.3 million** Afghan refugees in UNHCR's 1984 planning figure, rising past 3 million by the late 1980s (UNHCR; Pakistan was the largest single refugee concentration in the world); the ISI-run mujahideen pipeline. Dated: Geneva Accords 14 Apr 1988, Ojhri Camp explosion 10 Apr 1988, Zia's death in the C-130 crash 17 Aug 1988, Soviet withdrawal complete 15 Feb 1989, Taliban take Kabul 27 Sept 1996 | Refugee burden + proxy-war patronage + arms/narcotics inflow | A vector that **collapses mid-run**: the external rent that financed the regime disappears after 1989. The best structural explanation available for why Pakistan's corruption index jumps 0.637 (1985) to 0.831 (1990) and stays there |
+| `usa` | Transactional, conditional, aid-driven, with a hard dated reversal. The US$3.2bn package (1981-87) and US$4.02bn package (1987-93) were both contingent on the Afghan war. The **Pressler Amendment, enacted 8 August 1985 — the year zero itself** — required annual presidential certification that Pakistan possessed no nuclear device; certification was withheld on **1 October 1990**, cutting off aid and already-paid-for F-16 deliveries. Then Glenn Amendment sanctions after the 1998 tests | Conditional patron, then sanctioner | **The cleanest `sanctions` analogue in the whole 7-country set and far better dated than Myanmar's.** Should be high at year zero and drop sharply at simulated year 5 |
+| `china` | The "all-weather" strategic partner: nuclear and missile cooperation, the Karakoram Highway. **The only relationship stable across the entire window regardless of regime type** | Unconditional strategic patron | Flat-to-rising. Contrast with `usa`'s collapse — this is the real reason Pakistan survived the 1990 aid cutoff |
+| `saudi_gulf` | Remittances were the dominant source of Pakistani foreign exchange in the 1980s; Zia-era Islamisation patronage and the madrasa network; the personal-refuge dimension (Nawaz Sharif's 2000 Saudi exile) | Remittance dependence + ideological patronage | No Myanmar analogue. Also carries a real dated shock (see §6.5, Gulf War worker expulsions) |
+| `imf` | **Repeated, dated, within-window conditionality** — the only one of the five new countries with this: SAF arrangement Dec 1988, arrangements in 1993, 1995, and the Oct 1997 ESAF, plus the 1998 post-nuclear-test suspension and foreign-currency-account freeze | Recurrent conditional lender | Should fire multiple times, not drift. Myanmar's single `imf_world_bank` vector at 0.25 badly understates this |
+| `saarc` | **Founded 8 December 1985 — the year zero** — Pakistan a founding member. The real ASEAN analogue, and a conspicuously weaker one: chronically paralysed by the India-Pakistan dyad | Regional body, largely inert | Should be encoded *low and non-rising*, the opposite of Myanmar's ASEAN at 0.50. Pakistan's more active forum was the OIC |
+| `global_economy` | Cotton/textile export concentration, energy importer | Exposure | Keep |
+| `illicit_network_1/2/3` | **This is the one country where Myanmar's three-illicit-vector structure genuinely transfers.** Golden Crescent heroin: Pakistan became a major producer and transit state during exactly this window, with domestic addiction rising from near zero in 1979 to widely-cited estimates of 1.5 million-plus by the late 1980s. Arms leakage from the Afghan pipeline ("Kalashnikov culture"). Hawala and informal finance | Production + transit + informal finance | **Keep all three.** Justified, not copied |
+
+## 6.5 Historically-calibrated shock types for Pakistan, 1985-2035
+
+| Shock | Real basis (dated) | Comment |
+|---|---|---|
+| `patron_sanctions` | Pressler certification withheld 1 Oct 1990 (aid and F-16s cut); Glenn Amendment sanctions after 28 May 1998 | Replaces Myanmar's generic `sanctions` with two dated events |
+| `interstate_war_or_crisis` | Brasstacks 1986-87; 1990 Kashmir nuclear crisis; Kargil May-Jul 1999 | **Must be able to trigger regime failure.** Kargil → the 12 Oct 1999 coup is the real terminal chain |
+| `refugee_influx` | 2.3m (1984, UNHCR) rising past 3m; post-1989 and post-1996 secondary waves | New type. Myanmar's set has no inbound-refugee shock at all |
+| `proxy_war_rent_collapse` | Soviet withdrawal complete 15 Feb 1989; US aid conditionality lapses 1990 | **New type and the single most useful one for this scenario.** A *positive* external rent that vanishes — explains the corruption jump without invoking the constitution, which is itself a useful competing hypothesis the paper should address rather than ignore |
+| `head_of_state_death` | Zia-ul-Haq, C-130 crash, 17 Aug 1988, simulated year 3 | New type. The instrument's designer dies in year 3 and it survives 11 more years — a real finding worth being able to reproduce |
+| `imf_program` | Dec 1988, 1993, 1995, Oct 1997; 1998 suspension | Recurrent, not once |
+| `remittance_shock` | 1990-91 Gulf War: mass expulsion/return of Pakistani workers from Kuwait and Iraq | New type, large, dated |
+| `ethnic_urban_violence` | Karachi: Apr 1985 Bushra Zaidi riots, Dec 1986 Sohrab Goth/Aligarh Colony killings, 1992 Operation Clean-up, 1995 peak | **New type with no Myanmar analogue and no current `SHOCK_EVENTS` entry.** Localised to the `sindh` unit, driven by the Sindhi/Muhajir composition split — which is exactly why §6.3 recommends 6 ethnic groups rather than 4 |
+| `nuclear_test` | Chagai-I, 28 May 1998 | Dual-signed: legitimacy gain domestically, sanctions externally |
+| `natural_disaster` | 1992 Punjab/Sindh floods; 2005 Kashmir earthquake (outside the instrument window, inside a 50-year horizon from 1985) | Transfers |
+| `oil_price_shock` | 1990 Gulf War spike. Pakistan is a net energy importer | Transfers, higher sensitivity than Myanmar |
+
+## 6.6 Citizen count summary
+
+| Quantity | Value |
+|---|---|
+| Year zero | 1985 (RCO 1985 / Eighth Amendment) |
+| Real population | 98,229,285 (World Bank WDI `SP.POP.TOTL`, PAK, 1985) |
+| Ratio | 1:5000 (confirmed by Kaung) |
+| **Citizen agents** | **19,646** |
+| For comparison, locked Myanmar value | 11,000 |
+
+## 6.7 Sourcing limitations and flags
+
+**L1 — the NWFP/FATA split is arithmetic, not a published pair.** citypopulation.de reports
+Khyber Pakhtunkhwa 1981 = 13,259,875 **including** FATA. FATA's own 1981 figure (2,198,547) is
+separately confirmed in the FATA census literature. NWFP-proper (11,061,328) is the subtraction. Both
+components are sourced; the split itself is derived. Pull the PBS 1981 report's own two-row table to
+remove the derivation.
+
+**L2 — no provincial mother-tongue table retrieved.** §6.3's per-unit composition for Sindh, NWFP,
+Balochistan, FATA and ICT is **qualitative structure only**. The real source is the PBS *1981
+Population Census Report of Pakistan* language tables, which I could not retrieve online. This is the
+single largest remaining data gap in Pakistan's package and it matters, because the Sindh array is
+what would make the Karachi ethnic-violence mechanism work.
+
+**L3 — World Bank versus PBS coverage.** WB 1985 = 98,229,285 versus PBS 1981 census = 84,253,644;
+the two series differ in their treatment of AJK and Gilgit-Baltistan. This appendix deliberately uses
+WB for the national total (right year) and PBS for shares (right instrument), and the mixture should
+be stated rather than hidden.
+
+**F1 — rename `khyber_pakhtunkhwa` → `nwfp`** (§6.2, Correction 1). Period-accuracy fix, low cost,
+high reviewer-visibility.
+
+**F2 — raise `ETHNIC_GROUPS` 4 → 6** (§6.3). Needs Kaung's decision because it costs a round of
+`ELITE_SYSTEM_PROMPTS` few-shot edits (the bug #19 work) and changes PK's CVES L1 schema length.
+
+**F3 — reconcile `STATE_COUNT = 4` with the 6-entry `SIMULATION_STATES`.** Recommended resolution:
+keep 4 as "constitutional provinces" (correct for the Art. 59 Senate parity rule) and document that
+the simulated geography is 6 units including two federally administered territories with no Senate
+representation. Do not silently change one to match the other.
+
+**F4 — COMPUTE AND SCOPE, needs Kaung's decision.** 19,646 citizens is 79% above the locked 11,000 and
+sits essentially at the 20,000-citizen figure memory.md §7 lists under *"Explicitly deferred, do not
+pull into this revision's scope"*. At the §4 cost estimate of ~24-30 hrs/pod at 11,000 citizens,
+Pakistan alone plausibly becomes a ~45-55 hr run. Combined with the unequal-N statistical-power problem
+below, this is the strongest practical argument for option (b) — 11,000 agents everywhere — rather
+than ratio-derived N.
+
+**F5 — CROSS-SCENARIO STATISTICAL POWER, all 7 scenarios, needs Kaung's decision.** Full statement in
+the South Korea package §6.7 F1. Ratio-derived N: **Pakistan 19,646**, Thailand 14,232, Germany 9,969,
+South Korea 8,406, Chile 2,687, versus Myanmar's locked 11,000. Pakistan would run on 7.3x Chile's
+population, so Chile's confidence intervals will be systematically wider for reasons unrelated to
+constitutional structure. Note also that Myanmar's locked 11,000 implies 55,000,000, but Myanmar's own
+World Bank 2008 population is 48,390,793, which at 1:5000 is 9,678 — **the ratio rule as stated does
+not reproduce the already-published baseline.**

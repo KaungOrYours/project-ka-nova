@@ -521,3 +521,228 @@ live engine reads** (`judiciary.JUDGE_COUNT`, `military.COUP_TRIGGER_LOYALTY`,
 `config/constitution.py` as the field-name contract.** A separate engine-level issue
 (`self.CONSTITUTION` never read; agent modules import MFU's `CONSTITUTION` at module level) has been
 reported to the parent agent — it determines whether these parameters affect the simulation at all.
+
+---
+
+# 6. Administrative geography, population structure, and real geopolitical context
+
+*Added 2026-10-20 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement and its "each country's own real neighbours" extension. Additive only; nothing above has
+been changed. Every figure carries dataset, publisher, year and access method. Inferences are labelled
+INFERENCE and never presented as observations.*
+
+## 6.1 Real year-zero national population — two legitimate figures that differ by ~5 million
+
+| Quantity | Value | Source |
+|---|---|---|
+| Population, 2017 (de facto residents) | **71,160,187** | World Bank World Development Indicators, indicator `SP.POP.TOTL`, country `THA`, year 2017. Accessed 2026-10-20 via `https://api.worldbank.org/v2/country/THA/indicator/SP.POP.TOTL?date=2017&format=json` |
+| Registered population, December 2017 (Thai civil registration) | **66,188,506** | Thailand Department of Provincial Administration (DOPA) household-registration statistics, sum of the seven official regional totals (see §6.2), as reported by CEIC |
+
+**The gap is real and it matters.** The ~5.0 million difference is dominated by non-citizen residents
+not in the Thai household-registration system — principally Burmese, Cambodian and Lao migrant
+workers, routinely estimated at 2-4 million. Which denominator is correct depends on what the
+simulation's citizen agents represent:
+- If they represent **people with political standing under the 2017 Constitution**, DOPA's 66,188,506
+  is the right denominator → **13,238 citizens**.
+- If the 1:5000 ratio is meant as "simulation agents per resident human", matching how it was derived
+  for Myanmar (total population), World Bank's 71,160,187 is the consistent choice → **14,232
+  citizens**.
+
+**Recommendation: use the World Bank figure (14,232) for cross-scenario consistency**, because every
+other scenario's ratio is being applied to a total-population figure, and document the DOPA figure and
+the reason for the gap. Flag F3 in §6.7 — this needs Kaung's confirmation, not an agent's.
+
+## 6.2 Real administrative geography — 77 provinces is far above the target range; use the official regional scheme
+
+Thailand has 76 provinces (*changwat*) plus Bangkok Metropolitan Administration (a special
+administrative area, not a province), i.e. 77 first-level units. That is four to five times the target
+range of roughly 8-20 and five times Myanmar's 14. Municipal and sub-district administration is
+statutory, not constitutional (as `FoundationalConfig`'s own note above already records), so any
+aggregation is a modelling choice — but it should be a **real official** aggregation, not an invented
+one.
+
+### Option A (fully sourced, 7 units) — the official DOPA/NESDC regional scheme
+
+Source: DOPA household-registration statistics, December 2017, regional aggregates as reported by
+CEIC (series "Thailand Population: By Region", accessed 2026-10-20).
+
+| Unit | Real name | Dec 2017 registered pop. | Share |
+|---|---|---|---|
+| `northeastern` | Northeastern region (Isan), 20 provinces | 21,989,480 | 33.22% |
+| `northern` | Northern region | 12,098,164 | 18.28% |
+| `bangkok_and_vicinity` | Bangkok + Nonthaburi, Pathum Thani, Samut Prakan, Samut Sakhon, Nakhon Pathom | 10,831,988 | 16.37% |
+| `southern` | Southern region, 14 provinces | 9,399,578 | 14.20% |
+| `eastern` | Eastern region | 4,743,840 | 7.17% |
+| `western` | Western region | 3,831,952 | 5.79% |
+| `central` | Central region (excl. Bangkok and vicinity) | 3,293,504 | 4.98% |
+| | **total** | **66,188,506** | 100.00% |
+
+### Option B (RECOMMENDED, 9 units) — Option A with two politically-real splits
+
+7 units sits just under the target range, and Option A hides the two most politically consequential
+distinctions in modern Thai geography. Two splits, both using real sourced province figures:
+
+1. **Bangkok split from its vicinity.** Bangkok Metropolitan Administration alone, Dec 2017 =
+   **5,682,415** (DOPA via CEIC, "Population: By Province: Bangkok"). Vicinity = 10,831,988 −
+   5,682,415 = 5,149,573. Bangkok is the yellow-shirt/anti-Thaksin electoral core and the site of
+   every coup; its vicinity is industrial and electorally mixed. Collapsing them erases the
+   capital-versus-everywhere-else cleavage that the 2017 Constitution's appointed Senate was designed
+   around.
+2. **Deep South split from the rest of the South.** Pattani 709,796 + Yala 527,295 + Narathiwat
+   796,239 = **2,033,330** (DOPA via CEIC, 2017). Southern remainder = 9,399,578 − 2,033,330 =
+   7,366,248. These three provinces are ~80% Malay-Muslim and the site of an active insurgency with
+   **7,700+ deaths since January 2004** (figure from academic/press summaries of the Deep South
+   Watch dataset; see §6.7 L3 for the sourcing caveat). The adjoining Malay-Muslim districts of
+   Songkhla are conventionally included in the conflict zone but are left in `southern` here to keep
+   the unit boundaries identical to real province boundaries.
+
+| Unit | Real name | Dec 2017 registered pop. | Share | Citizens @1:5000 (of 14,232) |
+|---|---|---|---|---|
+| `northeastern` | Northeastern / Isan | 21,989,480 | 33.22% | 4,728 |
+| `northern` | Northern | 12,098,164 | 18.28% | 2,601 |
+| `southern` | Southern (excl. Deep South) | 7,366,248 | 11.13% | 1,584 |
+| `bangkok` | Bangkok Metropolitan Administration | 5,682,415 | 8.59% | 1,222 |
+| `bangkok_vicinity` | Nonthaburi, Pathum Thani, Samut Prakan, Samut Sakhon, Nakhon Pathom | 5,149,573 | 7.78% | 1,107 |
+| `eastern` | Eastern | 4,743,840 | 7.17% | 1,020 |
+| `western` | Western | 3,831,952 | 5.79% | 824 |
+| `central` | Central (excl. Bangkok + vicinity) | 3,293,504 | 4.98% | 709 |
+| `deep_south` | Pattani, Yala, Narathiwat | 2,033,330 | 3.07% | 437 |
+| | **total** | **66,188,506** | 100.00% | 14,232 |
+
+Change required: `FoundationalConfig.STATE_COUNT` and `SIMULATION_STATE_COUNT` 14 → 9,
+`FederalConfig.STATE_COUNT` 14 → 9, and **`SimulationConfig.SIMULATION_STATES` currently still holds
+Myanmar's 14 state names verbatim** (`sagaing`, `mandalay`, ... `rakhine`) — it must be replaced.
+
+**Also worth encoding, not a geography question but a federalism one:** Thailand is a unitary state.
+Provincial governors are appointed by the Ministry of Interior, not elected (Bangkok's governor is the
+sole elected exception). So the 35/35/30 federal-resource-share machinery inherited from MFU has no
+Thai referent at all, and the regional units above should carry no autonomous fiscal or political
+authority. `FederalConfig` for Thailand should be near-inert by design, and the paper should say so.
+
+## 6.3 Per-unit composition — keep `ETHNIC_GROUPS = 0`, and do NOT convert the Isan cleavage into one
+
+`ETHNIC_GROUPS = 0` is correct and should be preserved. The 2017 Constitution recognises no
+ethnic-group structure (README §1 above, verbatim), Thai national ideology is explicitly assimilationist,
+and there are no reserved seats, ethnic transfers or ethnic chambers of any kind. Fabricating an
+8-slot ethnic array here would directly contradict this package's own constitutional finding.
+
+**Thailand nevertheless has two entirely real socio-regional cleavages** with first-order political
+consequences, and the honest question is how to represent them without misrepresenting the
+constitution:
+
+1. **Isan (Northeastern) regional-political bloc.** 33.2% of the registered population — the single
+   largest bloc, Lao-speaking, poorest by region, and the electoral base that delivered a plurality or
+   majority to every Thaksin-aligned party from 2001 onward (TRT 2001 and 2005, PPP 2007, Pheu Thai
+   2011, and Pheu Thai again in 2019 and 2023 on seat count in the region). The appointed Senate of
+   s.269 and the joint-sitting PM selection of s.272 exist in large part to neutralise exactly this
+   bloc's electoral weight. This is the mechanism the simulation most needs to represent.
+2. **Deep South Malay-Muslim population.** ~80% of Pattani, Yala and Narathiwat; distinct language
+   (Patani Malay), religion, and an active armed conflict.
+
+**Recommendation: represent both at the *unit* level, not with within-unit composition arrays.**
+Reasoning, and this is a genuine structural difference from Myanmar rather than a convenience: Myanmar's
+ethnicity is **mixed within states** (Yangon is `[75, 5, 6, 2, 2, 5, 2, 3]`), which is why per-state
+arrays are the right shape there. Thailand's cleavages are **between regions, not within them** —
+Isan is overwhelmingly Isan, Bangkok overwhelmingly Central Thai, the Deep South overwhelmingly
+Malay-Muslim. The information therefore belongs in unit-level year-zero values (trust, grievance,
+GDP, political alignment), which the engine already supports via `_initialize_states()`, and not in a
+composition array that would be near-degenerate in 8 of 9 units.
+
+If a composition array is wanted anyway for schema parity, use **socio-regional categories, explicitly
+labelled non-constitutional**: `[central_thai, isan_lao, northern_lanna, southern_thai_buddhist,
+malay_muslim]`. Do **not** rename `ETHNIC_GROUPS` to a non-zero value to carry this — that field means
+"constitutionally recognised ethnic groups" everywhere else in the project, and changing its meaning
+for one country would break the cross-scenario interpretation and re-trigger the CVES L1 schema and
+`ELITE_SYSTEM_PROMPTS` few-shot work that bug #19 just fixed.
+
+## 6.4 Real neighbours and major-power relationships — replacing Myanmar's vector set
+
+Thailand is the one new country whose vector set genuinely overlaps Myanmar's, because they are each
+other's neighbours. Note the pleasing realism point for the methodology section: **`thailand` is
+already a vector in Myanmar's Scenario A/C set at 0.40, so A/C and TH are mutual neighbours** — the
+first reciprocal pair in the 7-constitution design.
+
+| Vector | Real relationship in 2017 | Real nature | Notes for the engine |
+|---|---|---|---|
+| `china` | **Thailand's largest trade partner** (since roughly 2013) and largest tourist source (~10m arrivals/yr pre-COVID). Post-2014-coup security pivot is concrete and dated: the S26T *Yuan*-class submarine contract signed 2017, VT-4 main battle tank purchases, and the Thai-Chinese high-speed rail project | Trade dependence + post-coup security realignment | The single most consequential external change *caused by* the constitutional order being encoded. Should rise through the run |
+| `myanmar` | 2,416 km border. Largest migrant-labour source (commonly estimated 1.5-2m+ Burmese workers, part of the 5m registration gap in §6.1); ~90,000 refugees in nine Tak / Mae Hong Son border camps; cross-border conflict spillover | Labour supply + refugee/conflict spillover | Should spike post-Feb-2021 (real: large new inflows after Myanmar's coup) |
+| `usa` | Treaty ally on paper (1954 Manila Pact, 1962 Thanat-Rusk communiqué) but **deliberately downgraded** after the 2014 coup: ~US$4.7m in security assistance suspended, Cobra Gold scaled back. Partially restored from 2017 (Prayut's White House visit, October 2017) | Formal alliance with sharply reduced real engagement | Structurally interesting: a *treaty ally* whose engagement fell *because of* the constitutional order. Low value at year zero, rising |
+| `asean` | Founding member (Bangkok Declaration, 8 Aug 1967); ASEAN's non-interference norm is precisely why the 2014 coup carried essentially no regional cost | Regional shield | **Opposite sign to Myanmar's ASEAN vector.** ASEAN constrained Myanmar (Five-Point Consensus, leader exclusion); it insulated Thailand. Same institution, inverse function — a strong point for the paper |
+| `eu` | Official visits and FTA negotiations suspended after the 2014 coup; Council conclusions of 11 Dec 2017 resumed political contacts; FTA talks relaunched 2023. Separately, the IUU-fishing **yellow card** issued April 2015, lifted January 2019 | Conditional trade pressure | The yellow card is a real, dated, bounded economic-pressure event — a far better-specified `sanctions` analogue than Myanmar's generic one |
+| `japan` | Largest cumulative FDI stock in Thai manufacturing, especially automotive; anchor investor base for the Eastern Economic Corridor | Investment dependence | Stable, high, apolitical — contrast with China's politically-contingent rise |
+| `malaysia` | Deep South border; facilitator of the Barisan Revolusi Nasional / MARA Patani peace process from 2013 | Border security + mediator | Links directly to the `deep_south` unit |
+| `cambodia_laos` | Preah Vihear temple dispute with Cambodia, with real armed border clashes 2008-2011; ICJ interpretation judgment 11 Nov 2013. Mekong water/dam issues with Laos | Low-intensity border friction | Low magnitude, non-zero |
+| `global_economy` | Tourism-dependent (directly ~11-12% of GDP, ~20% including indirect effects) and export-dependent | High exposure | Higher sensitivity than Myanmar's |
+| `illicit_transit_networks` | **Real, but structurally different from Myanmar's.** Thailand is primarily a **transit and destination** state: methamphetamine inflow from Shan State, trafficking in the fishing sector (the basis of the 2015 EU yellow card and the 2014 US TIP Tier 3 downgrade), and the migrant-labour brokerage economy | Transit/destination, not production | **Recommend 1-2 vectors, not Myanmar's 3**, and label them transit/destination. Thailand is the demand-and-corridor side of the same regional economy Myanmar produces for |
+
+**Deliberately absent: India, Bangladesh, "China proxies".** No real Thai counterpart at meaningful magnitude.
+
+## 6.5 Historically-calibrated shock types for Thailand, 2017-2067
+
+| Shock | Real basis (dated) | Comment |
+|---|---|---|
+| `royal_succession_legitimacy` | King Bhumibol died 13 Oct 2016, **13 months before this constitution's promulgation**; Vajiralongkorn's accession and the 2017 pre-promulgation royal amendments to the draft text | **No analogue in any other scenario.** The single largest real legitimacy variable in the Thai window and it sits immediately before year zero |
+| `coup` | 13 successful coups since 1932; README §2.6's own Powell-Thyne computation gives ≈0.125/yr for 1951-2014. But the **observed** record under this instrument is zero coups in nine years | Directly connected to the open question in memory.md §4a/bug #14: Thailand's encoded `COUP_TRIGGER_*` are both 0.0, same as Myanmar's, and Thailand collapsed at year 15-16 in testing — flattening exactly this contrast |
+| `pandemic` | COVID-19. Thailand's tourism-dependent economy contracted 6.1% in 2020 (World Bank/NESDC) | Transfers from Myanmar's set but with much higher intensity, because of tourism share |
+| `flooding` | The 2011 floods cost roughly 1.4 trillion baht / ~US$46bn (World Bank damage and loss assessment) — before the window, but establishes the real base rate and magnitude | Replaces Myanmar's generic `natural_disaster`, with a real Thai magnitude |
+| `insurgency_escalation` | Deep South, 7,700+ deaths since Jan 2004; Tak Bai incident 25 Oct 2004 (7 shot, 78 asphyxiated in custody) | Localised to the `deep_south` unit, not national |
+| `trade_sanction_equivalent` | EU IUU yellow card Apr 2015 - Jan 2019; US TIP Tier 3 downgrade 2014; EU FTA suspension 2014-2023 | Thailand's real `sanctions` analogue: conditional, reversible, sector-specific — not Myanmar's banking isolation |
+| `tourism_demand_shock` | Chinese arrivals collapse (2020-22); the 2018 Phuket boat disaster's effect on Chinese bookings | New type, no Myanmar analogue, large for Thailand |
+| `mekong_drought` | Upstream dam operation and recurring Mekong low-flow events from the late 2010s | Regional environmental, affects `northeastern` disproportionately |
+| `migrant_influx` | Post-Feb-2021 inflows from Myanmar | Reciprocal with Scenario A/C's own outflows |
+| `global_recession`, `oil_price_shock`, `fdi_boom` | Transfer from Myanmar's existing set | Keep |
+
+## 6.6 Citizen count summary
+
+| Quantity | Value |
+|---|---|
+| Year zero | 2017 (constitution promulgated 6 April 2017) |
+| Real population (recommended) | 71,160,187 (World Bank WDI `SP.POP.TOTL`, THA, 2017) |
+| Real registered population (alternative) | 66,188,506 (DOPA civil registration, Dec 2017) |
+| Ratio | 1:5000 (confirmed by Kaung) |
+| **Citizen agents (recommended)** | **14,232** (13,238 on the DOPA denominator) |
+| For comparison, locked Myanmar value | 11,000 |
+
+## 6.7 Sourcing limitations and flags
+
+**L1 — regional figures come via CEIC, not directly from DOPA.** The underlying publisher is Thailand's
+Department of Provincial Administration and CEIC states this explicitly, but I retrieved the regional
+and provincial numbers through CEIC's series pages (ceicdata.com returned HTTP 403 to direct fetch;
+values were obtained through search result snippets). The `central` figure in particular (3,293,504)
+is low enough to look wrong at first glance — it is correct only under the 7-region scheme where
+Bangkok-and-vicinity, Eastern and Western are separate regions. Verification: the seven regional
+figures sum to 66,188,506, which is consistent with Thailand's known 2017 registered total. A human
+should re-pull these from DOPA's own annual statistics before they enter a manuscript table.
+
+**L2 — the 9-unit scheme in Option B is my aggregation, not an official Thai one.** The 7-region base
+is official (DOPA/NESDC); the Bangkok and Deep South splits are mine, justified above but still a
+modelling decision. Label it as such in the methods section.
+
+**L3 — the 7,700+ Deep South death toll is a widely-repeated figure traceable to Deep South Watch
+(Prince of Songkla University), but I did not retrieve the primary dataset.** Cite Deep South Watch
+directly, with an accessed-date, before this number appears in the manuscript.
+
+**L4 — `YEAR_ZERO_GINI` and `YEAR_ZERO_EMPLOYMENT` remain unsourced** (already flagged in
+`constitution_thailand.py`). Nothing in this section fixes them. Note that if the regional units above
+are encoded, the state-GDP Gini (memory.md bug #2: Phase 3's live Gini is *geographic*, computed from
+state GDP levels) becomes much more meaningful for Thailand than for Myanmar, because Thai regional
+income inequality (Bangkok versus Isan) is one of the largest regional gaps in Southeast Asia. Worth
+telling `senior-data-analyst`.
+
+**F1 — `ETHNIC_GROUPS` must stay 0.** Raising it to carry the Isan or Malay-Muslim cleavage would
+change the field's meaning for one scenario only, break cross-scenario interpretation, and re-trigger
+the CVES L1 schema-length and `ELITE_SYSTEM_PROMPTS` few-shot work that bug #19 just completed.
+
+**F2 — the unitary-state point should be encoded, not just noted.** Thailand's regional units must
+carry no autonomous fiscal/political authority. If `FederalConfig`'s resource-share machinery runs on
+Thailand with MFU-like values, the simulation will model a decentralisation that does not exist.
+
+**F3 — population denominator needs Kaung's call** (World Bank 71.16m versus DOPA 66.19m, §6.1).
+
+**F4 — CROSS-SCENARIO STATISTICAL POWER, all 7 scenarios, needs Kaung's decision.** See the South
+Korea package §6.7 F1 for the full statement. Short version: ratio-derived N gives Pakistan 19,646,
+**Thailand 14,232**, Germany 9,969, South Korea 8,406, Chile 2,687, against Myanmar's locked 11,000.
+Unequal N means systematically unequal CI widths for reasons unrelated to constitutional structure —
+Reviewer 2's objection relocated into population size. Thailand at 14,232 also increases compute cost
+by ~29% per run relative to 11,000, and Pakistan by ~79%; flag to `senior-devops-engineer` for the
+RunPod budget estimate in memory.md §4.

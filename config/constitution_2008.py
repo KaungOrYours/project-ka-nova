@@ -1049,6 +1049,38 @@ class SimulationConfig:
         "kachin", "kayah", "kayin", "chin",
         "mon", "rakhine",
     )
+    # Per-country geography field contract (new, 2026-10-20) — see
+    # constitution.py's SimulationConfig for the full contract docstring.
+    # Byte-identical backfill of the same values previously hardcoded
+    # directly inside agents/citizen.py's _assign_state()/
+    # _assign_ethnicity(), correct here too since Scenario C simulates the
+    # same real country (Myanmar) as Scenario A, just under a different
+    # constitution. Same cross-file KeyError warning applies if these are
+    # ever changed to a different state list without also updating
+    # model_phase3.py's self.states dict.
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.07, 0.10, 0.05, 0.06,
+        0.18, 0.08, 0.04, 0.10,
+        0.06, 0.02, 0.05, 0.03,
+        0.06, 0.10,
+    )
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=lambda: {
+        "sagaing":     (85, 3, 1, 5, 4, 1, 0, 1),
+        "mandalay":    (90, 2, 1, 2, 2, 2, 0, 1),
+        "magway":      (92, 2, 1, 1, 2, 1, 0, 1),
+        "bago":        (85, 2, 5, 2, 1, 4, 0, 1),
+        "yangon":      (75, 5, 6, 2, 2, 5, 2, 3),
+        "ayeyarwady":  (90, 2, 2, 1, 1, 3, 0, 1),
+        "tanintharyi": (80, 3, 8, 1, 2, 5, 0, 1),
+        "shan":        (20, 60, 4, 6, 2, 2, 2, 4),
+        "kachin":      (30, 10, 2, 48, 4, 1, 1, 4),
+        "kayah":       (30, 10, 8, 2, 8, 2, 1, 39),
+        "kayin":       (30, 10, 52, 2, 2, 2, 1, 1),
+        "chin":        (30, 2, 2, 4, 56, 1, 2, 3),
+        "mon":         (50, 5, 8, 2, 1, 30, 2, 2),
+        "rakhine":     (30, 2, 3, 1, 1, 2, 60, 1),
+    })
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = (68, 9, 7, 2, 2, 2, 4, 1)
     # DELIBERATELY UNCHANGED from MFU, not a guess by omission — the
     # population's psychological/behavioural archetype distribution is a
     # real, legitimate research question (does a military constitution's

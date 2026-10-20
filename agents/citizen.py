@@ -150,6 +150,78 @@ SIMULATION_STATES = {
     "rakhine":         ["Rakhine", "Bamar"],
 }
 
+# ══════════════════════════════════════════════════════════════════════════════
+# GEOGRAPHY FALLBACK DATA (new, 2026-10-20)
+#
+# CitizenPopulation._assign_state()/_assign_ethnicity() below were, until this
+# fix, hardcoded unconditionally to these exact Myanmar values for EVERY
+# scenario (A, C, and all 5 new countries), with zero constitution access.
+# They now read constitution.simulation.STATE_POPULATION_WEIGHTS /
+# STATE_ETHNIC_WEIGHTS / STATE_ETHNIC_WEIGHTS_DEFAULT when a constitution
+# supplies them (MFU/2008 Myanmar now do, via a byte-identical backfill of
+# these exact literals — see config/constitution.py and
+# config/constitution_2008.py's own SimulationConfig). The constants below
+# are kept as the FALLBACK path for any constitution that does not yet
+# encode the new fields (today: all 5 new countries), so behavior for those
+# 5 scenarios is UNCHANGED from before this fix until a later task fills in
+# their own real geography. A loud, one-time-per-scenario warning is printed
+# when the fallback fires (see _warn_geo_fallback_once below) — this is a
+# documented, intentional fallback, not a silent wrong default.
+# ══════════════════════════════════════════════════════════════════════════════
+
+_MYANMAR_FALLBACK_STATES = (
+    "sagaing", "mandalay", "magway", "bago",
+    "yangon", "ayeyarwady", "tanintharyi", "shan",
+    "kachin", "kayah", "kayin", "chin",
+    "mon", "rakhine",
+)
+_MYANMAR_FALLBACK_STATE_WEIGHTS = (
+    0.07, 0.10, 0.05, 0.06,
+    0.18, 0.08, 0.04, 0.10,
+    0.06, 0.02, 0.05, 0.03,
+    0.06, 0.10,
+)
+_MYANMAR_FALLBACK_ETHNIC_GROUPS = (
+    "Bamar", "Shan", "Karen", "Kachin", "Chin", "Mon", "Rakhine", "Kayah"
+)
+_MYANMAR_FALLBACK_STATE_ETHNIC_WEIGHTS = {
+    "sagaing":     (85, 3, 1, 5, 4, 1, 0, 1),
+    "mandalay":    (90, 2, 1, 2, 2, 2, 0, 1),
+    "magway":      (92, 2, 1, 1, 2, 1, 0, 1),
+    "bago":        (85, 2, 5, 2, 1, 4, 0, 1),
+    "yangon":      (75, 5, 6, 2, 2, 5, 2, 3),
+    "ayeyarwady":  (90, 2, 2, 1, 1, 3, 0, 1),
+    "tanintharyi": (80, 3, 8, 1, 2, 5, 0, 1),
+    "shan":        (20, 60, 4, 6, 2, 2, 2, 4),
+    "kachin":      (30, 10, 2, 48, 4, 1, 1, 4),
+    "kayah":       (30, 10, 8, 2, 8, 2, 1, 39),
+    "kayin":       (30, 10, 52, 2, 2, 2, 1, 1),
+    "chin":        (30, 2, 2, 4, 56, 1, 2, 3),
+    "mon":         (50, 5, 8, 2, 1, 30, 2, 2),
+    "rakhine":     (30, 2, 3, 1, 1, 2, 60, 1),
+}
+_MYANMAR_FALLBACK_STATE_ETHNIC_DEFAULT = (68, 9, 7, 2, 2, 2, 4, 1)
+
+# Tracks which (scenario_name, reason) pairs have already printed a fallback
+# warning this process, so an 11,000-citizen population doesn't print the
+# same warning 11,000 times.
+_GEO_FALLBACK_WARNED: set = set()
+
+
+def _warn_geo_fallback_once(scenario_name: str, reason: str) -> None:
+    key = (scenario_name, reason)
+    if key not in _GEO_FALLBACK_WARNED:
+        _GEO_FALLBACK_WARNED.add(key)
+        print(
+            f"[citizen.py geography fallback] scenario={scenario_name!r}: "
+            f"{reason} — falling back to Myanmar's legacy geography data. "
+            f"This is expected and harmless for Scenario A/C. For any other "
+            f"scenario, this means its own real STATE_POPULATION_WEIGHTS/"
+            f"STATE_ETHNIC_WEIGHTS have not been encoded yet (see "
+            f"config/constitution.py's SimulationConfig field-contract "
+            f"comment for the schema)."
+        )
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CITIZEN AGENT
@@ -1372,10 +1444,28 @@ class CitizenPopulation:
         archetype_counts = CitizenPopulation._calculate_archetype_counts(n)
         agent_id = 0
 
+        # Thread the active constitution (if any) and the real ethnic-group
+        # NAME list through to the two geography methods below — see
+        # _assign_state()/_assign_ethnicity()'s own docstrings for the new
+        # field contract. `ethnic_groups` intentionally comes from
+        # shared_data["active_ethnic_groups"] (model_phase3.py's single
+        # source of truth for group naming, bug #16/#17) rather than a
+        # second, independent naming scheme; this factory method falls back
+        # to Myanmar's 8 legacy names when no such model/shared_data exists
+        # (e.g. this file's own `__main__` self-test below), preserving its
+        # prior always-Myanmar behavior exactly.
+        constitution = getattr(model, "CONSTITUTION", None)
+        shared_data = getattr(model, "shared_data", None) or {}
+        ethnic_groups = shared_data.get("active_ethnic_groups") or list(
+            _MYANMAR_FALLBACK_ETHNIC_GROUPS
+        )
+
         for archetype, count in archetype_counts.items():
             for _ in range(count):
-                state_id = CitizenPopulation._assign_state()
-                ethnicity = CitizenPopulation._assign_ethnicity(state_id)
+                state_id = CitizenPopulation._assign_state(constitution)
+                ethnicity = CitizenPopulation._assign_ethnicity(
+                    state_id, constitution, ethnic_groups
+                )
                 age = CitizenPopulation._assign_age()
 
                 agent = CitizenAgent(
@@ -1426,6 +1516,25 @@ class CitizenPopulation:
         Kachin 1.5%, Chin 1.5%, Kayah 0.5%
 
         Returns list of dicts: [{"ethnicity": str, "archetype": str}, ...]
+
+        KNOWN SCOPE GAP (flagged, not fixed, 2026-10-20 per-country
+        geography task): THIS is the method that actually assigns
+        `ethnicity` in the live Phase 3 pipeline (model_phase3.py's
+        `_create_agents_phase3()` calls this, not `_assign_ethnicity()`
+        below — `_assign_ethnicity()` is only reachable via
+        `CitizenPopulation.create_population()`, which is itself only
+        exercised by this file's own `__main__` self-test, not by
+        model_phase3.py at all). This method is 100% hardcoded to
+        Myanmar's own `ETHNIC_CENSUS` proportions and the 8-group x
+        7-archetype `ETHNIC_ARCHETYPE_PROPORTIONS` matrix above, for every
+        scenario, with no constitution access — this is the REAL remaining
+        gap for per-country ethnicity realism, not the two methods this
+        task generalized. Fixing it requires a comparable per-country
+        research+encoding effort (a real census-proportional ethnic
+        breakdown AND a real per-ethnicity archetype-proportion matrix for
+        each of the 5 new countries), well beyond this task's scope of
+        "generalize `_assign_state`/`_assign_ethnicity`." Flagged here so
+        it isn't mistaken for already-fixed.
         """
         ETHNIC_CENSUS = {
             "Bamar":   0.68,
@@ -1462,45 +1571,131 @@ class CitizenPopulation:
         return assignments
 
     @staticmethod
-    def _assign_state() -> str:
-        """Assign state based on GDP-proportional population distribution."""
-        states = [
-            "sagaing", "mandalay",    "magway",        "bago",
-            "yangon",        "ayeyarwady",  "tanintharyi",   "shan",
-            "kachin","kayah",      "kayin","chin",
-            "mon",           "rakhine",
-        ]
-        weights = [
-            0.07, 0.10, 0.05, 0.06,
-            0.18, 0.08, 0.04, 0.10,
-            0.06, 0.02, 0.05, 0.03,
-            0.06, 0.10,
-        ]
-        return random.choices(states, weights=weights)[0]
+    def _assign_state(constitution=None) -> str:
+        """
+        Assign a state_id based on population-proportional weights.
+
+        Generalized 2026-10-20 (was hardcoded to Myanmar's 14 states for
+        every scenario, with no constitution access at all). Reads
+        `constitution.simulation.SIMULATION_STATES` /
+        `.STATE_POPULATION_WEIGHTS` when `constitution` is supplied and
+        both fields are present, non-empty, and the same length — this is
+        the new field contract (see config/constitution.py's
+        SimulationConfig comment for the full schema). Falls back to
+        Myanmar's own legacy hardcoded distribution otherwise (module-level
+        `_MYANMAR_FALLBACK_STATES`/`_MYANMAR_FALLBACK_STATE_WEIGHTS` above),
+        which is a pure no-op for Scenario A/C (now backfilled into their
+        own constitution objects with these exact values) and a documented,
+        loud (one-time-per-scenario-per-process) fallback for any scenario
+        that has not yet had its own geography encoded.
+
+        `constitution` is intentionally Optional and defaults to None so
+        this stays callable exactly as before (e.g. the `__main__`
+        self-test below, which has no constitution object at all).
+        """
+        sim = getattr(constitution, "simulation", None)
+        states = getattr(sim, "SIMULATION_STATES", None) if sim else None
+        weights = getattr(sim, "STATE_POPULATION_WEIGHTS", None) if sim else None
+
+        scenario_name = getattr(sim, "SCENARIO", None) or getattr(
+            constitution, "__class__", type(None)
+        ).__name__
+
+        if (
+            states
+            and weights
+            and len(states) == len(weights)
+            and len(states) > 0
+            and sum(weights) > 0
+        ):
+            return random.choices(list(states), weights=list(weights))[0]
+
+        _warn_geo_fallback_once(
+            scenario_name,
+            "constitution.simulation has no well-formed "
+            "SIMULATION_STATES/STATE_POPULATION_WEIGHTS pair",
+        )
+        return random.choices(
+            list(_MYANMAR_FALLBACK_STATES), weights=list(_MYANMAR_FALLBACK_STATE_WEIGHTS)
+        )[0]
 
     @staticmethod
-    def _assign_ethnicity(state_id: str) -> str:
-        """Assign ethnicity based on Myanmar 2014 census per-state composition."""
-        # [Bamar, Shan, Karen, Kachin, Chin, Mon, Rakhine, Kayah]
-        state_ethnic_weights = {
-            "sagaing":   [85, 3, 1, 5, 4, 1, 0, 1],
-            "mandalay":        [90, 2, 1, 2, 2, 2, 0, 1],
-            "magway":          [92, 2, 1, 1, 2, 1, 0, 1],
-            "bago":            [85, 2, 5, 2, 1, 4, 0, 1],
-            "yangon":          [75, 5, 6, 2, 2, 5, 2, 3],
-            "ayeyarwady":      [90, 2, 2, 1, 1, 3, 0, 1],
-            "tanintharyi":     [80, 3, 8, 1, 2, 5, 0, 1],
-            "shan":    [20, 60, 4, 6, 2, 2, 2, 4],
-            "kachin": [30, 10, 2, 48, 4, 1, 1, 4],
-            "kayah":           [30, 10, 8, 2, 8, 2, 1, 39],
-            "kayin":  [30, 10, 52, 2, 2, 2, 1, 1],
-            "chin":            [30, 2, 2, 4, 56, 1, 2, 3],
-            "mon":             [50, 5, 8, 2, 1, 30, 2, 2],
-            "rakhine":         [30, 2, 3, 1, 1, 2, 60, 1],
-        }
-        groups  = ["Bamar", "Shan", "Karen", "Kachin", "Chin", "Mon", "Rakhine", "Kayah"]
-        weights = state_ethnic_weights.get(state_id, [68, 9, 7, 2, 2, 2, 4, 1])
-        return random.choices(groups, weights=weights)[0]
+    def _assign_ethnicity(state_id: str, constitution=None, ethnic_groups=None) -> Optional[str]:
+        """
+        Assign an ethnicity/regional-identity label for a citizen already
+        placed in `state_id`.
+
+        Generalized 2026-10-20 (was hardcoded to Myanmar's 2014 census
+        per-state composition for every scenario, with no constitution
+        access at all). Reads
+        `constitution.simulation.STATE_ETHNIC_WEIGHTS` (a dict keyed by
+        state name, values a tuple of weights over this constitution's own
+        ethnic-group axis) and `.STATE_ETHNIC_WEIGHTS_DEFAULT` (fallback
+        weights for a state absent from that dict) when `constitution` is
+        supplied and the weight tuples' length matches `len(ethnic_groups)`.
+        `ethnic_groups` is deliberately NOT read from the constitution
+        here — it should be the same `shared_data["active_ethnic_groups"]`
+        list model_phase3.py already builds (bug #16/#17), so there is one
+        single source of truth for ethnic-group NAMES, not two competing
+        ones.
+
+        No-op design for 0-ethnic-group constitutions (Chile/Thailand/
+        Germany as currently encoded): if `ethnic_groups` is falsy, returns
+        None rather than forcing a meaningless label — the same precedent
+        bug #17's CVES fix set for skipping the Acemoglu/Robinson component
+        entirely under ETHNIC_GROUPS=0 instead of forcing a 0-length array
+        to behave like a real ethnic taxonomy.
+
+        Fallback (constitution lacks the new fields, or the lengths don't
+        match `ethnic_groups`): if `ethnic_groups` is exactly Myanmar's own
+        8 names, falls back to the real Myanmar 2014 census weights
+        (pure no-op for Scenario A/C). Otherwise falls back to a UNIFORM
+        draw over `ethnic_groups` — deliberately NOT Myanmar's Bamar-
+        skewed weights, since forcing Myanmar's specific skew onto a
+        different country's groups would be a silently WRONG default, not
+        a sensible placeholder. Either fallback path prints a loud,
+        one-time-per-scenario-per-process warning.
+        """
+        if not ethnic_groups:
+            return None
+
+        sim = getattr(constitution, "simulation", None)
+        state_weights_map = getattr(sim, "STATE_ETHNIC_WEIGHTS", None) if sim else None
+        default_weights = getattr(sim, "STATE_ETHNIC_WEIGHTS_DEFAULT", None) if sim else None
+        n = len(ethnic_groups)
+
+        scenario_name = getattr(sim, "SCENARIO", None) or getattr(
+            constitution, "__class__", type(None)
+        ).__name__
+
+        if (
+            state_weights_map
+            and default_weights
+            and len(default_weights) == n
+            and all(len(w) == n for w in state_weights_map.values())
+        ):
+            weights = state_weights_map.get(state_id, default_weights)
+            return random.choices(list(ethnic_groups), weights=list(weights))[0]
+
+        if n == len(_MYANMAR_FALLBACK_ETHNIC_GROUPS) and tuple(ethnic_groups) == _MYANMAR_FALLBACK_ETHNIC_GROUPS:
+            _warn_geo_fallback_once(
+                scenario_name,
+                "constitution.simulation has no well-formed "
+                "STATE_ETHNIC_WEIGHTS/STATE_ETHNIC_WEIGHTS_DEFAULT pair "
+                "(Myanmar census fallback)",
+            )
+            weights = _MYANMAR_FALLBACK_STATE_ETHNIC_WEIGHTS.get(
+                state_id, _MYANMAR_FALLBACK_STATE_ETHNIC_DEFAULT
+            )
+            return random.choices(list(_MYANMAR_FALLBACK_ETHNIC_GROUPS), weights=list(weights))[0]
+
+        _warn_geo_fallback_once(
+            scenario_name,
+            f"constitution.simulation has no well-formed per-state ethnic "
+            f"composition for a {n}-group taxonomy — using a UNIFORM "
+            f"placeholder draw, not a real distribution",
+        )
+        return random.choice(list(ethnic_groups))
 
     @staticmethod
     def _assign_age() -> int:

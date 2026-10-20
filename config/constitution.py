@@ -1266,6 +1266,80 @@ class SimulationConfig:
         "mon", "rakhine",
     )
 
+    # ── Per-country geography field contract (new, 2026-10-20) ─────────────
+    # Defined by senior-simulation-engineer so agents/citizen.py's
+    # CitizenPopulation._assign_state()/_assign_ethnicity() can read each
+    # scenario's own real geography instead of Myanmar's hardcoded dicts
+    # (the two methods previously had zero constitution access at all).
+    # This backfill is a PURE REFACTOR for MFU: the values below are
+    # byte-identical to the literals previously hardcoded directly inside
+    # agents/citizen.py (_assign_state's `states`/`weights` lists and
+    # _assign_ethnicity's `state_ethnic_weights` dict), just relocated to
+    # the constitution layer so the method can be scenario-aware without
+    # changing Scenario A's behavior at all.
+    #
+    # STATE_POPULATION_WEIGHTS: parallel to SIMULATION_STATES above (same
+    # order, same length), each entry is that state's share of the
+    # COUNTRY'S REAL population (sums to ~1.0). Used ONLY to set each
+    # state's relative share of the uniform 11,000-citizen simulated
+    # population (locked Monte Carlo design, .claude/memory.md section 8)
+    # — never to change the total citizen count.
+    #
+    # CRITICAL CROSS-FILE CONSTRAINT for whoever fills this field in for
+    # the 5 new countries: model_phase3.py's _initialize_states() still
+    # hardcodes Myanmar's 14 state names for self.states, for EVERY
+    # scenario, regardless of this field (bug #16's deliberately-deferred
+    # scope, see model_phase3.py:262-333's own docstring). If a country's
+    # SIMULATION_STATES tuple is changed to its own REAL state names
+    # without ALSO updating model_phase3.py's self.states dict to match,
+    # every citizen assigned a non-Myanmar state_id will KeyError the
+    # first time any code reads self.model.states[self.state_id]. Filling
+    # in STATE_POPULATION_WEIGHTS and renaming SIMULATION_STATES away from
+    # Myanmar's placeholder list are a SINGLE atomic change, not two
+    # independent ones — do both together or neither.
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.07, 0.10, 0.05, 0.06,
+        0.18, 0.08, 0.04, 0.10,
+        0.06, 0.02, 0.05, 0.03,
+        0.06, 0.10,
+    )
+
+    # STATE_ETHNIC_WEIGHTS: per-state ethnic/regional composition. Keys
+    # must be a subset of SIMULATION_STATES; values are a tuple of
+    # weights over this constitution's own ethnic-group axis (same length
+    # as shared_data["active_ethnic_groups"], i.e. the count resolved by
+    # engine/cves.py's _get_ethnic_group_count() — 8 for MFU/2008 Myanmar,
+    # 0 for Chile/Thailand/Germany as currently encoded, 1 for South
+    # Korea, 6 for Pakistan). Need not sum to exactly 1.0 — random.choices
+    # normalizes — mirroring the shape agents/citizen.py's old hardcoded
+    # `state_ethnic_weights` dict already used. Group ORDER here is
+    # ["Bamar","Shan","Karen","Kachin","Chin","Mon","Rakhine","Kayah"],
+    # matching model_phase3.py's active_ethnic_groups list for n_ethnic==8
+    # and agents/citizen.py's module-level ETHNIC_GROUPS list.
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=lambda: {
+        "sagaing":     (85, 3, 1, 5, 4, 1, 0, 1),
+        "mandalay":    (90, 2, 1, 2, 2, 2, 0, 1),
+        "magway":      (92, 2, 1, 1, 2, 1, 0, 1),
+        "bago":        (85, 2, 5, 2, 1, 4, 0, 1),
+        "yangon":      (75, 5, 6, 2, 2, 5, 2, 3),
+        "ayeyarwady":  (90, 2, 2, 1, 1, 3, 0, 1),
+        "tanintharyi": (80, 3, 8, 1, 2, 5, 0, 1),
+        "shan":        (20, 60, 4, 6, 2, 2, 2, 4),
+        "kachin":      (30, 10, 2, 48, 4, 1, 1, 4),
+        "kayah":       (30, 10, 8, 2, 8, 2, 1, 39),
+        "kayin":       (30, 10, 52, 2, 2, 2, 1, 1),
+        "chin":        (30, 2, 2, 4, 56, 1, 2, 3),
+        "mon":         (50, 5, 8, 2, 1, 30, 2, 2),
+        "rakhine":     (30, 2, 3, 1, 1, 2, 60, 1),
+    })
+
+    # STATE_ETHNIC_WEIGHTS_DEFAULT: fallback weights for any
+    # SIMULATION_STATES entry absent from STATE_ETHNIC_WEIGHTS above,
+    # same order/length convention. Mirrors the old hardcoded
+    # `state_ethnic_weights.get(state_id, [68, 9, 7, 2, 2, 2, 4, 1])`
+    # fallback in agents/citizen.py.
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = (68, 9, 7, 2, 2, 2, 4, 1)
+
     # Citizens Assembly sample size (civic-lottery review panel).
     # NOTE: this duplicates AmendmentConfig.CITIZENS_ASSEMBLY_SIZE (also 320).
     # institutions/chambers.py reads it from HERE (simulation section);

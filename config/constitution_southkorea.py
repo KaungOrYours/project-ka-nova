@@ -162,17 +162,26 @@ class FoundationalConfig:
     # CONFIDENT — Art. 3: "The territory of the Republic of Korea shall
     # consist of the Korean peninsula and its adjacent islands."
     TERRITORY_BASIS: str = "korean_peninsula_and_adjacent_islands_article_3"
-    # GUESS, explicit modelling choice per research README §1: Korea is
-    # unitary, not federal (Art. 117-118); STATE_COUNT has no constitutional
-    # basis. 17 = Korea's real first-level administrative divisions as of
-    # 2012 (1 special city + 6 metropolitan cities + 1 special
-    # self-governing city + 8 provinces + 1 special self-governing
-    # province), a statutory/administrative fact, not a constitutional
-    # number. The research package explicitly flagged this as either-choice
-    # defensible; 17 is chosen here for real-world accuracy over reusing
-    # Myanmar's 14 for comparability.
-    STATE_COUNT: int = 17
-    SIMULATION_STATE_COUNT: int = 17
+    # CORRECTED 2026-10-20 per research README §6.2: 17 is the PRESENT-DAY
+    # count of Korea's first-level administrative divisions, not the count
+    # at simulation year zero (Feb 1988). Daejeon did not become a directly
+    # governed city until 1 Jan 1989 (simulated year 1), Ulsan not until
+    # 15 Jul 1997 (simulated year 9), Sejong not until 2 Jul 2012 (simulated
+    # year 24) — all three postdate the 1988 scenario start and were still
+    # part of Chungcheongnam-do / Gyeongsangnam-do respectively at year
+    # zero. The real year-zero count is 14 (Seoul Special City + Busan/
+    # Daegu/Incheon/Gwangju directly-governed cities + 9 provinces),
+    # independently confirmed by the 13th presidential election's
+    # (16 Dec 1987) province-level results table having exactly 14 rows
+    # (README §6.3). GUESS-tagged modelling choice (STATE_COUNT itself has
+    # no constitutional basis, Art. 117-118 is unitary, not federal) but
+    # CONFIDENT on the real-world count being 14, not 17, at year zero.
+    # 14 also removes a cross-scenario confound: Myanmar A/C both run on 14
+    # states, so an A-vs-SK difference is no longer partly attributable to
+    # geographic granularity (exactly the "parameterisation-driven, not
+    # structural" objection Reviewer 2 raised, relocated into state count).
+    STATE_COUNT: int = 14
+    SIMULATION_STATE_COUNT: int = 14
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -676,7 +685,10 @@ class FederalConfig:
     RESOURCE_* fields below are Ka-Nova modelling proxies for a unitary
     state's high central fiscal share, NOT a sourced constitutional split."""
 
-    STATE_COUNT: int = 17
+    # CORRECTED 2026-10-20, same fix and same reasoning as
+    # FoundationalConfig.STATE_COUNT above: 14 is the real year-zero (1988)
+    # count, not the present-day 17 (see research README §6.2).
+    STATE_COUNT: int = 14
     # CONFIDENT — no constitutionally recognised multi-ethnic structure;
     # ethnic channel is inert for this scenario.
     ETHNIC_GROUPS: int = 1
@@ -1499,27 +1511,113 @@ class SimulationConfig:
     # scenario (same caveat constitution_2008.py's own comment carries),
     # included here only for field-contract completeness.
     TIME_STEPS: int = 50
-    # CONFIDENT these are real South Korean first-level administrative
-    # division names (1 special city, 6 metropolitan cities, 1 special
-    # self-governing city, 8 provinces, 1 special self-governing province).
-    # CURRENTLY INERT AT RUNTIME: agents/official.py and agents/citizen.py
-    # read SIMULATION_STATES via an unconditional module-level
-    # `from config.constitution import CONSTITUTION` import (confirmed by
-    # direct grep, 2026-10-20 — see this file's top-of-module "KNOWN ENGINE
-    # WIRING GAP" disclaimer), so this real Korean list has NO mechanical
-    # effect today; model_phase3.py's own `_initialize_states()` also
-    # separately hardcodes Myanmar's 14 state names regardless of scenario,
-    # so there is no crash risk from this mismatch today, but BOTH of those
-    # would need a corresponding fix before this field's real values take
-    # effect. Filled with real, correct data now so no further edit to
-    # this file is needed once that wiring gap is fixed.
+    # CORRECTED 2026-10-20 per research README §6.2 (same correction as
+    # FoundationalConfig.STATE_COUNT / FederalConfig.STATE_COUNT above):
+    # this previously listed Korea's PRESENT-DAY 17 first-level divisions.
+    # Daejeon (elevated 1 Jan 1989), Ulsan (15 Jul 1997) and Sejong
+    # (2 Jul 2012) did not exist as separate first-level units at
+    # simulation year zero (Feb 1988) — Daejeon/Sejong were part of
+    # Chungcheongnam-do, Ulsan was part of Gyeongsangnam-do. CONFIDENT
+    # these 14 are the real year-zero first-level administrative division
+    # names (Seoul Special City; Busan/Daegu/Incheon/Gwangju directly-
+    # governed cities; 9 provinces), independently cross-checked against
+    # the 13th presidential election's (16 Dec 1987) province-level
+    # results table, which has exactly these same 14 rows (README §6.3).
+    # Order here is PARALLEL to STATE_POPULATION_WEIGHTS immediately below
+    # (same order, same length, required by the field contract) — NOT the
+    # same order as the old 17-item list, do not assume positional
+    # continuity with any stale downstream reference.
+    #
+    # CURRENTLY INERT AT RUNTIME for the reason already documented in this
+    # file's top-of-module "KNOWN ENGINE WIRING GAP" disclaimer: as of
+    # 2026-10-20 this field only takes mechanical effect once
+    # model_phase3.py's own per-scenario state-list fix and
+    # agents/citizen.py's _assign_state()/_assign_ethnicity() (which now
+    # read constitution.simulation.SIMULATION_STATES/
+    # STATE_POPULATION_WEIGHTS/STATE_ETHNIC_WEIGHTS when present, per the
+    # 2026-10-20 field contract in config/constitution.py's SimulationConfig
+    # comment) actually land for this scenario. Filled with real, correct
+    # data now so no further edit to this file is needed once that wiring
+    # is confirmed live.
     SIMULATION_STATES: Tuple[str, ...] = (
-        "seoul", "busan", "daegu", "incheon",
-        "gwangju", "daejeon", "ulsan", "sejong",
-        "gyeonggi", "gangwon", "chungbuk", "chungnam",
-        "jeonbuk", "jeonnam", "gyeongbuk", "gyeongnam",
-        "jeju",
+        "seoul", "gyeonggi", "busan", "gyeongnam",
+        "chungnam", "gyeongbuk", "jeonnam", "daegu",
+        "jeonbuk", "incheon", "gangwon", "chungbuk",
+        "gwangju", "jeju",
     )
+    # STATE_POPULATION_WEIGHTS — per-country geography field contract (see
+    # config/constitution.py's SimulationConfig comment for the full
+    # schema). CONFIDENT, sourced: Statistics Korea 1990 Population and
+    # Housing Census per-division figures as tabulated by citypopulation.de
+    # (accessed 2026-10-20), reconstructed onto the 14 year-zero (1988)
+    # units per research README §6.2 — Daejeon (1,049,578) and the Sejong
+    # area (90,502) folded back into Chungcheongnam-do; Ulsan (805,355)
+    # folded back into Gyeongsangnam-do. This is arithmetic on published
+    # census figures, not an estimate. GUESS-tagged limitation (README L1):
+    # 1990 is 2 years after year zero; the nearer 1985 census total is
+    # sourced (40,466,577) but a complete 14-division 1985 table could not
+    # be retrieved for this package, so 1990 shares are used as the best
+    # available proxy (README notes the 1985-vs-1990 share drift is at
+    # most ~1-2 percentage points, e.g. Seoul 23.8% in 1985 vs 24.45% here).
+    # Same order as SIMULATION_STATES above. Sums to 1.0002, not exactly
+    # 1.0, due to published-percentage rounding in the source table, not a
+    # transcription error.
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.2445, 0.1394, 0.0888, 0.0833,
+        0.0706, 0.0629, 0.0578, 0.0544,
+        0.0477, 0.0443, 0.0364, 0.0320,
+        0.0262, 0.0119,
+    )
+    # STATE_ETHNIC_WEIGHTS / STATE_ETHNIC_WEIGHTS_DEFAULT — per-country
+    # geography field contract. CONFIDENT: every weight tuple below is
+    # exactly 1 element long because FederalConfig.ETHNIC_GROUPS = 1 for
+    # this scenario (no constitutionally recognised multi-ethnic
+    # structure — Korea is among the most ethnically homogeneous states in
+    # the world, research README §6.3's explicit instruction is NOT to
+    # fabricate an 8-slot Myanmar-style array here). With exactly one
+    # group, every state's weight tuple is mathematically forced to (1.0,)
+    # — this is a formality, not a modelling choice with real content.
+    #
+    # DELIBERATE NON-USE of the Yeongnam/Honam regional-bloc data: the
+    # research README (§6.3) documents a real, heavily-studied, non-ethnic
+    # political cleavage — Yeongnam (Gyeongsang) vs. Honam (Jeolla)
+    # regionalism — anchored on real 1987 13th-presidential-election
+    # province vote shares (e.g. Gwangju 94.41% Kim Dae-jung vs. Daegu
+    # 70.70% Roh Tae-woo), and recommends a 5-slot
+    # [capital, yeongnam, honam, chungcheong, gangwon_jeju] array as
+    # Korea's real substitute for an ethnic composition array. That
+    # recommendation is NOT encoded into STATE_ETHNIC_WEIGHTS here,
+    # deliberately: this field's length is contractually tied to
+    # ETHNIC_GROUPS (1 for Korea), and engine/cves.py's
+    # _get_ethnic_group_count() plus agents/citizen.py's
+    # _assign_ethnicity() both validate weight-tuple length against that
+    # same count — a 5-element array would not fit this axis and, per the
+    # README's own caveat, SHOULD NOT be wired through the constitutional-
+    # allocation-shaped ethnic channel anyway, since Korea's regional
+    # cleavage has no constitutional status (no reserved seats, no
+    # resource transfers) unlike Myanmar's ethnic structure. If a future
+    # task wants Yeongnam/Honam regionalism to drive social/trust/
+    # grievance dynamics, it needs a NEW, separate field (outside this
+    # ETHNIC_GROUPS-sized contract, out of scope for this encoding task,
+    # which owns only this file) — not a repurposing of this one. Flagging
+    # this explicitly rather than silently discarding real, sourced data.
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=lambda: {
+        "seoul":     (1.0,),
+        "gyeonggi":  (1.0,),
+        "busan":     (1.0,),
+        "gyeongnam": (1.0,),
+        "chungnam":  (1.0,),
+        "gyeongbuk": (1.0,),
+        "jeonnam":   (1.0,),
+        "daegu":     (1.0,),
+        "jeonbuk":   (1.0,),
+        "incheon":   (1.0,),
+        "gangwon":   (1.0,),
+        "chungbuk":  (1.0,),
+        "gwangju":   (1.0,),
+        "jeju":      (1.0,),
+    })
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = (1.0,)
     # DELIBERATELY UNCHANGED from MFU/Myanmar 2008, not a guess by omission
     # — same precedent and same open-research-question flag both existing
     # files already carry: whether population archetype composition should

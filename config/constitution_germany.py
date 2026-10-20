@@ -158,15 +158,41 @@ class FoundationalConfig:
     # (after the 1952 Baden-Wurttemberg merger and the 1957 Saarland
     # accession — the README's "10 from 1952" rounds through a brief
     # 1952-1957 9-Lander period), 16 from 1990 reunification. This file
-    # uses 10 — the stable 1957-1990 configuration — because it is the
-    # single number that best matches the "as amended through 1968" label
-    # AND covers the large majority of the 50-year simulated window
-    # (1957-1999 = simulated years 8-50). The post-1990 jump to 16 (the
-    # final 9 years of the horizon, 1991-1999) is NOT modelled — this
+    # uses the stable 1957-1990 ten-Land configuration as its base, because
+    # it is the single number that best matches the "as amended through
+    # 1968" label AND covers the large majority of the 50-year simulated
+    # window (1957-1999 = simulated years 8-50). The post-1990 jump to 16
+    # (the final 9 years of the horizon, 1991-1999) is NOT modelled — this
     # dataclass takes one static value, a genuine schema limitation, not an
     # oversight. Flag for whoever next revisits this file.
-    STATE_COUNT: int = 10
-    SIMULATION_STATE_COUNT: int = 10
+    #
+    # 2026-10-20 UPDATE (research package README section 6.2, decision by
+    # senior-simulation-engineer): the ten-Land base is extended to ELEVEN
+    # by adding WEST BERLIN as its own unit. Reasoning: this scenario's
+    # external-layer vector set and shock catalog (README section 6.4/6.5,
+    # `allied_high_commission`, `ussr_gdr`, `berlin_crisis` shocks — the
+    # 1948-49 Blockade, the 1958-61 Berlin Crisis, the 13 Aug 1961 Wall)
+    # are already locked in and are arguably the single most important
+    # Cold-War-era external shocks in this scenario's 50-year window, but
+    # with only the 10 "West German mainland" Lander encoded there is no
+    # simulation unit for any of them to land on. West Berlin's real
+    # special status (no voting Bundestag delegates — its 22 members, sent
+    # by the Berlin Abgeordnetenhaus, could not vote on final passage —
+    # and governed under residual Allied authority until 1990) is itself
+    # part of the scenario's "externally-supervised, not self-governing"
+    # framing and belongs in the same geography layer as the other 10
+    # units, not treated as a narrative-only aside. The pre-1952 three-
+    # southwest-states configuration and the post-1990 16-Land
+    # configuration both remain deliberately un-modelled, same limitation
+    # as before. Saarland (acceded 1 Jan 1957, so technically anachronistic
+    # for a chunk of the 1949-1957 window) is kept in the 11-unit list per
+    # the README's option (a) — simpler, and consistent with this file's
+    # own "as amended through 1968" instrument choice, which already
+    # accepts several post-1949 features; the anachronism is documented
+    # here and at SimulationConfig.SIMULATION_STATES/STATE_POPULATION_WEIGHTS
+    # rather than silently absorbed.
+    STATE_COUNT: int = 11
+    SIMULATION_STATE_COUNT: int = 11
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -707,7 +733,10 @@ class FederalConfig:
     """Arts. 70-74 (legislative powers), Arts. 83-87 (Land execution of federal law),
     Arts. 106-107 (fiscal federalism and horizontal equalisation)"""
 
-    STATE_COUNT: int = 10   # matches FoundationalConfig.STATE_COUNT — CONFIDENT pairing
+    # 11 = the 10-Land 1957-1990 base plus West Berlin, matches
+    # FoundationalConfig.STATE_COUNT — CONFIDENT pairing (see that field's
+    # 2026-10-20 comment for the West Berlin addition's reasoning).
+    STATE_COUNT: int = 11
     ETHNIC_GROUPS: int = 0   # CONFIDENT — no constitutionally recognised ethnic-group structure (README, verbatim)
 
     # GUESS, flagged per the README's explicit instruction NOT to reuse
@@ -1485,14 +1514,145 @@ class SimulationConfig:
     # constitution_2008.py documents for this exact field.
     TIME_STEPS: int = 50
 
-    # CONFIDENT — the stable 10-Land (1957-1990) configuration, matching
-    # FoundationalConfig.STATE_COUNT/FederalConfig.STATE_COUNT above. Real
-    # West German Land names of that period.
+    # CONFIDENT — the stable 10-Land (1957-1990) configuration PLUS West
+    # Berlin as an 11th unit, matching FoundationalConfig.STATE_COUNT/
+    # FederalConfig.STATE_COUNT above (both updated 2026-10-20 — see that
+    # field's comment for the full West Berlin reasoning). Real West German
+    # Land names of that period. `saarland` is included even though it did
+    # not accede until 1 Jan 1957 (a real ~8-year anachronism for the early
+    # portion of this "as amended through 1968" instrument) per the
+    # research package's option (a) — documented here rather than silently
+    # absorbed; see STATE_POPULATION_WEIGHTS below for how its weight is
+    # derived to keep the anachronism auditable.
     SIMULATION_STATES: Tuple[str, ...] = (
         "schleswig_holstein", "hamburg", "niedersachsen", "bremen",
         "nordrhein_westfalen", "hessen", "rheinland_pfalz",
-        "baden_wurttemberg", "bayern", "saarland",
+        "baden_wurttemberg", "bayern", "saarland", "west_berlin",
     )
+
+    # STATE_POPULATION_WEIGHTS — per-country geography field contract (see
+    # config/constitution.py's SimulationConfig comment for the full
+    # schema this mirrors). Parallel to SIMULATION_STATES above, same
+    # order/length. CONFIDENT, sourced to the 13 September 1950
+    # Volkszahlung (Statistisches Bundesamt), reproduced in the research
+    # package (config/constitution_germany_encoding/README.md section 6.2)
+    # and independently cross-validated there against the Ritter & Niehuss
+    # expellee-percentage derivation (all ten 1950-census units agree with
+    # that independent arithmetic route within 0.81%, nine of ten within
+    # 0.35% — see README L1 for the honest caveat that the per-Land column
+    # itself still needs a primary Statistisches Bundesamt table pulled
+    # before a manuscript table cites it to the person-digit).
+    #
+    # The 1950 census (16 months after year-zero, 23 May 1949 — no 1949
+    # population enumeration exists, see README L4) covers 10 units
+    # (9 Lander + West Berlin) and excludes Saarland (995,210 in 1950, not
+    # yet part of the FRG). To keep an 11-unit weight vector summing to
+    # ~1.0, Saarland's weight below is its 1950 population taken as a share
+    # of the COMBINED 1950-census-plus-Saarland total (50,837,837), with
+    # the other ten units' shares rescaled proportionally against that same
+    # combined total — i.e. Saarland is weighted as if it had already
+    # acceded in 1950, a documented modelling simplification, not a second
+    # real observation. The within-unit shares relative to EACH OTHER
+    # (excluding Saarland) are unchanged from the real 1950 census ratios.
+    #   schleswig_holstein:    2,594,648 -> 0.0510
+    #   hamburg:               1,605,606 -> 0.0316
+    #   niedersachsen:         6,797,379 -> 0.1337
+    #   bremen:                  558,619 -> 0.0110
+    #   nordrhein_westfalen:  13,196,176 -> 0.2596
+    #   hessen:                4,323,801 -> 0.0851
+    #   rheinland_pfalz:       3,004,752 -> 0.0591
+    #   baden_wurttemberg:     6,430,225 -> 0.1265
+    #   bayern:                9,184,469 -> 0.1807
+    #   saarland:                995,210 -> 0.0196  (1957-accession anachronism, see above)
+    #   west_berlin:           2,146,952 -> 0.0422
+    #   TOTAL:                50,837,837 -> 1.0001 (rounding artifact, same tolerance as the other 6 encoded scenarios)
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.0510, 0.0316, 0.1337, 0.0110,
+        0.2596, 0.0851, 0.0591,
+        0.1265, 0.1807, 0.0196, 0.0422,
+    )
+
+    # STATE_ETHNIC_WEIGHTS / STATE_ETHNIC_WEIGHTS_DEFAULT — DELIBERATE NO-OP
+    # for Germany, same "mechanism absent, nullify via parameter value, not
+    # a code branch" idiom this file already uses throughout for
+    # ETHNIC_GROUPS=0 (see FoundationalConfig/ChamberConfig/FederalConfig
+    # comments above), and the same pattern already used for Thailand/Chile
+    # (constitution_thailand.py's identical STATE_ETHNIC_WEIGHTS comment).
+    # `ETHNIC_GROUPS=0` means Germany's Basic Law recognises no
+    # constitutional ethnic-group structure at all (Art. 3(3) non-
+    # discrimination; README section 1, verbatim finding), so
+    # `shared_data["active_ethnic_groups"]` resolves to an empty list for
+    # this scenario, and agents/citizen.py's `_assign_ethnicity()` returns
+    # `None` the moment `ethnic_groups` is falsy, WITHOUT ever reading
+    # either field below.
+    #
+    # The real substitute cleavage the research package found — expellee
+    # (Heimatvertriebene) population share per Land, 1950 and 1961, Ritter &
+    # Niehuss via GHDI, a genuine 6.5x spread (33.0% Schleswig-Holstein down
+    # to 5.1% Rheinland-Pfalz) that drove real electoral behaviour (the BHE
+    # party, 5.9%/27 seats in the 1953 Bundestag election) — is deliberately
+    # NOT forced into these two fields. Their contract is specifically keyed
+    # to the ETHNIC_GROUPS axis (length 0 for Germany), and a 0-length tuple
+    # cannot carry a 33.0%-to-5.1% spread without being semantically wrong.
+    # See STATE_EXPELLEE_SHARE_1950/_1961 below instead, a separate,
+    # clearly-named field for this real data.
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=dict)
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = ()
+
+    # STATE_EXPELLEE_SHARE_1950 / STATE_EXPELLEE_SHARE_1961 — NOT part of
+    # the established per-country geography field contract and NOT
+    # currently read by any engine code (confirmed by grep against
+    # agents/citizen.py, model_phase3.py, feedback/loops.py, engine/cves.py
+    # at encoding time, 2026-10-20). Added here purely to preserve real,
+    # sourced, meaningful data that has no field whose semantics fit it
+    # (STATE_ETHNIC_WEIGHTS is keyed to the ETHNIC_GROUPS=0 axis and cannot
+    # carry it honestly, per the comment above) rather than letting it live
+    # only in the research package where no future engine change would ever
+    # surface it. Values are REAL PERCENTAGES AS SOURCED (0-100 scale, NOT
+    # 0-1 — do not silently divide by 100 if this is ever wired in without
+    # checking which convention the consuming code expects).
+    #
+    # CONFIDENT, source: Gerhard A. Ritter and Merith Niehuss, "Wahlen in
+    # der Bundesrepublik Deutschland: Bundestags- und Landtagswahlen
+    # 1946-1987" (Munich: Beck, 1987), p. 31, reproduced by German History
+    # in Documents and Images (GHDI), via
+    # config/constitution_germany_encoding/README.md section 6.3. Federal
+    # total: 16.1% (1950), 15.9% (1961) — the two years' near-identical
+    # national totals mask real internal migration FROM the high-expellee
+    # agricultural north/south-east TOWARD the industrial west (e.g.
+    # nordrhein_westfalen 1,332k -> 2,298k expellees over the same period),
+    # a genuine inter-unit dynamic visible only at the per-Land level below.
+    # `saarland` has no 1950 observation (not yet part of the FRG) and is
+    # OMITTED from the 1950 dict rather than defaulted to 0.0, to avoid
+    # implying "zero expellees" where the real answer is "not yet measured
+    # under this instrument". `west_berlin`'s 1950 and 1961 values are
+    # identical (6.9%) in the source table, not a transcription artefact.
+    STATE_EXPELLEE_SHARE_1950: Dict[str, float] = field(default_factory=lambda: {
+        "schleswig_holstein": 33.0,
+        "niedersachsen": 27.2,
+        "bayern": 21.1,
+        "hessen": 16.7,
+        "baden_wurttemberg": 13.4,
+        "nordrhein_westfalen": 10.1,
+        "bremen": 8.6,
+        "hamburg": 7.2,
+        "west_berlin": 6.9,
+        "rheinland_pfalz": 5.1,
+        # "saarland": not part of the FRG in 1950 — no observation, see comment above
+    })
+    STATE_EXPELLEE_SHARE_1961: Dict[str, float] = field(default_factory=lambda: {
+        "schleswig_holstein": 27.2,
+        "niedersachsen": 24.3,
+        "bayern": 17.3,
+        "hessen": 17.0,
+        "baden_wurttemberg": 15.5,
+        "nordrhein_westfalen": 14.5,
+        "bremen": 13.9,
+        "hamburg": 11.3,
+        "west_berlin": 6.9,
+        "rheinland_pfalz": 8.1,
+        "saarland": 1.7,
+    })
 
     # DELIBERATELY UNCHANGED from MFU/constitution_2008.py, same reasoning
     # both of those files give: the population's psychological/behavioural

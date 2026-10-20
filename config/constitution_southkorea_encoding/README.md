@@ -535,3 +535,256 @@ assigned but never read; agent/feedback modules import the MFU constitution at m
 unconditionally) that is outside this document's scope but has been reported separately to the
 parent agent and to `senior-simulation-engineer` — **it determines whether any of these parameters
 actually affect the simulation.**
+
+---
+
+# 6. Administrative geography, population structure, and real geopolitical context
+
+*Added 2026-10-20 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement and its "each country's own real neighbours" extension. This section is additive; nothing
+above it has been changed. Every figure below carries its dataset, publisher, year, and access method.
+Inferences are labelled INFERENCE and are never presented as observations.*
+
+## 6.1 Real year-zero national population
+
+| Quantity | Value | Source |
+|---|---|---|
+| Population, 1987 | **41,621,690** | World Bank World Development Indicators, indicator `SP.POP.TOTL`, country `KOR`, year 1987. Accessed 2026-10-20 via `https://api.worldbank.org/v2/country/KOR/indicator/SP.POP.TOTL?date=1987&format=json` |
+| Population, 1988 | **42,031,247** | Same series, year 1988 |
+| 1985 Population and Housing Census, national total | 40,466,577 | Statistics Korea (KOSIS) 1985 census, as tabulated by citypopulation.de |
+| 1990 Population and Housing Census, national total | 43,410,899 | Statistics Korea (KOSIS) 1990 census, as tabulated by citypopulation.de |
+
+**Which year to use.** The 1987 Constitution was promulgated 29 October 1987 and entered into force
+25 February 1988. `config/constitution_southkorea.py`'s `YEAR_ZERO_CORRUPTION = 0.458` is sourced to
+V-Dem **1988**. For internal consistency, year zero should be 1988 throughout → **42,031,247**.
+
+**Citizen count at the confirmed 1:5000 ratio: 42,031,247 / 5000 = 8,406 citizens** (8,324 if 1987 is
+used instead). Both are well below the locked 11,000 — see the cross-scenario statistical-power flag
+in §6.7 F1.
+
+## 6.2 Real administrative geography — `STATE_COUNT = 17` is anachronistic, the correct 1988 count is 14
+
+17 is the **present-day** count of South Korean first-level divisions. It is not the count at year
+zero, and three of the 17 did not exist in 1988.
+
+Real timeline of first-level divisions (sourced: Wikipedia *List of provincial-level cities of South
+Korea* / *Administrative divisions of South Korea*, cross-checked against the Library of Congress
+*South Korea: A Country Study*, "Local Administration", which states that **in 1990** Korea had six
+provincial-level cities — Seoul plus Busan, Daegu, Incheon, Daejeon and Gwangju — i.e. 15 units, one
+more than in 1988):
+
+| Unit | Status at year zero (Feb 1988) | Date of elevation |
+|---|---|---|
+| Seoul | Special City (*teukbyeolsi*) | 1946 |
+| Busan | Directly-governed city (*jikhalsi*) | 1 Jan 1963 |
+| Daegu | Directly-governed city | 1 Jul 1981 |
+| Incheon | Directly-governed city | 1 Jul 1981 |
+| Gwangju | Directly-governed city | 1 Nov 1986 |
+| 9 provinces (*do*) | Gyeonggi, Gangwon, Chungcheongbuk, Chungcheongnam, Jeollabuk, Jeollanam, Gyeongsangbuk, Gyeongsangnam, Jeju | all pre-1948 |
+| **Daejeon** | **part of Chungcheongnam** | became *jikhalsi* 1 Jan 1989 (simulated year 1) |
+| **Ulsan** | **part of Gyeongsangnam** | became metropolitan city 15 Jul 1997 (simulated year 9) |
+| **Sejong** | **part of Chungcheongnam** | became Special Autonomous City 2 Jul 2012 (simulated year 24) |
+
+**Total at year zero: 14 first-level units.** (All *jikhalsi* were renamed *gwangyeoksi* /
+metropolitan cities in 1995, a nomenclature change only.)
+
+**Recommendation: encode 14 units, not 17.** Two independent reasons:
+1. Period accuracy, which is the whole basis of this project's realism requirement.
+2. It removes a confound. Myanmar A and C both run 14 states. If SK runs 17, any A-vs-SK difference
+   is partly attributable to geographic granularity rather than to constitutional structure — exactly
+   the "parameterisation-driven, not structural" objection Reviewer 2 raised. At 14 units, A, C and SK
+   share state count and that channel is closed.
+
+Change required: `FoundationalConfig.STATE_COUNT` 17 → 14, `FoundationalConfig.SIMULATION_STATE_COUNT`
+17 → 14, `FederalConfig.STATE_COUNT` 17 → 14, and `SimulationConfig.SIMULATION_STATES` from the
+current 17-name tuple to the 14 below. Document the three later creations as a known simplification.
+
+### Population shares, 1990 census reconstructed onto the 14 units of 1988
+
+Source: Statistics Korea 1990 Population and Housing Census, per-division figures as tabulated by
+citypopulation.de (accessed 2026-10-20). Reconstruction: Daejeon (1,049,578) and the Sejong area
+(90,502) folded back into Chungcheongnam; Ulsan (805,355) folded back into Gyeongsangnam. This is
+arithmetic on published census figures, not an estimate. Flagged: 1990 is 2 years after year zero;
+the 1985 census is nearer but I could not retrieve a complete 1985 per-division table online (see
+§6.7 L1).
+
+| Unit (encode as) | Real name | 1990 census pop. | Share | Citizens @1:5000 |
+|---|---|---|---|---|
+| `seoul` | Seoul Special City | 10,612,577 | 24.45% | 2,055 |
+| `gyeonggi` | Gyeonggi-do | 6,050,943 | 13.94% | 1,172 |
+| `busan` | Busan City | 3,854,960 | 8.88% | 746 |
+| `gyeongnam` | Gyeongsangnam-do (incl. Ulsan) | 3,615,549 | 8.33% | 700 |
+| `chungnam` | Chungcheongnam-do (incl. Daejeon, Sejong) | 3,063,504 | 7.06% | 593 |
+| `gyeongbuk` | Gyeongsangbuk-do | 2,729,922 | 6.29% | 529 |
+| `jeonnam` | Jeollanam-do | 2,507,439 | 5.78% | 486 |
+| `daegu` | Daegu City | 2,359,713 | 5.44% | 457 |
+| `jeonbuk` | Jeollabuk-do | 2,069,960 | 4.77% | 401 |
+| `incheon` | Incheon City | 1,922,608 | 4.43% | 372 |
+| `gangwon` | Gangwon-do | 1,580,430 | 3.64% | 306 |
+| `chungbuk` | Chungcheongbuk-do | 1,389,686 | 3.20% | 269 |
+| `gwangju` | Gwangju City | 1,139,003 | 2.62% | 221 |
+| `jeju` | Jeju-do | 514,605 | 1.19% | 100 |
+| | **total** | **43,410,899** | 100.00% | 8,406 |
+
+(The "Citizens @1:5000" column applies each share to the 1988 national citizen count of 8,406, so it
+sums correctly; it is not population/5000 per unit, which would use 1990 totals.)
+
+**Note for whoever encodes this:** South Jeolla and Gwangju were merged into "Jeonnam-Gwangju Special
+Metropolitan City" on 1 July 2026. This is irrelevant to the encoded window but will confuse anyone
+who checks the present-day division list, so it is recorded here.
+
+## 6.3 Per-unit composition — keep `ETHNIC_GROUPS = 1`, encode regional blocs instead
+
+**Do not invent an ethnic array for Korea.** `ETHNIC_GROUPS = 1` is correct: the 1987 Constitution
+recognises no ethnic-group structure and Korea is among the most ethnically homogeneous states in the
+world. Fabricating an 8-slot array here would be exactly the kind of force-fit section 11 of
+`.claude/memory.md` prohibits.
+
+**But Korea does have a real, first-order, intensely documented political cleavage that is regional,
+not ethnic:** *Yeongnam* (Gyeongsang) versus *Honam* (Jeolla) regionalism. It is the single most
+studied variable in Korean electoral behaviour, and it was at its historical maximum in the exact year
+zero. This is the defensible substitute for an ethnic composition array, and it has hard numbers.
+
+### Real sourced data: 13th presidential election, 16 December 1987, by province
+
+Source: 1987 South Korean presidential election results by province (National Election Commission
+figures as tabulated on Wikipedia, accessed 2026-10-20). National: turnout 89.15%; Roh Tae-woo (DJP)
+36.64%, Kim Young-sam (RDP) 28.04%, Kim Dae-jung (PDP) 27.05%, Kim Jong-pil (NDRP) 8.07%.
+
+| Unit | Roh (Daegu/Gyeongbuk base) | Kim Young-sam (Busan/Gyeongnam base) | Kim Dae-jung (Honam base) | Kim Jong-pil (Chungcheong base) |
+|---|---|---|---|---|
+| Seoul | 29.95 | 29.14 | 32.62 | 8.20 |
+| Busan | 32.11 | **55.98** | 9.14 | 2.59 |
+| Daegu | **70.70** | 24.28 | 2.64 | 2.05 |
+| Incheon | 39.95 | 29.99 | 21.31 | 9.21 |
+| Gwangju | 4.82 | 0.52 | **94.41** | 0.23 |
+| Gyeonggi | 41.45 | 27.55 | 22.30 | 8.51 |
+| Gangwon | 59.53 | 26.20 | 8.87 | 5.11 |
+| Chungbuk | 46.90 | 28.23 | 10.98 | 13.53 |
+| Chungnam | 26.22 | 16.06 | 12.43 | **45.03** |
+| Jeonbuk | 14.14 | 1.51 | **83.46** | 0.76 |
+| Jeonnam | 8.17 | 1.15 | **90.28** | 0.33 |
+| Gyeongbuk | **66.39** | 28.17 | 2.38 | 2.59 |
+| Gyeongnam | 41.17 | **51.26** | 4.51 | 2.66 |
+| Jeju | 49.77 | 26.78 | 18.64 | 4.51 |
+
+That the division list in this real electoral table has exactly 14 rows is independent confirmation of
+the 14-unit finding in §6.2.
+
+### Recommended encoding
+
+A 5-element per-unit array over regional-identity blocs, in this slot order:
+`[capital, yeongnam, honam, chungcheong, gangwon_jeju]`.
+
+Korean regional identity is near-perfectly territorial **outside the capital region** — unlike
+Myanmar's ethnicity, which is genuinely mixed within most states. So for 11 of the 14 units the array
+is close to single-category, and the real mixing happens only in Seoul / Incheon / Gyeonggi, which
+absorbed mass internal migration from every region during the 1960s-80s industrialisation.
+
+For Seoul/Incheon/Gyeonggi, the 1987 vote shares above are the best available empirical proxy for
+regional-origin composition, because Korean voters in 1987 voted overwhelmingly along region of
+origin. **This is an INFERENCE from documented voting behaviour, not a census origin table.** The
+better source, not yet retrieved, is Statistics Korea's census "population by place of birth"
+(*출생지별 인구*) table, which gives the actual origin mix of Seoul's population directly — see §6.7 L2.
+
+**Important caveat for the paper**: this regional-bloc array is *not* a drop-in substitute for
+Myanmar's ethnic array in meaning. Myanmar's ethnic structure is constitutionally recognised (reserved
+seats, ethnic transfers); Korea's regional structure has no constitutional status at all. The array
+should therefore drive social/trust/grievance dynamics only, never a constitutional allocation
+mechanism. Encoding it as a federal resource-share key would misrepresent the 1987 Constitution.
+
+## 6.4 Real neighbours and major-power relationships — replacing Myanmar's vector set
+
+Myanmar's 17-vector set (`china` 0.75, `india` 0.45, `thailand` 0.40, `bangladesh` 0.25, `asean` 0.50,
+three illicit networks, three "China proxies", etc.) has almost no overlap with Korea's real external
+situation. ASEAN in particular is not Korea's regional body and should not appear. Proposed replacement:
+
+| Vector | Real relationship at year zero (1988) | Real nature | Notes for the engine |
+|---|---|---|---|
+| `north_korea` | **The defining relationship.** Existential military threat, zero trade. Rangoon bombing 9 Oct 1983 (21 killed incl. 17 ROK officials); KAL 858 bombing 29 Nov 1987 (115 killed) — 17 days before the founding election | Security threat / legitimacy competitor | Should be high and **non-monotonic**: Sunshine Policy 1998-2008 (summits 2000, 2007) genuinely lowered it; 2006 first nuclear test, 2010 Cheonan sinking (46 killed) and Yeonpyeong shelling, 2016 Kaesong closure raised it again |
+| `usa` | Treaty ally (1953 Mutual Defense Treaty); **~43,000 troops in 1987** (Library of Congress / GlobalSecurity.org USFK strength figures, stable through 1988); operational control via Combined Forces Command; also the dominant export market and the external actor that pressed against martial law in June 1987 | Alliance + security guarantor + trade pressure | Dual-signed: security support and economic coercion (1988-89 Super 301 market-opening pressure) |
+| `japan` | Colonial-legacy antagonist **and** the key capital/technology/intermediate-goods supplier. 1965 Normalization Treaty + US$800m claims settlement; chronic bilateral trade deficit | Economic dependency + historical grievance | Recurrent crisis events: comfort-women disputes, Dokdo, 2019 export-control restrictions |
+| `china` | **At year zero: no diplomatic relations.** PRC was the DPRK's ally. Normalised 24 Aug 1992 (simulated year 4); became Korea's largest trade partner by 2004 | Relationship that inverts mid-run | Must be a scripted regime change, not a drift. Also the 2016-17 THAAD economic retaliation |
+| `ussr_russia` | No relations at year zero; Nordpolitik target; normalised 30 Sept 1990. Soviet bloc attended the 1988 Seoul Olympics after boycotting 1980 and 1984 | Diplomatic-breakthrough channel | Low magnitude after 1991 |
+| `imf` | **A real, dated, hard shock, not a background vector**: standby arrangement agreed 3 Dec 1997, US$58.4bn package (then the largest in IMF history), with chaebol, labour-law and financial-supervision conditionality | Conditional lender, one-time | Simulated year 10. Should fire as a scripted/high-probability shock, not drift |
+| `multilateral_institutions` | **Korea had no UN seat at year zero.** ROK and DPRK both admitted 17 Sept 1991 (year 4). APEC founding member 1989; WTO founding member 1995; OECD acceded 12 Dec 1996; G20 from 2008, hosted 2010 | Status-acquisition channel | A rising, legitimacy-conferring vector — structurally the opposite of Myanmar's UN vector, which is humanitarian-pressure-shaped |
+| `global_economy` | Export-led growth model, high trade/GDP ratio | Exposure | Keep |
+| `foreign_investors` | Low at year zero (capital account largely closed); liberalised sharply post-1997 | FDI | Rises after the IMF shock, not before |
+
+**Deliberately absent: illicit networks.** Korea has no real analogue of Myanmar's Golden Triangle
+drug-production economy, arms smuggling, or hawala/crypto laundering at anything like comparable
+salience. Myanmar runs three such vectors; **Korea should run zero.** The nearest real phenomena are
+(a) chaebol-political corruption, which is domestic and already captured by the corruption channel,
+and (b) DPRK illicit activity, which is another state's behaviour, not Korea's. Encoding a Korean
+illicit vector to preserve schema symmetry would be a fabrication. This is a structural difference the
+methodology section should state explicitly.
+
+**Deliberately absent: ASEAN, India, Bangladesh, "China proxies".** No real Korean counterpart.
+
+## 6.5 Historically-calibrated shock types for Korea, 1988-2038
+
+Myanmar's 10 `SHOCK_EVENTS` mostly do not transfer. Real, dated Korean shocks within the window:
+
+| Shock | Real basis (dated) | Comment vs Myanmar's set |
+|---|---|---|
+| `financial_crisis_imf_program` | Asian Financial Crisis; IMF standby 3 Dec 1997, US$58.4bn | Replaces `sanctions` as Korea's dominant external-coercion shock. Far better dated than Myanmar's |
+| `dprk_military_provocation` | 1996 Gangneung submarine infiltration; 1999 and 2002 Yellow Sea clashes; 2010 Cheonan (46 dead) and Yeonpyeong shelling | No Myanmar analogue. Closest is `regional_conflict`, but the mechanism is different: a single hostile state, not refugee/trade spillover |
+| `dprk_nuclear_crisis` | 1993-94 first nuclear crisis / Agreed Framework; 2006 first test; subsequent tests | Distinct from conventional provocation; drives alliance dependence, not trade |
+| `global_recession` | 2008 global financial crisis | Transfers from Myanmar's set directly |
+| `oil_price_shock` | 1990 Gulf War; 2008 spike. Korea imports essentially all its oil | Transfers; higher sensitivity than Myanmar |
+| `pandemic` | 2015 MERS outbreak (186 confirmed cases, 38 deaths, KCDC); 2020 COVID-19 | Transfers |
+| `economic_coercion_by_partner` | 2016-17 Chinese THAAD retaliation (tourism, retail, cultural bans); 2019 Japanese export controls on semiconductor materials | New type. Not sanctions by a hostile bloc but coercion by a major trade partner — structurally distinct and real |
+| `executive_corruption_scandal` | 1995-96 Chun Doo-hwan and Roh Tae-woo trials; 2016-17 Park Geun-hye impeachment and removal; 2024-25 martial-law declaration, impeachment and removal | **This is the one that matters most for this paper.** See §2.4's 122-day self-correction finding. The engine should be able to produce "executive crisis, constitutional removal, continuity" as an outcome, not only "coup, collapse" |
+| `status_legitimacy_gain` (positive) | 1988 Seoul Olympics; 1996 OECD accession; 2002 World Cup; 2012 KORUS FTA in force | Positive shock, analogous to Myanmar's `fdi_boom`/`technology_leap` but legitimacy-driven |
+| `export_technology_boom` (positive) | Semiconductor and later Hallyu/cultural export booms | Positive |
+
+## 6.6 Citizen count summary
+
+| Quantity | Value |
+|---|---|
+| Year zero | 1988 (constitution in force 25 Feb 1988) |
+| Real population | 42,031,247 (World Bank WDI `SP.POP.TOTL`, KOR, 1988) |
+| Ratio | 1:5000 (confirmed by Kaung) |
+| **Citizen agents** | **8,406** |
+| For comparison, locked Myanmar value | 11,000 (= 55,000,000 / 5000) |
+
+## 6.7 Sourcing limitations and flags
+
+**L1 — 1985 census per-division table not retrieved.** The 1985 census (1 Nov 1985) is nearer to year
+zero than the 1990 census I used for shares. Its national total (40,466,577) and major-city figures
+(Seoul 9,645,932; Busan 3,516,807; Daegu 2,030,672; Incheon 1,387,491; Gwangju 906,129; Daejeon
+866,695) are sourced, but I could not retrieve a complete 14-division 1985 table online. KOSIS
+(kosis.kr) holds it. Shares between 1985 and 1990 differ by at most a couple of percentage points
+(Seoul 23.8% in 1985 vs 24.45% in 1990), so the effect on the simulation is small — but a human
+should pull the real 1985 table before this appears in a manuscript table.
+
+**L2 — Seoul's regional-origin mix is an inference, not an observation.** §6.3 uses 1987 vote shares
+as a proxy. The real source is Statistics Korea's census "population by place of birth" table. Chase
+this before the paper claims a sourced capital-region composition.
+
+**L3 — `YEAR_ZERO_TRUST = 0.45` is still unsourced** (already flagged in `constitution_southkorea.py`
+and in §2.6/L2 above). Nothing in this section fixes it. WVS Wave 2 (1990-94) Korea is still the
+earliest usable survey reading and still requires primary microdata extraction.
+
+**F1 — CROSS-SCENARIO STATISTICAL POWER, applies to all 7 scenarios, needs Kaung's decision.**
+Applying 1:5000 to each country's own real year-zero population produces wildly unequal agent counts:
+Pakistan 19,646, Thailand 14,232, Germany 9,969, **South Korea 8,406**, Chile 2,687, against Myanmar's
+locked 11,000. Chile would run on roughly one seventh of Pakistan's population. Across 100 Monte Carlo
+runs this means Chile's confidence intervals will be systematically wider than Pakistan's **for
+reasons that have nothing to do with constitutional structure**. That is precisely Reviewer 2's
+"parameterisation-driven, not structural" objection relocated into population size, and an adversarial
+reviewer will find it. Three options, all of which need Kaung, not an agent:
+(a) ratio-derived N everywhere — most realistic, worst for cross-scenario comparability;
+(b) 11,000 everywhere — best statistically, abandons the realism rationale for the ratio;
+(c) ratio-derived N **plus** explicit reporting of per-scenario N and effective sample size in every
+    results table, with a note that CI width is partly N-driven — defensible, but it must be stated,
+    not discovered by a reviewer.
+Also note (b)/(c) interact with a further inconsistency: Myanmar's locked 11,000 corresponds to
+55,000,000, but Myanmar's own World Bank 2008 population is 48,390,793, which at 1:5000 gives 9,678,
+not 11,000. **The ratio rule as stated is not consistent with the already-published baseline.**
+
+**F2 — `STATE_COUNT` change has engine consequences.** 17 → 14 touches `FoundationalConfig`,
+`FederalConfig` and `SimulationConfig`, and `agents/citizen.py`'s `_assign_state()` independently
+hardcodes Myanmar's 14 names with no constitution access (memory.md bug #16's deliberately-deferred
+note). The state-name generalisation has to land in `citizen.py` before any of this takes effect, or
+the new names will `KeyError` in `_assign_ethnicity()`.

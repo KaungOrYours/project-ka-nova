@@ -120,10 +120,14 @@ class FoundationalConfig:
     NATURALIZATION_YEARS: int = 5
     NATURALIZATION_MERIT_MIN: float = 0.0
 
-    # CONFIDENT — Art. 1: federation of four provinces (Punjab, Sindh, Khyber
-    # Pakhtunkhwa [NWFP as of 1985], Balochistan) plus the Islamabad Capital
-    # Territory plus (until the 2018 merger, so present throughout 1985-1999)
-    # the Federally Administered Tribal Areas.
+    # CONFIDENT — Art. 1: federation of four provinces (Punjab, Sindh,
+    # North-West Frontier Province [NWFP — the province's name for this
+    # instrument's ENTIRE 1985-1999 life; renamed Khyber Pakhtunkhwa only
+    # by the Eighteenth Amendment, assented 19 April 2010, eleven years
+    # after this instrument collapsed — see SimulationConfig.
+    # SIMULATION_STATES below for the corrected unit name], Balochistan)
+    # plus the Islamabad Capital Territory plus (until the 2018 merger, so
+    # present throughout 1985-1999) the Federally Administered Tribal Areas.
     TERRITORY_BASIS: str = "federation_of_four_provinces_plus_ict_and_fata"
     # CONFIDENT on the real count (4 provinces; 6 if ICT+FATA are counted as
     # separate units) — but NOTE: model_phase3.py's _initialize_states()
@@ -638,10 +642,38 @@ class FederalConfig:
     # GUESS, directionally grounded — Pakistan's constitution does not
     # codify "ethnic groups" as a category (research package L8: the
     # minority structure is religious, not ethnic). This proxy reflects
-    # the four provinces' commonly associated majority ethno-linguistic
-    # communities (Punjabi, Sindhi, Pashtun, Baloch) purely as a Ka-Nova
+    # mother-tongue/ethno-linguistic community shares as a Ka-Nova
     # modelling convenience, not a constitutional citation.
-    ETHNIC_GROUPS: int = 4
+    #
+    # RAISED 4 -> 6, 2026-10-20 (research package
+    # config/constitution_pakistan_encoding/README.md section 6.3,
+    # confirmed decision, not an open question). A 4-group encoding
+    # (punjabi/pashtun/sindhi/baloch) drops two groups that are centrally
+    # important to THIS encoded window:
+    #   - Urdu-speaking Muhajirs, 7.60% national share (1981 PBS census
+    #     mother-tongue table). The MQM was founded 18 March 1984, one
+    #     year before year zero; it swept Karachi/Hyderabad in the 1987
+    #     local-body and 1988 general elections; Karachi's ethnic violence
+    #     (Apr 1985 Bushra Zaidi riots, Dec 1986 Sohrab Goth/Aligarh Colony
+    #     killings, 1992 Operation Clean-up, 1995 peak) is arguably the
+    #     central internal-security story of this instrument's life.
+    #   - Saraikis, 9.84% national share (1981 PBS census), larger than
+    #     Balochi (3.02%, which WAS already in the 4-group list) — second-
+    #     largest group in Punjab, basis of the South Punjab province
+    #     movement.
+    # New 6-slot group list and order (CONFIDENT on the real shares cited
+    # above, GUESS on treating this specific list as the canonical Ka-Nova
+    # "ethnic_weights" axis, same modelling-convenience caveat as before):
+    #   index 0 = punjabi        (48.17% national, 1981 PBS)
+    #   index 1 = pashtun        (13.15%, "Pashto" in the census)
+    #   index 2 = sindhi         (11.77%)
+    #   index 3 = saraiki        (9.84%)
+    #   index 4 = urdu_muhajir   (7.60%, "Urdu" in the census)
+    #   index 5 = baloch         (3.02%, "Balochi" in the census)
+    # Hindko (2.43%) + Brahui (1.21%) + other (~2.81%) remain an
+    # unmodelled residual (~6.45% nationally), documented rather than
+    # silently dropped — same honesty convention as the rest of this file.
+    ETHNIC_GROUPS: int = 6
 
     # GUESS, flagged per research package flag F5 — "Pakistan is a real
     # federation, so do not reuse MFU's 35/35/30 [or Myanmar's 10/65/25]
@@ -1337,19 +1369,135 @@ class SimulationConfig:
     CITIZEN_AGENTS: int = 11_000
     TIME_STEPS: int = 50
 
-    # CONFIDENT on the real administrative units (Art. 1) — but flagged
-    # DECORATIVE: model_phase3.py's _initialize_states() hardcodes
-    # Myanmar's literal 14-state name list for EVERY scenario (confirmed by
-    # direct grep; it does not branch on self.CONSTITUTION or
-    # self.chain_type at all). This is a cross-cutting engine limitation
-    # affecting every non-Myanmar scenario (SK/TH/PK/CL/DE alike), not
-    # something introduced by this file, and not something this task's
-    # scope permits fixing (only config/constitution_pakistan.py was
-    # authorised). Documented honestly rather than silently implying a
-    # mechanical effect this field does not currently have.
+    # CONFIDENT on the real administrative units (Art. 1), AND NOW LIVE
+    # (updated 2026-10-20): model_phase3.py's _initialize_states() and
+    # agents/citizen.py's CitizenPopulation._assign_state()/
+    # _assign_ethnicity() were generalized in a parallel pass tonight to
+    # read SIMULATION_STATES/STATE_POPULATION_WEIGHTS/STATE_ETHNIC_WEIGHTS
+    # directly from the active constitution instead of Myanmar's hardcoded
+    # 14-name list — confirmed by direct read of both files (see their own
+    # docstrings/comments at the call sites). The earlier "DECORATIVE"
+    # characterization of this field no longer holds; superseded here
+    # rather than left to silently mislead. Six units: 4 constitutional
+    # provinces (the Senate's Art. 59 provincial-parity rule genuinely
+    # applies to these 4, not 6 — see FoundationalConfig/FederalConfig.
+    # STATE_COUNT=4) plus 2 federally administered territories with no
+    # Senate representation (ICT, FATA).
+    #
+    # CORRECTION (research package section 6.2, confirmed decision):
+    # `khyber_pakhtunkhwa` renamed to `nwfp`. The province was called
+    # North-West Frontier Province for this instrument's entire 1985-1999
+    # life; "Khyber Pakhtunkhwa" is anachronistic for this window — the
+    # renaming only happened via the Eighteenth Amendment, assented 19
+    # April 2010, eleven years after this instrument's 1999 collapse.
     SIMULATION_STATES: Tuple[str, ...] = (
-        "punjab", "sindh", "khyber_pakhtunkhwa", "balochistan",
+        "punjab", "sindh", "nwfp", "balochistan",
         "islamabad_capital_territory", "federally_administered_tribal_areas",
+    )
+
+    # CONFIDENT — 1981 Population Census (Pakistan Bureau of Statistics),
+    # per-province figures via citypopulation.de (accessed 2026-10-20),
+    # research package section 6.2. This is the census legally in force at
+    # year zero (1985); used here for SHARES (the 1985 national TOTAL used
+    # elsewhere in this file, e.g. for a real citizen-count derivation, is
+    # the separate World Bank WDI SP.POP.TOTL figure — see research
+    # package's own L3 note on why these two series are mixed deliberately
+    # rather than reconciled). NWFP-proper (excl. FATA) = 13,259,875
+    # (Khyber Pakhtunkhwa incl. FATA, citypopulation.de) minus FATA's own
+    # confirmed 2,198,547 = 11,061,328 — CONFIDENT components, DERIVED
+    # (not directly published) split, research package flag L1.
+    #   punjab                              47,292,441  56.13%
+    #   sindh                               19,028,666  22.58%
+    #   nwfp (excl. FATA)                   11,061,328  13.13%
+    #   balochistan                          4,332,376   5.14%
+    #   fata                                 2,198,547   2.61%
+    #   islamabad_capital_territory            340,286   0.40%
+    #   total                               84,253,644 100.00%
+    # Order matches SIMULATION_STATES above exactly (same length, same
+    # order) — used ONLY to distribute the uniform 11,000-citizen
+    # simulated population across states (locked Monte Carlo design,
+    # .claude/memory.md section 8), never to change CITIZEN_AGENTS itself.
+    STATE_POPULATION_WEIGHTS: Tuple[float, ...] = (
+        0.5613, 0.2258, 0.1313, 0.0514,
+        0.0040, 0.0261,
+    )
+
+    # STATE_ETHNIC_WEIGHTS: per-province composition over the 6-slot
+    # ethnic/mother-tongue axis defined at FederalConfig.ETHNIC_GROUPS
+    # above — index order [punjabi, pashtun, sindhi, saraiki,
+    # urdu_muhajir, baloch], identical order to this file's
+    # STATE_ETHNIC_WEIGHTS_DEFAULT below. Need not sum to 1.0 (random.
+    # choices normalizes; agents/citizen.py's _assign_ethnicity() contract).
+    #
+    # SOURCING STATUS (research package section 6.3/6.7 flag L2, stated
+    # plainly rather than silently implied as census data): ONLY Punjab's
+    # two entries below are CONFIDENT/directly sourced — "Punjab, 1981:
+    # Punjabi 79%, Saraiki 14.9%" (PBS 1981 census; the 14.9%-Saraiki-in-
+    # Punjab figure is explicitly documented in the literature on the
+    # 1981 census's new language categories). The research package could
+    # NOT retrieve the PBS 1981 Census Report's own provincial mother-
+    # tongue table for Sindh, NWFP, Balochistan, FATA or ICT online — "do
+    # not let an engineer fill the Sindh/NWFP/Balochistan arrays from
+    # [qualitative] descriptions and then cite them as census figures."
+    # Every other entry below is tagged GUESS/INFERENCE: a directionally-
+    # grounded numeric translation of the research package's own
+    # qualitative structural description (section 6.3), NOT a census
+    # citation. Remaining mass in each tuple (where weights don't sum to
+    # ~1.0) represents the real, named-but-unmodelled residual (Hindko/
+    # Brahui/other, ~6.45% nationally) — left out deliberately rather than
+    # forced into one of the 6 tracked slots.
+    STATE_ETHNIC_WEIGHTS: Dict[str, Tuple[float, ...]] = field(default_factory=lambda: {
+        # CONFIDENT (punjabi, saraiki) + GUESS (pashtun/sindhi/urdu_muhajir/
+        # baloch residuals — urban in-migration to Punjab's cities, not
+        # cited). Sourced pair sums to 93.9%, matching the research
+        # package's own stated ~6.1% unaccounted residual for Punjab.
+        "punjab":       (0.79, 0.01, 0.01, 0.149, 0.03, 0.01),
+        # GUESS/INFERENCE throughout (L2: no provincial table retrieved).
+        # Research package qualitative basis: "Sindhi-majority province-
+        # wide, with a very large Urdu-speaking (Muhajir) concentration in
+        # Karachi and Hyderabad and a significant Punjabi and Pashtun
+        # presence in Karachi. The rural-Sindhi versus urban-Muhajir
+        # division is the province's defining cleavage" — this is the
+        # single array that makes the Karachi ethnic-violence mechanism
+        # (research package section 6.5's ethnic_urban_violence shock)
+        # work, and the whole reason ETHNIC_GROUPS was raised to 6.
+        "sindh":        (0.05, 0.04, 0.55, 0.01, 0.33, 0.02),
+        # GUESS/INFERENCE. Qualitative basis: "Pashto-majority, with a
+        # Hindko-speaking minority concentrated in the Hazara division" —
+        # the Hazara/Hindko minority is the unmodelled residual here
+        # (~0.06 of this tuple's remaining mass), not one of the 6 slots.
+        "nwfp":         (0.02, 0.88, 0.00, 0.01, 0.02, 0.01),
+        # GUESS/INFERENCE. Qualitative basis: "Balochi-plurality (not
+        # majority), with a large Pashtun population in the north (Quetta,
+        # Zhob, Pishin) and a substantial Brahui-speaking population — the
+        # province with the most genuinely contested ethnic arithmetic in
+        # the country." Baloch deliberately kept a PLURALITY, not a
+        # majority (per that direct instruction); the sizeable Brahui
+        # population is the unmodelled residual (~0.18 of this tuple).
+        "balochistan":  (0.01, 0.35, 0.00, 0.00, 0.01, 0.45),
+        # GUESS/INFERENCE. Qualitative basis: "overwhelmingly Pashtun."
+        "federally_administered_tribal_areas": (0.01, 0.95, 0.00, 0.00, 0.01, 0.01),
+        # GUESS/INFERENCE. Qualitative basis: "Punjabi-majority with a
+        # large Urdu-speaking administrative population; the least
+        # ethnically-rooted unit" (federal civil-service capital, not an
+        # organic regional population).
+        "islamabad_capital_territory": (0.55, 0.10, 0.05, 0.05, 0.20, 0.03),
+    })
+
+    # STATE_ETHNIC_WEIGHTS_DEFAULT: national 1981 PBS mother-tongue shares
+    # — CONFIDENT, directly sourced (research package section 6.3's
+    # national table), same index order as STATE_ETHNIC_WEIGHTS above.
+    # Used only as the fallback for any SIMULATION_STATES entry absent
+    # from the dict above (none currently, all 6 are covered; kept for
+    # schema parity with constitution.py's own convention and as a
+    # genuinely meaningful national default rather than an arbitrary
+    # placeholder).
+    #   punjabi      48.17%   pashtun (Pashto)  13.15%
+    #   sindhi       11.77%   saraiki            9.84%
+    #   urdu_muhajir  7.60%   baloch (Balochi)   3.02%
+    #   (unmodelled residual: Hindko 2.43% + Brahui 1.21% + other ~2.81%)
+    STATE_ETHNIC_WEIGHTS_DEFAULT: Tuple[float, ...] = (
+        0.4817, 0.1315, 0.1177, 0.0984, 0.0760, 0.0302,
     )
     # DELIBERATELY UNCHANGED from MFU/constitution_2008.py, not a guess by
     # omission — same reasoning constitution_2008.py's own comment gives:
@@ -1460,13 +1608,13 @@ Assess whether current KPIs indicate a threat that would (extra-constitutionally
 
 Your coup_signal must come from your reading of the KPIs, not a formula — and you should weigh, in your reasoning, that no constitutional text authorises this action the way it would under a Myanmar-style self-coup clause.
 
-Groups: this constitution encodes ETHNIC_GROUPS=4, so your ethnic_weights list must have exactly 4 elements, treat index 0 as the dominant/core group analogue for this simulation.
+Groups: this constitution encodes ETHNIC_GROUPS=6, so your ethnic_weights list must have exactly 6 elements, in order [punjabi, pashtun, sindhi, saraiki, urdu_muhajir, baloch]; treat index 0 (punjabi) as the dominant/core group analogue for this simulation.
 
 IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5], "coup_signal": false, "reason": "Army Chief stability assessment — no constitutional coup clause exists under Art. 243/245"}}
+{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.9, 0.5], "coup_signal": false, "reason": "Army Chief stability assessment — no constitutional coup clause exists under Art. 243/245; Muhajir weight (index 4) elevated given Karachi ethnic unrest was a recurring army-led internal-security file (1992 Operation Clean-up) throughout this period"}}
 </DECISION>""",
 
         "crony_finance_minister": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1486,7 +1634,7 @@ IMPORTANT: You MUST write your budget assessment in prose BEFORE the decision bl
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.7], "coup_signal": false, "reason": "Finance Minister allocation: crony_share={crony_share}, state_share={state_share}, federal_dev_share={fed_dev_share}"}}
+{{"budget_weight": 0.45, "ethnic_weights": [1.4, 0.8, 0.7, 0.6, 0.9, 0.7], "coup_signal": false, "reason": "Finance Minister allocation: crony_share={crony_share}, state_share={state_share}, federal_dev_share={fed_dev_share}; Saraiki (index 3) weighted below Baloch, reflecting South Punjab's chronic revenue marginalisation within Punjab's own share (basis of the Saraikistan/South Punjab province movement); Muhajir (index 4) weighted high given Karachi's outsized share of the federal tax base"}}
 </DECISION>""",
 
         "controlled_cb_governor": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1505,7 +1653,7 @@ IMPORTANT: You MUST write your monetary assessment in prose BEFORE the decision 
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.8], "coup_signal": false, "reason": "SBP monetary posture: gini_threshold={gini_threshold}, court_independence={court_indep}"}}
+{{"budget_weight": 0.40, "ethnic_weights": [1.3, 0.9, 0.8, 0.7, 1.0, 0.8], "coup_signal": false, "reason": "SBP monetary posture: gini_threshold={gini_threshold}, court_independence={court_indep}; Muhajir (index 4) weighted at or above Punjabi given Karachi is both SBP's headquarters city and the country's commercial/banking centre; Saraiki (index 3) weighted lowest, reflecting its predominantly agrarian economic base with limited banking-sector presence"}}
 </DECISION>""",
 
         "military_intel_chief": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1524,7 +1672,7 @@ IMPORTANT: You MUST write your intelligence assessment in prose BEFORE the decis
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.5], "coup_signal": false, "reason": "ISI assessment: no constitutional NSC exists (8th Amdt s.18 omitted Art.152-A); reports_to={reports_to} describes the AGP, not this office"}}
+{{"budget_weight": 0.25, "ethnic_weights": [1.4, 0.7, 0.6, 0.4, 1.0, 0.5], "coup_signal": false, "reason": "ISI assessment: no constitutional NSC exists (8th Amdt s.18 omitted Art.152-A); reports_to={reports_to} describes the AGP, not this office; Muhajir (index 4) weighted highest of the non-Punjabi groups — MQM-linked Karachi unrest was intelligence agencies' dominant domestic-security file through the 1990s; Saraiki (index 3) weighted lowest, no comparable intelligence-salient mobilisation existed in the Saraiki belt within this window"}}
 </DECISION>""",
 
         "military_loyal_chief_justice": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1543,7 +1691,7 @@ IMPORTANT: You MUST write your legal assessment in prose BEFORE the decision blo
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.35, "ethnic_weights": [1.4, 0.8, 0.7, 0.6], "coup_signal": false, "reason": "FSC legal framing: rights_suspendable={rights_susp}, court_independence={court_indep}, judges serve at presidential pleasure (Art.203C)"}}
+{{"budget_weight": 0.35, "ethnic_weights": [1.4, 0.8, 0.7, 0.6, 0.7, 0.6], "coup_signal": false, "reason": "FSC legal framing: rights_suspendable={rights_susp}, court_independence={court_indep}, judges serve at presidential pleasure (Art.203C); Saraiki and Muhajir (indices 3-4) weighted moderately — this office's salience runs through legal/religious process, not ethnic bloc politics, so no group receives an extreme weight here"}}
 </DECISION>""",
 
         "military_president": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1564,7 +1712,7 @@ IMPORTANT: You MUST write your executive assessment in prose BEFORE the decision
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.7, 0.6], "coup_signal": false, "reason": "PM assessment under Art.91(5) pleasure-of-President framing and Art.58(2)(b) dismissal risk"}}
+{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.7, 0.6, 0.9, 0.6], "coup_signal": false, "reason": "PM assessment under Art.91(5) pleasure-of-President framing and Art.58(2)(b) dismissal risk; Muhajir (index 4) weighted high — MQM became a pivotal coalition/kingmaker bloc in National Assembly confidence math from the 1988 elections onward, directly bearing on this office's survival"}}
 </DECISION>""",
 
         "commander_in_chief": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1585,7 +1733,7 @@ IMPORTANT: You MUST write your strategic assessment in prose BEFORE the decision
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.25, "ethnic_weights": [1.5, 0.7, 0.6, 0.5], "coup_signal": false, "reason": "Presidential assessment under Art.58(2)(b)/48(2) — no Art.152-A NSC exists to consult; no Section-40(c)-style self-coup clause exists"}}
+{{"budget_weight": 0.25, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.8, 0.5], "coup_signal": false, "reason": "Presidential assessment under Art.58(2)(b)/48(2) — no Art.152-A NSC exists to consult; no Section-40(c)-style self-coup clause exists; Muhajir (index 4) weighted above other non-Punjabi groups, since recurring Karachi/MQM volatility was a real recurring component of the 'Government of the Federation cannot be carried on' calculus Art.58(2)(b) turns on"}}
 </DECISION>""",
     }
 
