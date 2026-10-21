@@ -34,7 +34,17 @@ mock_constitution = types.SimpleNamespace(
         RIGHTS_SUSPENDABLE=False,
     ),
 )
-sys.modules.setdefault("config", types.ModuleType("config"))
+# The mocked `config` must still behave as a *package*, otherwise any real
+# submodule import inside the engine fails with "'config' is not a package".
+# This bit when bug #11 added `from config.scenario_registry import SCENARIOS`
+# to engine/elite_agents_v3.py:57 — the mock only pre-registered
+# config.constitution / config.constitution_2008, so the whole test module
+# stopped importing. Giving the stub a real __path__ lets genuine submodules
+# (scenario_registry, which is importlib-based and self-contained) load for
+# real, while the two entries explicitly injected below still shadow theirs.
+_config_stub = types.ModuleType("config")
+_config_stub.__path__ = [str(Path(__file__).resolve().parent.parent / "config")]
+sys.modules.setdefault("config", _config_stub)
 sys.modules.setdefault("config.constitution", types.ModuleType("config.constitution"))
 sys.modules["config.constitution"].CONSTITUTION = mock_constitution
 

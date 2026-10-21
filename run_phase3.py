@@ -76,6 +76,16 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
             "progress.json",
             f"cves_violations_{scenario}.jsonl",
             f"cves_scores_{scenario}.jsonl",
+            # Both of these are append-mode writers in
+            # engine/elite_agents_v3.py (:775, :779). Without resetting them
+            # here, a fresh campaign appends onto whatever the repo already
+            # shipped (the published July elite_decisions_A/C logs are tracked
+            # in git), mixing old and new data in one file with no boundary.
+            # suppression_log_* additionally feeds the live suppression_count
+            # in _update_progress(), so a stale file inflates the number shown
+            # on Telegram/Grafana for the whole run.
+            f"elite_decisions_{scenario}.jsonl",
+            f"suppression_log_{scenario}.jsonl",
         ]:
             p = RESULTS_DIR / f
             if p.exists():
@@ -314,7 +324,13 @@ class KaNovaPhase3Runner:
             self.errors.append({
                 "run_id":   result["run_id"],
                 "scenario": result["scenario"],
-                "error":    result["error"]
+                "error":    result["error"],
+                # run_single() already captures this; it used to be dropped on
+                # the floor, leaving only the 80-char tqdm line below. On a
+                # 24-30hr remote pod run that was the difference between
+                # diagnosing a failure from run_log_<scenario>.json and having
+                # to reproduce it locally.
+                "traceback": result.get("traceback", ""),
             })
             tqdm.write(
                 f"  ERROR r={result['run_id']}: {result['error'][:80]}"

@@ -109,7 +109,21 @@ def get_gini_coefficient(m):
     return m.shared_data.get("gini_coefficient", 0.55)
 
 def get_ethnic_harmony(m):
-    return m.shared_data.get("ethnic_harmony", 0.35)
+    # shared_data["ethnic_harmony"] is seeded at 0.35 (:375) and never written
+    # again anywhere in the live Phase 3 pipeline, so this reporter published a
+    # frozen 0.35 for every scenario and every year — while feedback/loops.py's
+    # S1 loop (:779) writes the real trajectory to "ethnic_harmony_index".
+    # The dead key was already identified and documented by the bug #3
+    # north-star fix (see _update_north_star_progress's docstring, which routes
+    # around it the same way), but this reporter itself was left reading it, so
+    # the "ethnic_harmony" column in every results CSV — and the Ethnic Harmony
+    # row in analysis/kpi.py's Table 1 (:1074) plus its ethnic_harmony-vs-
+    # stability correlation (:863) — were computed on a constant.
+    # Same fallback-chain convention as the north-star fix.
+    return m.shared_data.get(
+        "ethnic_harmony_index",
+        m.shared_data.get("ethnic_harmony", 0.35),
+    )
 
 def get_stability_index(m):
     return m.shared_data.get("stability_index", 0.18)

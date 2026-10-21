@@ -3,6 +3,15 @@ Ka-Nova Full Systems Diagnostic
 Run before every paper run to verify all layers are operational.
 Usage: python3 tests/test_full_diagnostic.py
 """
+import sys
+import os
+
+# The docstring above documents `python3 tests/test_full_diagnostic.py`, which
+# only works if the repo root is importable. Same bootstrap feedback/loops.py
+# and the other test entry points already use. Without it the documented
+# invocation of the pre-paper-run diagnostic dies on ModuleNotFoundError.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from model_phase3 import KaNovaModelPhase3
 from agents.citizen import CitizenAgent
 from agents.official import OfficialAgent

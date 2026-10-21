@@ -1,6 +1,6 @@
 """
 Ka-Nova — Prometheus Metrics Exporter
-Reads progress.json and suppression_log.jsonl every 15s
+Reads progress.json and suppression_log_<scenario>.jsonl every 15s
 and exposes metrics on http://localhost:8000/metrics
 Grafana scrapes this endpoint for live dashboards.
 """
@@ -19,7 +19,10 @@ logger = logging.getLogger(__name__)
 
 RESULTS_DIR = Path("results_phase3")
 PROGRESS_FILE = RESULTS_DIR / "progress.json"
-SUPPRESSION_LOG = RESULTS_DIR / "suppression_log.jsonl"
+# Per-scenario since bug #18 split the shared CVES/suppression logs.
+# Nothing writes a bare "suppression_log.jsonl" any more, so the old
+# constant made kanova_suppression_total sit at 0 for every run.
+SUPPRESSION_LOG_GLOB = "suppression_log_*.jsonl"
 SCRAPE_INTERVAL = 15  # seconds
 
 # ─── Metrics ────────────────────────────────────────────────────────────────
@@ -107,9 +110,9 @@ def read_and_export():
     # ── Suppressions
     try:
         count = 0
-        if SUPPRESSION_LOG.exists():
-            with open(SUPPRESSION_LOG) as f:
-                count = sum(1 for line in f if line.strip())
+        for fp in RESULTS_DIR.glob(SUPPRESSION_LOG_GLOB):
+            with open(fp) as f:
+                count += sum(1 for line in f if line.strip())
 
         kanova_suppression_total.set(count)
 
@@ -120,7 +123,7 @@ def read_and_export():
             _last_suppression_count = count
 
     except Exception as e:
-        logger.error(f"Error reading suppression_log.jsonl: {e}")
+        logger.error(f"Error reading {SUPPRESSION_LOG_GLOB}: {e}")
 
     kanova_exporter_up.set(1)
 

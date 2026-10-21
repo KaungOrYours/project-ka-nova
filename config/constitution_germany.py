@@ -1977,6 +1977,18 @@ class GermanyConstitution:
         # and this file's TatmadawTransitionConfig docstring above.
         self.tatmadaw_transition = TatmadawTransitionConfig()
 
+        # Module-level-attribute hooks engine/elite_agents_v3.py reads via
+        # getattr(constitution, "ELITE_ROLE_TITLES"/"ELITE_SYSTEM_PROMPTS", None)
+        # at :154 and :737. These two assignments were missing while the
+        # module-level dicts above were fully written, so the engine silently
+        # fell back to Myanmar/MFU-flavoured prompt text for every German
+        # elite agent — and bug #19's fix to the ethnic_weights output-format
+        # line in these same prompts was inert. Same data-present-never-read
+        # class as bugs #11/#14. The other four new constitutions already
+        # assign these; Germany was the only one that did not.
+        self.ELITE_ROLE_TITLES = ELITE_ROLE_TITLES
+        self.ELITE_SYSTEM_PROMPTS = ELITE_SYSTEM_PROMPTS
+
     def validate(self) -> bool:
         """Validate critical Basic Law (as amended through 1968) constraints"""
         checks = [

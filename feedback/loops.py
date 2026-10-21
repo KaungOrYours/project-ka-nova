@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING
 from config.constitution import CONSTITUTION
 
 if TYPE_CHECKING:
-    from model import KaNovaModel
+    from model_phase3 import KaNovaModelPhase3
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -58,7 +58,7 @@ class FeedbackEngine:
         Social loops run last — they respond to both governance and economics
     """
 
-    def __init__(self, model: "KaNovaModel"):
+    def __init__(self, model: "KaNovaModelPhase3"):
         self.model = model
         self.year = 0
 
