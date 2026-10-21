@@ -73,7 +73,11 @@ COUP_TRUST_TRIGGER      = 0.30
 
 ETHNIC_GROUP_NAMES = ["bamar", "shan", "karen", "kachin", "chin", "mon", "rakhine", "kayah"]
 
-RESULTS_DIR = Path("results_phase3")
+# Honours KA_NOVA_RESULTS_DIR (same as analysis/kpi.py and
+# charts/visualize.py) so a throwaway/diagnostic run can be fully
+# isolated from the tracked results_phase3/ files instead of
+# overwriting them and needing a git checkout afterwards.
+RESULTS_DIR = Path(os.getenv("KA_NOVA_RESULTS_DIR", "results_phase3"))
 
 # ── 7-agent chain rosters ─────────────────────────────────────────────────────
 # Renamed from CHAIN_ORDER_A/_C (kept below as aliases for any external

@@ -53,7 +53,11 @@ try:
 except ImportError:
     WANDB_AVAILABLE = False
 
-RESULTS_DIR = Path("results_phase3")
+# Honours KA_NOVA_RESULTS_DIR (same as analysis/kpi.py and
+# charts/visualize.py) so a throwaway/diagnostic run can be fully
+# isolated from the tracked results_phase3/ files instead of
+# overwriting them and needing a git checkout afterwards.
+RESULTS_DIR = Path(os.getenv("KA_NOVA_RESULTS_DIR", "results_phase3"))
 # Registry-driven — one results subdirectory per registered scenario code
 # (all 7), not a hardcoded A/C pair. Directories are created regardless of
 # whether that scenario's constitution module is encoded yet (cheap,

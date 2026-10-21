@@ -40,7 +40,11 @@ except ImportError:
 
 from config.constitution import CONSTITUTION
 
-RESULTS_DIR = Path("results_phase3")
+# Honours KA_NOVA_RESULTS_DIR (same as analysis/kpi.py and
+# charts/visualize.py) so a throwaway/diagnostic run can be fully
+# isolated from the tracked results_phase3/ files instead of
+# overwriting them and needing a git checkout afterwards.
+RESULTS_DIR = Path(os.getenv("KA_NOVA_RESULTS_DIR", "results_phase3"))
 
 # L4 behaviour — CONFIRM WITH KAUNG: the two handoff docs conflict on this.
 # DEFAULT = "flag" (consistent with emergence claim — outliers may be real).

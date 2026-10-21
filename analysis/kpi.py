@@ -1012,7 +1012,10 @@ class SensitivityAnalyzer:
         is the actual sensitivity-analysis deliverable referenced in the
         module docstring and requested by both IEEE Access reviewers.
 
-        Total runs = n_sample x (2k + 2), k = GSA_PROBLEM["num_vars"] (13).
+        Total runs = n_sample x (k + 2), k = GSA_PROBLEM["num_vars"] (13),
+        i.e. 960 at the default n_sample=64. (The 2k+2 form applies only
+        when calc_second_order=True; this method passes False, so the
+        earlier 2k+2 figure overstated the cost by ~87%.)
         Defaults (n_sample=64, n_citizens=1000) match the RunPod-scale design
         in feasibility_check.py — reduce both for a fast local smoke test.
 
