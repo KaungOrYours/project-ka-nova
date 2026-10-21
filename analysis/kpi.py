@@ -88,7 +88,18 @@ KPI_COLUMNS = [
 MYANMAR_BASELINES = {
     "corruption_index":  0.72,   # Transparency International CPI 2023
     "trust_index":       0.22,   # World Bank governance 2022
-    "gini_coefficient":  0.55,   # World Bank 2017
+    # UNIT MISMATCH, flagged 2026-10-21, not silently changed.
+    # The World Bank 2017 figure is Myanmar's household income/consumption
+    # Gini. The simulated "gini_coefficient" is dispersion of GDP across
+    # administrative units (see FederalDevFundAgent._calculate_gini), a
+    # different quantity, and it starts near 0.06-0.08 because states begin
+    # near-identical. Validating the simulated series against this baseline
+    # therefore compares incommensurable measures. Needs a decision from
+    # senior-data-analyst: either source a real subnational/regional-GDP
+    # dispersion benchmark, or report this metric without an external
+    # calibration target and say so. Left as-is so no published number moves
+    # without that decision.
+    "gini_coefficient":  0.55,   # World Bank 2017 -- SEE UNIT MISMATCH NOTE ABOVE
     "employment_rate":   0.58,   # Myanmar Census 2014
     "ethnic_harmony":    0.22,   # V-Dem estimated
     "stability_index":   0.18,   # World Bank political stability 2022
@@ -134,13 +145,20 @@ GSA_PROBLEM = {
         "year_zero_corruption",
     ],
     "bounds": [
-        [0.25, 0.45],   # merit_performance_weight
+        # Re-centred 2026-10-21. Was [0.25, 0.45], which excluded the live
+        # default of 0.20 (config/constitution.py PERFORMANCE_WEIGHT), so
+        # Sobol was sampling a region that did not contain the actual
+        # configuration being analysed. Same 0.20 width, centred on 0.20.
+        [0.10, 0.30],   # merit_performance_weight (default 0.20)
         [0.60, 0.90],   # analysis_threshold (veto)
         [0.25, 0.45],   # state_share
         [0.20, 0.40],   # ethnic_direct_share
         [1.00, 2.00],   # trust_acceleration_multiplier
         [0.10, 0.30],   # trust_acceleration_trigger_corruption
-        [0.55, 0.85],   # iig_investigation_trigger
+        # Re-centred 2026-10-21. Was [0.55, 0.85], which excluded the live
+        # default of 0.45 — the stale pre-"lowered from 0.70" value noted in
+        # constitution.py. Same 0.30 width, centred on 0.45.
+        [0.30, 0.60],   # iig_investigation_trigger (default 0.45)
         [0.75, 0.95],   # iig_entry_merit_min
         [0.20, 0.40],   # coup_trigger_loyalty
         [0.60, 0.85],   # year_zero_corruption
@@ -1072,7 +1090,10 @@ class PublicationTables:
             ("iig_effectiveness", "IIG Effectiveness"),
             ("coup_probability", "Coup Probability"),
             ("ethnic_harmony", "Ethnic Harmony"),
-            ("gini_coefficient", "Gini Coefficient"),
+            # Labelled explicitly: this is geographic (state-GDP) inequality,
+            # not citizen-income inequality. See the unit-mismatch note on
+            # MYANMAR_BASELINES["gini_coefficient"].
+            ("gini_coefficient", "Gini (state-GDP inequality)"),
             ("employment_rate", "Employment Rate"),
             ("knowledge_capital", "Knowledge Capital"),
             ("north_star_progress", "North Star Progress"),

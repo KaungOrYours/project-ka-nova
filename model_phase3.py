@@ -106,6 +106,10 @@ def get_north_star_progress(m):
     return m.shared_data.get("north_star_progress", 0.0)
 
 def get_gini_coefficient(m):
+    # Geographic inequality (dispersion of GDP across administrative units),
+    # not citizen-income inequality. Written only by
+    # FederalDevFundAgent._calculate_gini(); see its docstring for why the
+    # distinction matters when this column is compared to external data.
     return m.shared_data.get("gini_coefficient", 0.55)
 
 def get_ethnic_harmony(m):

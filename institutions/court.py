@@ -205,7 +205,10 @@ class ConstitutionalCourtSystem:
     def _conduct_constitutional_review(self, year: int):
         """
         10-year mandatory constitutional review.
-        Article 12.3 — Citizens Assembly by civic lottery (500 members).
+        Article 12.3 — Citizens Assembly by civic lottery. Size is read from
+        CONSTITUTION.amendment.CITIZENS_ASSEMBLY_SIZE (320 under MFU v7), not
+        the 500 this docstring used to claim; 500 is the vestigial, unread
+        SafeguardConfig.ASSEMBLY_SIZE. The code below was always correct.
         """
         from agents.citizen import CitizenAgent
         from agents.official import OfficialAgent

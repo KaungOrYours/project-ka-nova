@@ -20,6 +20,23 @@ Usage:
     python3 run.py --citizens 50000 --steps 50 --runs 100 --workers 128
     python3 run.py --citizens 50000 --steps 50 --runs 100 --use-llm --workers 1
 ================================================================================
+
+LEGACY, PHASE 2, NON-FUNCTIONAL. Flagged 2026-10-21.
+
+This module imports `KaNovaModel` from a root-level `model.py` that no longer
+exists; the Phase 1/2 model now lives at `archive/model.py`. Running this file
+raises ImportError on its first import line. It is retained as a historical
+record of the Phase 2 scenario runners, NOT as a usable entry point.
+
+The live Phase 3 entry point is `run_phase3.py`:
+
+    python3 run_phase3.py --scenario A --runs 100 --citizens 11000 --steps 50
+
+Not repaired because it targets the Phase 2 KaNovaModel API, which Phase 3
+replaced (KaNovaModelPhase3, registry-driven scenarios); porting it would mean
+rewriting it against an engine it was never written for. Open question for the
+reproducibility package: whether these legacy runners should ship at all, since
+a reviewer who clones the repo and runs one gets an immediate traceback.
 """
 
 from __future__ import annotations

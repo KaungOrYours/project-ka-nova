@@ -207,7 +207,26 @@ class IIGSystem:
     def _enforce_post_service_restrictions(self):
         """
         Article 7.9 — Former IIG agents cannot enter chambers.
-        Track and enforce permanently.
+
+        KNOWN NO-OP BY CONSTRUCTION (bug #4, re-characterized 2026-10-20,
+        documented 2026-10-21). This registers the unique_id of every current
+        IIGAgent, then checks those ids against current OfficialAgent
+        instances. That can only ever match if an agent moves from an IIG role
+        into an official role while keeping the same unique_id, and no such
+        role-transition mechanism exists anywhere in agents/oversight.py or
+        agents/official.py: agents are created once per population with a
+        fixed role and id range for the simulation's lifetime. So the
+        disqualification branch below has never fired and cannot fire as
+        written.
+
+        This is NOT an off-by-N id-range bug and must not be "fixed" by
+        shifting id ranges. Making Article 7.9 mechanically real requires a
+        genuine role-transition / identity-carryover design (an agent
+        completing IIG service and later standing for a chamber seat), which
+        is new simulation design, not a patch. Deliberately left inert and
+        labelled rather than quietly deleted, so that the Article 7.9 claim is
+        not read as enforced in the reproducibility package. Needs Kaung's
+        decision on whether role transition enters scope at all.
         """
         from agents.oversight import IIGAgent
         from agents.official import OfficialAgent

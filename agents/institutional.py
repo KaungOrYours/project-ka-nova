@@ -139,6 +139,23 @@ class FederalDevFundAgent(Agent):
             self.model.shared_data["total_ruin_seizures_this_year"] = 0.0
 
     def _calculate_gini(self):
+        """
+        Gini over the 14 (or per-scenario N) STATES' GDP LEVELS.
+
+        Disambiguation (bug #2, 2026-10-21). This is the only Gini actually
+        computed in the live Phase 3 pipeline and the only writer of
+        shared_data["gini_coefficient"], so it is the number that reaches every
+        results CSV, the north-star composite, and Table 1. It measures
+        GEOGRAPHIC inequality -- dispersion of GDP across administrative units
+        -- NOT citizen-income inequality. No citizen-income Gini exists in
+        Phase 3. (engine/hybrid_engine.py and archive/model.py contain other
+        Gini computations; both are Phase 2 legacy and outside the Phase 3
+        import graph, so they are stale reference code, not competing values.)
+
+        Consequence that needs stating wherever this metric is reported: it is
+        not commensurable with a World Bank household income/consumption Gini.
+        See the note on MYANMAR_BASELINES["gini_coefficient"] in analysis/kpi.py.
+        """
         states = self.model.states
         if not states:
             return

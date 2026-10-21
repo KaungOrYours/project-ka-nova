@@ -831,6 +831,12 @@ class SafeguardConfig:
 
     # S.7 — Generational renewal
     REVIEW_INTERVAL: int = 10
+    # VESTIGIAL, read by nothing (verified repo-wide 2026-10-21). The
+    # operative Citizens Assembly size is AmendmentConfig.CITIZENS_ASSEMBLY_SIZE
+    # (320), which is what institutions/court.py and chambers.py actually use.
+    # Left at its original encoded value rather than silently edited, since
+    # this file is a published constitutional artifact; flagged so the
+    # 500-vs-320 discrepancy cannot be misread as a live parameter conflict.
     ASSEMBLY_SIZE: int = 500
     ASSEMBLY_METHOD: str = "civic_lottery"
     REVIEW_ITSELF_REMOVABLE: bool = False
@@ -1425,7 +1431,10 @@ class MFUConstitution:
 
             # Rights must never be suspendable
             not self.rights.RIGHTS_SUSPENDABLE,
-            not self.emergency.RIGHTS_UNTOUCHED is False,
+            # Was `not self.emergency.RIGHTS_UNTOUCHED is False`, a double
+            # negative that parses as `not (X is False)` and so passed for any
+            # truthy-but-not-False value. Stated directly instead.
+            self.emergency.RIGHTS_UNTOUCHED is True,
 
             # Resource split must sum to 1.0
             abs(self.federal.RESOURCE_STATE_SHARE +

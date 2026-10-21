@@ -24,11 +24,20 @@ License: MIT
 
 from __future__ import annotations
 
+import os
 import random
 import math
+import sys
 from collections import deque
 from typing import Optional, Dict, List
 from mesa import Agent
+
+# This module carries a __main__ self-test (merit formula + archetype checks)
+# that could not run standalone at all without this: `python3 agents/citizen.py`
+# died on `ModuleNotFoundError: No module named 'config'`. Same missing
+# bootstrap as the two test entry points fixed in 991c8b5. Harmless when the
+# module is imported normally, since the repo root is already on sys.path then.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config.constitution import CONSTITUTION
 
@@ -1736,20 +1745,38 @@ if __name__ == "__main__":
     class MockModel:
         def __init__(self):
             self.current_year = 0
+            # Required since the bug #14 propagation fix: _begin_national_service()
+            # and the geography helpers now read self.model.CONSTITUTION rather
+            # than the bare module singleton. This mock predated that change, so
+            # the step test below died on AttributeError and the geography
+            # helpers fell back to Myanmar's legacy data with a warning.
+            self.CONSTITUTION = CONSTITUTION
+            self.scenario = "A"
+            self.chain_type = "civilian"
+            # Built for EVERY state the active constitution declares, not just
+            # "sagaing". With a real CONSTITUTION attached above, _assign_state()
+            # now draws from the full state list, so a single-state mock made the
+            # step test die on KeyError the moment an agent was placed anywhere
+            # else. Same template values for each state, which is all this
+            # self-test needs.
+            _state_template = {
+                "corruption_level": 0.72,
+                "employment_rate": 0.58,
+                "trust_index": 0.22,
+                "ethnic_tension": 0.65,
+                "gdp_growth": 0.02,
+                "resource_revenue": 100.0,
+                "gdp": 1000.0,
+                "knowledge_capital": 0.0,
+                "protest_activity": 0.0,
+                "iig_activity": 0.0,
+                "merit_integrity": 0.50
+            }
             self.states = {
-                "sagaing": {
-                    "corruption_level": 0.72,
-                    "employment_rate": 0.58,
-                    "trust_index": 0.22,
-                    "ethnic_tension": 0.65,
-                    "gdp_growth": 0.02,
-                    "resource_revenue": 100.0,
-                    "gdp": 1000.0,
-                    "knowledge_capital": 0.0,
-                    "protest_activity": 0.0,
-                    "iig_activity": 0.0,
-                    "merit_integrity": 0.50
-                }
+                state_id: dict(_state_template)
+                for state_id in getattr(
+                    CONSTITUTION.simulation, "SIMULATION_STATES", ["sagaing"]
+                )
             }
             self.shared_data = {
                 "poverty_line": 1000.0,
@@ -1813,7 +1840,13 @@ if __name__ == "__main__":
     agent.education_level = 0.70
     agent.performance = 0.75
     agent.civic_contribution = 0.60
-    expected = 0.80*0.40 + 0.70*0.30 + 0.75*0.20 + 0.60*0.10
+    # v7 weights, read from the live constitution rather than restated, so
+    # this self-test cannot drift again. Was hardcoded to the v6 set
+    # (0.40/0.30/0.20/0.10) while _calculate_merit() used v7
+    # (0.35/0.25/0.20/0.20), which made the Match assertion below print False.
+    _mw = CONSTITUTION.merit
+    expected = (0.80*_mw.PRODUCTIVITY_WEIGHT + 0.70*_mw.EDUCATION_WEIGHT
+                + 0.75*_mw.PERFORMANCE_WEIGHT + 0.60*_mw.CIVIC_WEIGHT)
     calculated = agent._calculate_merit()
     print(f"  Expected:   {expected:.4f}")
     print(f"  Calculated: {calculated:.4f}")

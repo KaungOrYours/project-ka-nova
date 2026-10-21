@@ -650,47 +650,100 @@ async def post_init(app: Application):
     asyncio.create_task(final_comparison_loop(app))
 
 
+# Scenario codes this bot will report on, in display order. Sourced from the
+# same registry the engine uses, so a newly encoded constitution shows up here
+# without touching this file. Falls back to the original A/C pair if the
+# registry cannot be imported (e.g. the bot running outside the repo root).
+try:
+    from config.scenario_registry import SCENARIOS as _REGISTRY_SCENARIOS
+    MONITORED_SCENARIOS = [c for c in ["A", "C", "SK", "TH", "PK", "CL", "DE"]
+                           if c in _REGISTRY_SCENARIOS]
+except Exception:  # pragma: no cover - defensive, bot must never fail to boot
+    MONITORED_SCENARIOS = ["A", "C"]
+
+
+def _scenario_result_csv(code: str):
+    return RESULTS_DIR / f"scenario_{code.lower()}_all.csv"
+
+
 async def final_comparison_loop(app: Application):
+    """
+    Announce each scenario as it finishes, then post one comparison table once
+    every scenario that produced results has finished.
+
+    Generalized 2026-10-21. This used to hardcode the Scenario A/C pair, so a
+    7-constitution campaign produced no completion ping and no final summary
+    for SK/TH/PK/CL/DE — five of seven scenarios ran unmonitored to the end,
+    which matters because they run on separate pods.
+    """
     await asyncio.sleep(15)
-    a_done = False
-    c_done = False
+    announced = set()
     comparison_sent = False
     while True:
         try:
-            if not comparison_sent:
-                p = await to_thread(read_progress)
-                scenario = p.get("scenario", "")
-                pct = round((p.get("current_run", 0) / p.get("total_runs", 100)) * 100) if p.get("total_runs") else 0
-                if scenario == "A" and pct >= 100:
-                    a_done = True
-                if scenario == "C" and pct >= 100:
-                    c_done = True
-                a_csv = RESULTS_DIR / "scenario_a_all.csv"
-                c_csv = RESULTS_DIR / "scenario_c_all.csv"
-                if a_csv.exists() and c_csv.exists() and scenario == "A" and pct >= 100:
-                    a_done = True
-                    c_done = True
-                if a_done and c_done and not comparison_sent:
-                    comparison_sent = True
-                    kpi_a = await to_thread(compute_final_kpis, "A")
-                    kpi_c = await to_thread(compute_final_kpis, "C")
-                    if kpi_a and kpi_c:
+            # A scenario counts as done once its merged per-scenario CSV exists;
+            # run_phase3.py writes that only in _finalize(), after the last run.
+            # This works regardless of which pod wrote it, so one bot watching a
+            # shared results dir reports correctly for every scenario.
+            done = {c for c in MONITORED_SCENARIOS if _scenario_result_csv(c).exists()}
+
+            p = await to_thread(read_progress)
+            live = p.get("scenario", "")
+            pct = round((p.get("current_run", 0) / p.get("total_runs", 100)) * 100) if p.get("total_runs") else 0
+            if live in MONITORED_SCENARIOS and pct >= 100:
+                done.add(live)
+
+            for code in MONITORED_SCENARIOS:
+                if code in done and code not in announced:
+                    announced.add(code)
+                    kpi = await to_thread(compute_final_kpis, code)
+                    if kpi:
                         msg = (
-                            f"[FINAL] *Ka-Nova Paper Run Complete*\n"
-                            f"{chr(9472) * 32}\n"
-                            f"KPI               Scen A     Scen C\n"
-                            f"{chr(9472) * 32}\n"
-                            f"Corruption:   `{kpi_a['corruption']}` vs `{kpi_c['corruption']}`\n"
-                            f"Trust:        `{kpi_a['trust']}` vs `{kpi_c['trust']}`\n"
-                            f"Coup prob:    `{kpi_a['coup']}` vs `{kpi_c['coup']}`\n"
-                            f"North star:   `{kpi_a['north_star']}` vs `{kpi_c['north_star']}`\n"
-                            f"Gini:         `{kpi_a['gini']}` vs `{kpi_c['gini']}`\n"
-                            f"Eth harmony:  `{kpi_a['ethnic_harmony']}` vs `{kpi_c['ethnic_harmony']}`\n"
-                            f"{chr(9472) * 32}\n"
-                            f"Push results before terminating pod."
+                            f"[DONE] *Scenario {code} complete*\n"
+                            f"Corruption:  `{kpi['corruption']}`\n"
+                            f"Trust:       `{kpi['trust']}`\n"
+                            f"Coup prob:   `{kpi['coup']}`\n"
+                            f"North star:  `{kpi['north_star']}`\n"
+                            f"Gini:        `{kpi['gini']}`\n"
+                            f"Eth harmony: `{kpi['ethnic_harmony']}`"
                         )
                         for chat_id in SUBSCRIBERS:
                             await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
+
+            if not comparison_sent and announced and announced == set(MONITORED_SCENARIOS):
+                comparison_sent = True
+                kpis = {}
+                for code in MONITORED_SCENARIOS:
+                    k = await to_thread(compute_final_kpis, code)
+                    if k:
+                        kpis[code] = k
+                if kpis:
+                    bar = chr(9472) * 40
+                    rows = [
+                        ("Corruption",  "corruption"),
+                        ("Trust",       "trust"),
+                        ("Coup prob",   "coup"),
+                        ("North star",  "north_star"),
+                        ("Gini",        "gini"),
+                        ("Eth harmony", "ethnic_harmony"),
+                    ]
+                    codes = [c for c in MONITORED_SCENARIOS if c in kpis]
+                    header = "KPI          " + " ".join(f"{c:>8}" for c in codes)
+                    body = "\n".join(
+                        f"{label:<12} " + " ".join(f"{kpis[c][key]:>8}" for c in codes)
+                        for label, key in rows
+                    )
+                    msg = (
+                        f"[FINAL] *Ka-Nova Paper Run Complete*\n"
+                        f"{bar}\n"
+                        f"`{header}`\n"
+                        f"`{body}`\n"
+                        f"{bar}\n"
+                        f"{len(codes)} of {len(MONITORED_SCENARIOS)} scenarios reported.\n"
+                        f"Push results before terminating pod."
+                    )
+                    for chat_id in SUBSCRIBERS:
+                        await app.bot.send_message(chat_id, msg, parse_mode="Markdown")
         except Exception as e:
             logger.error(f"Final comparison loop error: {e}")
         await asyncio.sleep(60)
@@ -718,7 +771,10 @@ def main():
     app.add_handler(CommandHandler("help",         help_cmd))
 
     logger.info("Ka-Nova Monitor Bot v2 started.")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    # drop_pending_updates avoids a 409 Conflict from a lingering getUpdates
+    # session on the previous pod. Subscribers do not persist across pods
+    # anyway, so queued pre-boot updates are never wanted.
+    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 
 if __name__ == "__main__":
