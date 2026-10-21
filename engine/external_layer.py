@@ -40,6 +40,7 @@ License: MIT
 
 from __future__ import annotations
 
+import os
 import random
 import numpy as np
 from dataclasses import dataclass, field
@@ -942,7 +943,62 @@ class ExternalLayer:
                 f"scenario."
             )
 
-        entry = EXTERNAL_LAYER_REGISTRY[scenario]
+        # ── Opening 3 (added 2026-10-21): controlled vs realism mode ────────
+        # The submitted manuscript's central experimental-control claim is a
+        # scenario-neutral engine — "the same eleven-vector external world and
+        # the same ten shock types drive every run; only the constitution the
+        # elite layer reads changes" — repeated in the abstract, contribution 4,
+        # Section III-A/III-E/IV, and crucially in Threats to Validity, where it
+        # is the entire defence against the culture/geopolitics confound.
+        #
+        # The per-country realism work (memory section 11) deliberately gives
+        # each scenario its own real neighbours and shocks. That is better
+        # realism, but for CROSS-COUNTRY comparison it removes exactly the
+        # control the paper leans on, and it moves opposite to what Reviewer 1
+        # pt.1 and Reviewer 2 pt.1 asked, since varying the environment
+        # alongside the constitution adds confounds rather than isolating
+        # structure.
+        #
+        # Rather than force that framing choice in code, this switch makes BOTH
+        # experiments runnable from the same engine:
+        #
+        #   KA_NOVA_EXTERNAL_MODE=real       (default) each country's own real
+        #                                    geopolitical context. Maximum
+        #                                    realism; the right setting for the
+        #                                    historical backtest (Reviewer 1
+        #                                    pt.5), where a country's own
+        #                                    neighbours are a feature.
+        #   KA_NOVA_EXTERNAL_MODE=controlled every scenario runs the SAME
+        #                                    external world (default Myanmar's,
+        #                                    override with
+        #                                    KA_NOVA_EXTERNAL_BASELINE). This
+        #                                    preserves "constitution is the only
+        #                                    manipulated variable" verbatim and
+        #                                    is the right setting for the
+        #                                    structural-vs-parametric claim.
+        #
+        # A/C are unaffected in either mode when the baseline is "A": Myanmar's
+        # own entry is what they already load.
+        _mode = os.getenv("KA_NOVA_EXTERNAL_MODE", "real").strip().lower()
+        if _mode not in ("real", "controlled"):
+            raise ValueError(
+                f"KA_NOVA_EXTERNAL_MODE must be 'real' or 'controlled', "
+                f"got {_mode!r}."
+            )
+        self.external_mode = _mode
+        _baseline = os.getenv("KA_NOVA_EXTERNAL_BASELINE", "A").strip().upper()
+        if _mode == "controlled":
+            if _baseline not in EXTERNAL_LAYER_REGISTRY:
+                raise KeyError(
+                    f"KA_NOVA_EXTERNAL_BASELINE={_baseline!r} is not a "
+                    f"registered external-layer scenario. Known codes: "
+                    f"{sorted(EXTERNAL_LAYER_REGISTRY)}."
+                )
+            self.external_source = _baseline
+        else:
+            self.external_source = scenario
+
+        entry = EXTERNAL_LAYER_REGISTRY[self.external_source]
         self.label = entry["label"]
         self._vector_drift = entry["drift"]
         self._shock_events = entry["shocks"]

@@ -94,6 +94,31 @@ class RightsConfig:
     RIGHTS_VIOLATION_GRIEVANCE_SPIKE: float = 0.25
     RIGHTS_VIOLATION_TRUST_DROP: float = 0.20
 
+    # ── Dynamics constants surfaced for disclosure and sensitivity analysis ──
+    # Added 2026-10-21 (Opening 1 / Opening 8). These three were hardcoded
+    # literals inside feedback/loops.py and model_phase3.py. They are the
+    # "thresholds, parameter bounds, [and] deterministic relationships embedded
+    # in the model" that Reviewer 1 pt.2 asks about, and they are what produce
+    # the zero-variance arms behind the headline Cohen's d values:
+    #
+    #   FEAR_COMPLIANCE_TRUST_FLOOR  -> Scenario C trust = 0.100 +/- 0.000 (d=84.2)
+    #   CIVILIAN_COUP_SIGNAL_DAMPING -> Scenario A coup prob = 0.000 +/- 0.000 (d=46.7)
+    #   STABILITY_RIGHTS_BONUS       -> a flat, deterministic share of the
+    #                                   stability gap (d=91.6), present under
+    #                                   absolute rights and absent under
+    #                                   suspendable rights
+    #
+    # Values are IDENTICAL to the previous hardcoded literals, so behaviour is
+    # unchanged (verified byte-identical). Surfacing them does three things:
+    # makes them disclosable in the manuscript rather than buried, makes them
+    # per-constitution rather than global, and makes them perturbable by the
+    # Sobol GSA so the mechanical contribution can be QUANTIFIED instead of
+    # argued. Reviewer 2 pt.2 explicitly asks about "constitutional and
+    # feedback parameters"; these are the feedback parameters.
+    FEAR_COMPLIANCE_TRUST_FLOOR: float = 0.10
+    CIVILIAN_COUP_SIGNAL_DAMPING: float = 0.05
+    STABILITY_RIGHTS_BONUS: float = 0.20
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PART III — MERIT SYSTEM (Article 3)

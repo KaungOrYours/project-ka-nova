@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from functools import lru_cache
 import numpy as np
 from pathlib import Path
@@ -46,6 +47,36 @@ RESULTS_DIR = Path("results_phase3")
 # Change this one line to "strip" if Kaung says strip-and-failsafe.
 L4_MODE = "flag"   # "flag" = log only, keep decision
                     # "strip" = clamp decision to 2-sigma range
+
+# ── L2 ablation (Opening 4, 2026-10-21) ───────────────────────────────────────
+# The manuscript's Future Work already promises "a targeted ablation of
+# individual CVES layers, disabling the constitutional layer (L2) alone while
+# leaving the structural, consensus and statistical layers active". This is the
+# switch that delivers it, and it is the direct quantitative answer to
+# Reviewer 1 pt.3 and Reviewer 2 pt.4 on what the generative layer plus CVES
+# actually contribute: run the identical configuration with L2 enforcing and
+# with L2 observing, and the KPI difference IS the marginal contribution of
+# runtime constitutional enforcement.
+#
+#   "enforce" (default) — detect, log, correct, reprompt. Published behaviour.
+#   "observe"           — detect and log identically, but do NOT correct and do
+#                         NOT reprompt. Violating decisions propagate into the
+#                         simulation. The audit trail stays complete, so the
+#                         ablation run is directly comparable to the enforced
+#                         run violation-for-violation.
+#   "off"               — do not even detect. No L2 logging. Use only to measure
+#                         L2's own compute cost, not for the science ablation.
+#
+# CRITICAL: "observe" also bypasses the defence-in-depth coup re-suppression at
+# aggregation in engine/elite_agents_v3.py. Without that, ablating L2 would
+# change nothing observable for the headline coup result, because the second
+# lock would silently re-suppress every signal L2 let through, and the ablation
+# would misreport L2's contribution as zero.
+L2_MODE = os.getenv("CVES_L2_MODE", "enforce").strip().lower()
+if L2_MODE not in ("enforce", "observe", "off"):
+    raise ValueError(
+        f"CVES_L2_MODE must be one of enforce/observe/off, got {L2_MODE!r}"
+    )
 
 
 # ── Ethnic-group count resolution (bug #17) ────────────────────────────────────
@@ -260,6 +291,11 @@ class CVES:
         Log all violations to cves_violations_<scenario>.jsonl (bug #18).
         """
         run_id     = shared_data.get("run_id", 0)
+
+        # L2 ablation: "off" skips detection entirely (no logging either).
+        if L2_MODE == "off":
+            return decision
+
         violations = self._find_violations(decision, scenario, shared_data)
 
         if not violations:
@@ -296,7 +332,14 @@ class CVES:
             logger.warning(
                 f"L2 [scenario={scenario} Y{year} {agent_role}] "
                 f"{viol['type']} — {viol['article']}"
+                f"{' (OBSERVE MODE, not corrected)' if L2_MODE == 'observe' else ''}"
             )
+
+        # Ablation: detection and logging are identical to enforce mode, so the
+        # two runs are comparable violation-for-violation, but the violating
+        # decision is returned unchanged and propagates into the simulation.
+        if L2_MODE == "observe":
+            return original
 
         # Reprompt once with injected article if LLM available
         if invoke_fn and self.llm and violations:

@@ -221,6 +221,10 @@ class KaNovaModelPhase3(Model):
             constitution=self.CONSTITUTION,
             chain_type=self.chain_type,
             scenario=self.scenario,
+            # Opening 5: the run's own seed, so the LLM path is reproducible
+            # per run_id rather than only statistically reproducible. See the
+            # verify-on-pod note in EliteAgentLayerV3.__init__.
+            seed=seed,
         )
         if ELITE_V3_AVAILABLE:
             print("Elite agents: v3")
@@ -520,13 +524,24 @@ class KaNovaModelPhase3(Model):
 
         # Handle coup signal
         if self.shared_data.get("elite_coup_signal", False):
+            # Opening 1: was a hardcoded 0.05 step. Under a civilian chain this
+            # DECREMENTS coup_risk toward a 0.0 floor on every elite coup
+            # signal, and because the Chief Justice emits one in essentially
+            # every year (3,690 of 4,176 logged L2 violations), Scenario A's
+            # coup probability is driven to the floor within roughly five years
+            # and pinned there by construction — the mechanism behind the
+            # reported 0.000 +/- 0.000 and its d=46.7. Surfaced so it can be
+            # disclosed and perturbed rather than inferred from source.
+            _damping = getattr(
+                self.CONSTITUTION.rights, "CIVILIAN_COUP_SIGNAL_DAMPING", 0.05
+            )
             if self.chain_type == "civilian":
                 self.shared_data["coup_risk"] = max(
-                    0.0, self.shared_data.get("coup_risk", 0.25) - 0.05
+                    0.0, self.shared_data.get("coup_risk", 0.25) - _damping
                 )
             else:
                 self.shared_data["coup_risk"] = min(
-                    1.0, self.shared_data.get("coup_risk", 0.25) + 0.05
+                    1.0, self.shared_data.get("coup_risk", 0.25) + _damping
                 )
 
         # ── 3. Broadcast environment ──────────────────────────────────────────

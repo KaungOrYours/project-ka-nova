@@ -244,6 +244,19 @@ class RightsConfig:
     # (Yoon's approval collapsed within days), not a slow decay.
     RIGHTS_VIOLATION_TRUST_DROP: float = 0.15
 
+    # ── Dynamics constants surfaced for disclosure and sensitivity analysis ──
+    # Added 2026-10-21 (Openings 1 and 8), same values as every other
+    # constitution, so behaviour is unchanged (verified byte-identical across
+    # all 7 scenarios). These are Ka-Nova MODELLING choices, not provisions of
+    # this real constitution, and are marked as such deliberately: they exist
+    # here so the Sobol GSA can perturb them on the scenario that actually
+    # reads them. FEAR_COMPLIANCE_TRUST_FLOOR binds only on a military chain,
+    # so for Thailand and Pakistan this is the field that lets the GSA
+    # quantify Reviewer 1 pt.2 for the trust effect size.
+    FEAR_COMPLIANCE_TRUST_FLOOR: float = 0.10
+    CIVILIAN_COUP_SIGNAL_DAMPING: float = 0.05
+    STABILITY_RIGHTS_BONUS: float = 0.20
+
     # EXTRA field, NOT part of the confirmed 86-field engine-read contract.
     # CONFIDENT — Art. 37(2): rights may be restricted by law only for
     # national security/order/public welfare, and "no essential aspect of

@@ -56,7 +56,17 @@ except ImportError:
 from config.constitution import CONSTITUTION
 
 # ── PATHS ─────────────────────────────────────────────────────────────────────
-RESULTS_DIR = Path("results")
+# Opening 7 (fixed 2026-10-21). This was Path("results"), the Phase 1/2
+# directory, while the live pipeline writes to results_phase3/ (run_phase3.py:56,
+# engine/cves.py:43). Every output of this module — descriptive_stats.csv,
+# trajectories.csv, statistical_tests.csv, table1_scenario_comparison.csv,
+# sobol_sensitivity_*.csv — therefore targeted a directory that does not exist
+# in a clean checkout, and the loader looked for Phase 2's combined
+# all_results.csv rather than Phase 3's per-scenario files. In other words the
+# entire table/analysis layer was pointed at legacy data and could not read a
+# Phase 3 run at all. Overridable so the Phase 2 archive can still be analysed
+# (KA_NOVA_RESULTS_DIR=archive/results).
+RESULTS_DIR = Path(os.getenv("KA_NOVA_RESULTS_DIR", "results_phase3"))
 ANALYSIS_DIR = Path("analysis")
 
 
@@ -131,7 +141,7 @@ SIGNIFICANCE_LEVEL = 0.05
 # actually drives, so Sobol indices below are computed from real Phase 3 model
 # output, not a synthetic placeholder).
 GSA_PROBLEM = {
-    "num_vars": 10,
+    "num_vars": 13,
     "names": [
         "merit_performance_weight",
         "analysis_threshold",
@@ -143,6 +153,16 @@ GSA_PROBLEM = {
         "iig_entry_merit_min",
         "coup_trigger_loyalty",
         "year_zero_corruption",
+        # Added 2026-10-21 (Openings 1 and 8). Reviewer 2 pt.2 asks about
+        # "constitutional AND feedback parameters"; the ten above are all
+        # constitutional. These three are the feedback/dynamics constants that
+        # mechanically produce the zero-variance arms behind the headline
+        # effect sizes, so perturbing them turns Reviewer 1 pt.2 from an
+        # argument into a measurement: if ST for these is small, the
+        # separation is not an artifact of them; if it is large, we must say so.
+        "fear_compliance_trust_floor",
+        "civilian_coup_signal_damping",
+        "stability_rights_bonus",
     ],
     "bounds": [
         # Re-centred 2026-10-21. Was [0.25, 0.45], which excluded the live
@@ -162,6 +182,13 @@ GSA_PROBLEM = {
         [0.75, 0.95],   # iig_entry_merit_min
         [0.20, 0.40],   # coup_trigger_loyalty
         [0.60, 0.85],   # year_zero_corruption
+        # Centred on the published defaults (0.10 / 0.05 / 0.20). The lower
+        # bound of each reaches ~0, which is the substantively interesting
+        # case: it asks what the separation looks like with the floor, the
+        # damping, or the deterministic rights step effectively removed.
+        [0.00, 0.20],   # fear_compliance_trust_floor  (default 0.10)
+        [0.00, 0.10],   # civilian_coup_signal_damping (default 0.05)
+        [0.00, 0.40],   # stability_rights_bonus       (default 0.20)
     ],
 }
 
@@ -180,6 +207,11 @@ GSA_PARAM_MAP = {
     "iig_entry_merit_min":                    ("iig", "ENTRY_MERIT_MIN"),
     "coup_trigger_loyalty":                    ("military", "COUP_TRIGGER_LOYALTY"),
     "year_zero_corruption":                    ("simulation", "YEAR_ZERO_CORRUPTION"),
+    # Feedback/dynamics constants (Openings 1 and 8). All three live on the
+    # rights section; see config/constitution.py for why they were surfaced.
+    "fear_compliance_trust_floor":             ("rights", "FEAR_COMPLIANCE_TRUST_FLOOR"),
+    "civilian_coup_signal_damping":            ("rights", "CIVILIAN_COUP_SIGNAL_DAMPING"),
+    "stability_rights_bonus":                  ("rights", "STABILITY_RIGHTS_BONUS"),
 }
 
 
@@ -200,13 +232,30 @@ class ResultsLoader:
     def load(self) -> pd.DataFrame:
         """Load combined results CSV."""
 
+        # Phase 3 writes one merged CSV per scenario (scenario_<code>_all.csv,
+        # run_phase3.py:405). Prefer those: they are what the live runner
+        # actually produces, and globbing means a 7-scenario campaign is picked
+        # up without naming each code here. Falls back to Phase 2's combined
+        # all_results.csv, then to per-run files, so analysing the legacy
+        # archive with KA_NOVA_RESULTS_DIR still works unchanged.
+        phase3_files = sorted(self.results_dir.glob("scenario_*_all.csv"))
         combined_path = self.results_dir / "all_results.csv"
 
-        if combined_path.exists():
+        if phase3_files:
+            print(f"Loading {len(phase3_files)} Phase 3 per-scenario file(s):")
+            frames = []
+            for p in phase3_files:
+                try:
+                    frames.append(pd.read_csv(p))
+                    print(f"  {p.name}")
+                except Exception as e:
+                    print(f"  Warning: could not load {p}: {e}")
+            self.df = pd.concat(frames, ignore_index=True) if frames else None
+        elif combined_path.exists():
             print(f"Loading: {combined_path}")
             self.df = pd.read_csv(combined_path)
         else:
-            print("all_results.csv not found. Loading individual files...")
+            print("No Phase 3 or combined CSV found. Loading individual files...")
             self.df = self._load_individual_files()
 
         if self.df is None or self.df.empty:
@@ -963,14 +1012,24 @@ class SensitivityAnalyzer:
         is the actual sensitivity-analysis deliverable referenced in the
         module docstring and requested by both IEEE Access reviewers.
 
-        Total runs = n_sample x (2k + 2), k = GSA_PROBLEM["num_vars"] (10).
+        Total runs = n_sample x (2k + 2), k = GSA_PROBLEM["num_vars"] (13).
         Defaults (n_sample=64, n_citizens=1000) match the RunPod-scale design
         in feasibility_check.py — reduce both for a fast local smoke test.
 
-        Only overrides parameters on scenario "A" (MFU) — the 10 parameters
-        are MFU-specific tunable constants; Scenario C's 2008 Myanmar
-        constitution is a separately-sourced, fixed historical encoding and
-        is not a free parameter space to perturb.
+        Overrides are applied to whichever scenario's constitution the run
+        actually reads, resolved through config.scenario_registry (fixed
+        2026-10-21; previously always mutated the MFU singleton, so any
+        scenario other than "A" silently perturbed nothing).
+
+        Scope note for the manuscript: the ten constitutional parameters are
+        MFU-specific tunable constants, and Scenario C's 2008 encoding is a
+        separately-sourced fixed historical document rather than a free
+        parameter space. The three feedback/dynamics parameters, however, are
+        Ka-Nova modelling choices rather than provisions of any real
+        constitution, so perturbing them is legitimate on ANY scenario — and
+        for the trust floor it is only meaningful on a military chain, since
+        that is the only chain where the floor binds. Running this on C/TH/PK
+        for `trust_index` is what quantifies Reviewer 1 pt.2 for trust.
         """
         if not SALIB_AVAILABLE:
             raise ImportError(
@@ -990,8 +1049,29 @@ class SensitivityAnalyzer:
         # simulation) is a frozen dataclass — individual fields can't be
         # mutated in place. Snapshot the whole section objects so every
         # override is reverted exactly, even if a run raises.
+        # LATENT BUG FIXED 2026-10-21. This always mutated the MFU singleton
+        # imported at module load, but since the bug #11 registry refactor the
+        # model loads its constitution via get_scenario(scenario). So calling
+        # run_sobol_gsa(scenario="C") perturbed MFU while the model ran on
+        # CONSTITUTION_2008, and every override was silently a no-op — the GSA
+        # would have reported near-zero sensitivity for every parameter and
+        # looked like a valid result. Resolve the target from the registry so
+        # the object perturbed is the object the run actually reads.
+        from config.scenario_registry import get_scenario
+        target_constitution = get_scenario(scenario).constitution
+
         section_names = sorted({section for section, _ in GSA_PARAM_MAP.values()})
-        originals = {section: getattr(CONSTITUTION, section) for section in section_names}
+        missing = [
+            (s, f) for name, (s, f) in GSA_PARAM_MAP.items()
+            if not hasattr(getattr(target_constitution, s, None), f)
+        ]
+        if missing:
+            raise AttributeError(
+                f"Scenario {scenario!r}'s constitution is missing GSA target "
+                f"fields {missing}. Backfill them before running the GSA on "
+                f"this scenario rather than letting overrides silently no-op."
+            )
+        originals = {section: getattr(target_constitution, section) for section in section_names}
 
         Y = np.zeros(total_runs)
         try:
@@ -1001,7 +1081,7 @@ class SensitivityAnalyzer:
                     section, attr = GSA_PARAM_MAP[name]
                     overrides_by_section.setdefault(section, {})[attr] = float(row[col_idx])
                 for section, field_overrides in overrides_by_section.items():
-                    setattr(CONSTITUTION, section, dataclasses.replace(originals[section], **field_overrides))
+                    setattr(target_constitution, section, dataclasses.replace(originals[section], **field_overrides))
 
                 seed = row_idx * 100 + ord(scenario)
                 model = KaNovaModelPhase3(
@@ -1025,7 +1105,7 @@ class SensitivityAnalyzer:
             # Always restore — a GSA run must not leave CONSTITUTION mutated
             # for any other analysis that imports the singleton afterward.
             for section, original_section in originals.items():
-                setattr(CONSTITUTION, section, original_section)
+                setattr(target_constitution, section, original_section)
 
         if np.isnan(Y).any():
             raise ValueError(

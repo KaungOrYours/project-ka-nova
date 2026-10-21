@@ -898,7 +898,8 @@ class EliteAgentLayerV3:
         elite_decisions_log    list of dicts
     """
 
-    def __init__(self, use_llm: bool = False, constitution=None, chain_type=None, scenario=None):
+    def __init__(self, use_llm: bool = False, constitution=None, chain_type=None,
+                 scenario=None, seed=None):
         # Bug #13: constitution/chain_type/scenario now threaded through
         # from model_phase3.py (self.CONSTITUTION/self.chain_type/
         # self.scenario, set by the registry at model construction) instead
@@ -908,10 +909,26 @@ class EliteAgentLayerV3:
         # "civilian"/"unknown" respectively — see engine/cves.py).
         self.use_llm = use_llm and LANGCHAIN_AVAILABLE  # bool, read directly by model
         self._llm = None
+        # Opening 5 (2026-10-21): the manuscript's Reproducibility section claims
+        # "All runs are seeded", but the LLM path had no seed at temperature 0.4,
+        # so CVES L1-L4 outputs for a given run_id were NOT reproducible — only
+        # statistically so. Reviewer 1 pt.8 asks specifically for "random seeds,
+        # LLM configuration". Threading the model's own per-run_id seed into the
+        # client makes the claim true for the LLM path too.
+        #
+        # VERIFY ON THE POD, NOT ASSUMED: `seed` reaches Ollama through its
+        # OpenAI-compatible endpoint, and determinism additionally depends on the
+        # server honouring it (Ollama support has varied by version, and batching
+        # or KV-cache reuse can still perturb output). Confirm empirically by
+        # running the same run_id twice and diffing elite_decisions_<scen>.jsonl
+        # before any reproducibility claim is made in the manuscript. If it does
+        # not hold, the honest fallback is to state statistical reproducibility
+        # precisely rather than to claim seeding.
+        self.llm_seed = int(seed) if seed is not None else None
 
         if self.use_llm:
             try:
-                self._llm = ChatOpenAI(
+                _client_kwargs = dict(
                     base_url=ELITE_LLM_BASE_URL,
                     api_key=ELITE_LLM_API_KEY,
                     model=ELITE_LLM_MODEL,
@@ -919,6 +936,9 @@ class EliteAgentLayerV3:
                     max_tokens=512,
                     timeout=45,
                 )
+                if self.llm_seed is not None:
+                    _client_kwargs["seed"] = self.llm_seed
+                self._llm = ChatOpenAI(**_client_kwargs)
                 logger.info(f"EliteAgentLayerV3: LLM ready ({ELITE_LLM_MODEL})")
             except Exception as e:
                 logger.warning(f"LLM init failed ({e}) — rule-based fallback")
@@ -1111,8 +1131,25 @@ class EliteAgentLayerV3:
         # feature of the chain, not a Scenario-A-only special case.
         coup_signal = any(d.get("coup_signal", False) for d in decisions_list)
         if chain_type == "civilian" and coup_signal:
-            logger.info(f"Year {year}: Coup signal suppressed by civilian-chain safeguards (scenario={scenario})")
-            coup_signal = False
+            # L2 ablation (Opening 4): this is the SECOND lock. If CVES L2 is
+            # being ablated, this must stand down too, otherwise ablating L2
+            # changes nothing observable for the headline coup result and the
+            # measured marginal contribution of runtime constitutional
+            # enforcement would be a spurious zero. Import is local and
+            # defensive so that a caller constructing this layer without the
+            # cves module present behaves exactly as before.
+            try:
+                from engine.cves import L2_MODE as _l2_mode
+            except Exception:
+                _l2_mode = "enforce"
+            if _l2_mode == "enforce":
+                logger.info(f"Year {year}: Coup signal suppressed by civilian-chain safeguards (scenario={scenario})")
+                coup_signal = False
+            else:
+                logger.warning(
+                    f"Year {year}: coup signal NOT suppressed, CVES_L2_MODE={_l2_mode} "
+                    f"(ablation run, scenario={scenario}) — defence-in-depth lock stood down"
+                )
 
         budget_impact = float(np.clip(budget_weight * 0.15, 0.0, 0.15))
 

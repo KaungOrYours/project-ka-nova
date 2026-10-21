@@ -133,7 +133,12 @@ class FeedbackEngine:
         # fear-compliance trust.
         if m.chain_type == "military":
             rights_penalty = 0.0 if rights_ok else 0.04   # chronic low-level erosion
-            trust_floor    = 0.10                           # fear-compliance floor
+            # Opening 1: was a hardcoded 0.10. Now read from the active
+            # constitution so it is disclosable, per-scenario, and perturbable
+            # by the Sobol GSA. Default preserves the published value exactly.
+            trust_floor    = getattr(
+                m.CONSTITUTION.rights, "FEAR_COMPLIANCE_TRUST_FLOOR", 0.10
+            )
             performance_c  = min(performance, 0.25)         # military policy quality capped
             new_trust = (
                 current_trust * 0.80 +
@@ -170,10 +175,18 @@ class FeedbackEngine:
         m.shared_data["legitimacy_index"] = max(0.0, min(1.0, legitimacy))
 
         # Stability from legitimacy + no rights violations
+        # Opening 1: the rights term is a flat, deterministic constant that is
+        # present under absolute rights and absent under suspendable rights, so
+        # it contributes a fixed share of the A-vs-C stability gap (reported
+        # d=91.6) independently of any dynamics. Surfaced for disclosure and
+        # sensitivity analysis; default preserves the published value.
+        _rights_bonus = getattr(
+            m.CONSTITUTION.rights, "STABILITY_RIGHTS_BONUS", 0.20
+        )
         stability = (
             legitimacy * 0.50 +
             (1.0 - m.shared_data.get("coup_risk", 0.25)) * 0.30 +
-            (0.20 if rights_ok else 0.0)
+            (_rights_bonus if rights_ok else 0.0)
         )
         m.shared_data["stability_index"] = max(0.0, min(1.0, stability))
 
@@ -859,9 +872,12 @@ class FeedbackEngine:
                         0.0, 1.0
                     )
                 m.shared_data["rights_violated"] = True
-                # Floor at 0.10 — fear-compliance trust, not zero collapse
+                # Fear-compliance trust, not zero collapse. Same constitutional
+                # field as the P1 floor above (Opening 1) — these were two
+                # independent hardcoded 0.10 literals enforcing one concept.
                 m.shared_data["trust_index"] = max(
-                    0.10,
+                    getattr(m.CONSTITUTION.rights,
+                            "FEAR_COMPLIANCE_TRUST_FLOOR", 0.10),
                     m.shared_data.get("trust_index", 0.22) - 0.05
                 )
 

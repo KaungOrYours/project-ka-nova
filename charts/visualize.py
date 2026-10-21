@@ -50,7 +50,11 @@ import seaborn as sns
 from matplotlib.gridspec import GridSpec
 
 # ── PATHS ─────────────────────────────────────────────────────────────────────
-RESULTS_DIR = Path("results")
+# Opening 7 (fixed 2026-10-21). Same bug as analysis/kpi.py: this pointed at
+# the Phase 1/2 directory, so the figure pipeline could not read Phase 3 data
+# at all. Reviewer 1 pt.6 asks for figures "regenerated directly from the
+# underlying data/model" — that was impossible while this pointed here.
+RESULTS_DIR = Path(os.getenv("KA_NOVA_RESULTS_DIR", "results_phase3"))
 CHARTS_DIR  = Path("charts")
 KPI_DIR     = CHARTS_DIR / "kpi"
 FEEDBACK_DIR= CHARTS_DIR / "feedback"
@@ -119,11 +123,30 @@ def add_watermark(fig):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def load_results() -> pd.DataFrame:
-    """Load simulation results."""
+    """
+    Load simulation results.
+
+    Phase 3 writes one merged CSV per scenario (scenario_<code>_all.csv); this
+    used to look only for Phase 2's combined all_results.csv, so it could not
+    read a Phase 3 run even once RESULTS_DIR was corrected. Globbing means a
+    7-scenario campaign is picked up without listing codes here. The Phase 2
+    fallback is retained for analysing the legacy archive via
+    KA_NOVA_RESULTS_DIR.
+    """
+    phase3_files = sorted(RESULTS_DIR.glob("scenario_*_all.csv"))
+    if phase3_files:
+        frames = [pd.read_csv(p) for p in phase3_files]
+        df = pd.concat(frames, ignore_index=True)
+        names = ", ".join(p.name for p in phase3_files)
+        print(f"Loaded {len(df):,} rows from {len(phase3_files)} file(s): {names}")
+        return df
+
     path = RESULTS_DIR / "all_results.csv"
     if not path.exists():
         raise FileNotFoundError(
-            f"Results not found at {path}. Run simulation first: python3 run.py"
+            f"No scenario_*_all.csv and no {path}. Run the simulation first: "
+            f"python3 run_phase3.py --scenario A ... "
+            f"(or set KA_NOVA_RESULTS_DIR to a results directory)."
         )
     df = pd.read_csv(path)
     print(f"Loaded {len(df):,} rows from {path}")
