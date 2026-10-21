@@ -1399,17 +1399,45 @@ if __name__ == "__main__":
     parser.add_argument(
         "--results",
         type=str,
-        default="results",
-        help="Path to results directory (default: results/)"
+        default=None,
+        help="Path to results directory (default: RESULTS_DIR, i.e. results_phase3/ "
+             "or $KA_NOVA_RESULTS_DIR)"
     )
     parser.add_argument(
         "--quick",
         action="store_true",
         help="Quick analysis — descriptive stats and calibration only"
     )
+    # GSA entry point. run_sobol_gsa() previously had no CLI, so it could not be
+    # launched from a pod without exec'ing in and writing Python by hand.
+    parser.add_argument("--gsa", action="store_true",
+                        help="Run Sobol global sensitivity analysis instead of KPI analysis")
+    parser.add_argument("--gsa-kpi", type=str, default="corruption_index",
+                        help="KPI to analyse (default: corruption_index)")
+    parser.add_argument("--gsa-scenario", type=str, default="A",
+                        help="Scenario whose constitution is perturbed (default: A)")
+    parser.add_argument("--gsa-samples", type=int, default=64,
+                        help="Sobol n_sample; total runs = n_sample*(2k+2) (default: 64)")
+    parser.add_argument("--gsa-citizens", type=int, default=1000)
+    parser.add_argument("--gsa-steps", type=int, default=50)
     args = parser.parse_args()
 
-    analysis = KPIAnalysis(results_dir=Path(args.results))
+    if args.gsa:
+        sa = SensitivityAnalyzer.__new__(SensitivityAnalyzer)
+        SensitivityAnalyzer.run_sobol_gsa(
+            sa,
+            kpi=args.gsa_kpi,
+            scenario=args.gsa_scenario,
+            n_sample=args.gsa_samples,
+            n_citizens=args.gsa_citizens,
+            n_steps=args.gsa_steps,
+            use_llm=False,
+        )
+        raise SystemExit(0)
+
+    analysis = KPIAnalysis(
+        results_dir=Path(args.results) if args.results else RESULTS_DIR
+    )
 
     if args.quick:
         print("Quick analysis mode...")

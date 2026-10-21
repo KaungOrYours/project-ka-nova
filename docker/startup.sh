@@ -12,7 +12,34 @@ echo "Scenario:   ${SCENARIO:-NOT SET}"
 echo "Runs:       ${RUNS:-100}"
 echo "Citizens:   ${CITIZENS:-11000}"
 echo "Steps:      ${STEPS:-50}"
+echo "Job:        ${JOB:-run}"
+echo "Use LLM:    ${USE_LLM:-true}"
 echo "============================================================"
+
+# JOB=run (default) — the Monte Carlo campaign via run_phase3.py
+# JOB=gsa         — Sobol global sensitivity analysis via analysis/kpi.py --gsa
+#
+# USE_LLM=true (default) — unchanged published behaviour: Ollama + --use-llm.
+# USE_LLM=false          — rule-based. Skips Ollama entirely (no serve, no
+#   model pull) and drops --use-llm/--model. This matters commercially, not
+#   just cosmetically: run_phase3.py forces workers=1 whenever use_llm is set,
+#   so an LLM scenario is ~35,000 sequential calls and 24-30 hrs, whereas the
+#   same scenario rule-based parallelises across cores and finishes in minutes
+#   (measured: 23.2s per 11,000-citizen 50-year run, so 100 runs is ~39 min
+#   single-process). Before this flag existed there was no way to run the cheap
+#   path through the pipeline at all.
+JOB="${JOB:-run}"
+USE_LLM="${USE_LLM:-true}"
+if [ "$JOB" != "run" ] && [ "$JOB" != "gsa" ]; then
+    echo "FATAL: JOB must be 'run' or 'gsa', got '${JOB}'" >&2
+    exit 1
+fi
+if [ "$USE_LLM" != "true" ] && [ "$USE_LLM" != "false" ]; then
+    echo "FATAL: USE_LLM must be 'true' or 'false', got '${USE_LLM}'" >&2
+    exit 1
+fi
+# A GSA is rule-based by construction (run_sobol_gsa passes use_llm=False).
+if [ "$JOB" = "gsa" ]; then USE_LLM="false"; fi
 
 # ── 1. Pull latest codebase ───────────────────────────────────────────────────
 echo ""
@@ -41,14 +68,18 @@ echo ".env written."
 
 # ── 3. Start Ollama and pull model ────────────────────────────────────────────
 echo ""
-echo "[3/5] Starting Ollama..."
-ollama serve &
-OLLAMA_PID=$!
-sleep 5
+if [ "$USE_LLM" = "true" ]; then
+    echo "[3/5] Starting Ollama..."
+    ollama serve &
+    OLLAMA_PID=$!
+    sleep 5
 
-echo "Pulling model: ${LLM_MODEL:-llama3.2:3b}..."
-ollama pull ${LLM_MODEL:-llama3.2:3b}
-echo "Ollama ready."
+    echo "Pulling model: ${LLM_MODEL:-llama3.2:3b}..."
+    ollama pull ${LLM_MODEL:-llama3.2:3b}
+    echo "Ollama ready."
+else
+    echo "[3/5] Skipping Ollama (USE_LLM=false) — no serve, no model pull."
+fi
 
 # ── 4. Start Prometheus metrics exporter ─────────────────────────────────────
 echo ""
@@ -125,17 +156,45 @@ echo "Scenario: ${SCENARIO:-A}"
 mkdir -p logs
 
 IFS=',' read -ra SCENARIO_LIST <<< "${SCENARIO:-A}"
-for SCEN in "${SCENARIO_LIST[@]}"; do
-    echo "Running scenario: ${SCEN}"
-    python3 -u run_phase3.py \
-        --scenario "${SCEN}" \
-        --runs ${RUNS:-100} \
-        --citizens ${CITIZENS:-11000} \
-        --steps ${STEPS:-50} \
-        --model ${LLM_MODEL:-llama3.2:3b} \
-        --use-llm >> "logs/paper_${SCEN}.log" 2>&1
-    echo "=== SCENARIO ${SCEN} COMPLETE ===" >> "logs/paper_${SCEN}.log"
-done
+
+if [ "$JOB" = "gsa" ]; then
+    # Sobol GSA. One invocation per scenario in SCENARIO, so
+    # SCENARIO=A,C GSA_KPI=trust_index runs both. Reviewer 1 pt.2 wants the
+    # trust/coup effect sizes shown not to be artifacts of the feedback
+    # constants, which means running this on a MILITARY chain for trust_index
+    # (the fear-compliance floor only binds there), not only on A.
+    for SCEN in "${SCENARIO_LIST[@]}"; do
+        echo "Running Sobol GSA: scenario=${SCEN} kpi=${GSA_KPI:-corruption_index}"
+        python3 -u analysis/kpi.py --gsa \
+            --gsa-scenario "${SCEN}" \
+            --gsa-kpi "${GSA_KPI:-corruption_index}" \
+            --gsa-samples ${GSA_SAMPLES:-64} \
+            --gsa-citizens ${CITIZENS:-1000} \
+            --gsa-steps ${STEPS:-50} \
+            >> "logs/gsa_${SCEN}_${GSA_KPI:-corruption_index}.log" 2>&1
+        echo "=== GSA ${SCEN} COMPLETE ===" >> "logs/gsa_${SCEN}_${GSA_KPI:-corruption_index}.log"
+    done
+else
+    for SCEN in "${SCENARIO_LIST[@]}"; do
+        echo "Running scenario: ${SCEN} (use_llm=${USE_LLM})"
+        if [ "$USE_LLM" = "true" ]; then
+            python3 -u run_phase3.py \
+                --scenario "${SCEN}" \
+                --runs ${RUNS:-100} \
+                --citizens ${CITIZENS:-11000} \
+                --steps ${STEPS:-50} \
+                --model ${LLM_MODEL:-llama3.2:3b} \
+                --use-llm >> "logs/paper_${SCEN}.log" 2>&1
+        else
+            python3 -u run_phase3.py \
+                --scenario "${SCEN}" \
+                --runs ${RUNS:-100} \
+                --citizens ${CITIZENS:-11000} \
+                --steps ${STEPS:-50} >> "logs/paper_${SCEN}.log" 2>&1
+        fi
+        echo "=== SCENARIO ${SCEN} COMPLETE ===" >> "logs/paper_${SCEN}.log"
+    done
+fi
 
 echo ""
 echo "============================================================"
