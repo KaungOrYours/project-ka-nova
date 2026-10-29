@@ -96,7 +96,17 @@ KPI_COLUMNS = [
 
 # Real-world Myanmar Year Zero baselines (calibration targets)
 MYANMAR_BASELINES = {
-    "corruption_index":  0.72,   # Transparency International CPI 2023
+    # CORRECTED 2026-10-29. Was 0.72 cited to "Transparency International CPI
+    # 2023", the same wrong citation that sat in config/constitution.py and
+    # config/constitution_2008.py until today (see memory section 5j). Two
+    # errors: CPI 2023 for Myanmar is 20 of 100, which inverts to 0.80 not
+    # 0.72, and 0.72 is actually the inverted CPI score for 2016 / 2020 / 2021
+    # (28 of 100). Now matches the corrected encoded year-zero value and its
+    # instrument: V-Dem Dataset v16 (2026), variable v2x_corr (political
+    # corruption index, 0 = clean to 1 = highly corrupt), Myanmar, 2008 =
+    # 0.878, flat across 1989 to 2009. This is the baseline the A and C
+    # year-zero values are now calibrated to, so the two must move together.
+    "corruption_index":  0.878,  # V-Dem v16 v2x_corr, Myanmar, 2008
     "trust_index":       0.22,   # World Bank governance 2022
     # UNIT MISMATCH, flagged 2026-10-21, not silently changed.
     # The World Bank 2017 figure is Myanmar's household income/consumption
@@ -141,7 +151,7 @@ SIGNIFICANCE_LEVEL = 0.05
 # actually drives, so Sobol indices below are computed from real Phase 3 model
 # output, not a synthetic placeholder).
 GSA_PROBLEM = {
-    "num_vars": 13,
+    "num_vars": 14,
     "names": [
         "merit_performance_weight",
         "analysis_threshold",
@@ -163,6 +173,15 @@ GSA_PROBLEM = {
         "fear_compliance_trust_floor",
         "civilian_coup_signal_damping",
         "stability_rights_bonus",
+        # Added 2026-10-29 (memory section 5j, decision 6). Myanmar's own
+        # YEAR_ZERO_COUP_RISK=0.25 is a calibration choice, not a sourced
+        # figure (the historical Powell & Thyne base rate is ~0.054), and
+        # Reviewer 1 pt.2's "is the divergence parameter-driven" question
+        # applies to this constant exactly as it did to the trust floor.
+        # Disclosed openly per Kaung's decision rather than quietly
+        # changed; the GSA quantifies its real contribution instead of
+        # leaving it asserted.
+        "coup_risk",
     ],
     "bounds": [
         # Re-centred 2026-10-21. Was [0.25, 0.45], which excluded the live
@@ -181,7 +200,14 @@ GSA_PROBLEM = {
         [0.30, 0.60],   # iig_investigation_trigger (default 0.45)
         [0.75, 0.95],   # iig_entry_merit_min
         [0.20, 0.40],   # coup_trigger_loyalty
-        [0.60, 0.85],   # year_zero_corruption
+        # Re-centred 2026-10-29. Was [0.60, 0.85], which stopped bracketing the
+        # live default the moment Myanmar's year-zero corruption was corrected
+        # from an unsourced 0.72 to the real V-Dem v16 2008 value of 0.878 (see
+        # memory section 5j). Same defect class as bug #26: SALib must not
+        # sample a region that excludes the configuration being analysed.
+        # Width preserved at 0.25, re-centred on 0.878 and clamped to the
+        # index's own [0, 1] domain.
+        [0.75, 1.00],   # year_zero_corruption (default 0.878)
         # Centred on the published defaults (0.10 / 0.05 / 0.20). The lower
         # bound of each reaches ~0, which is the substantively interesting
         # case: it asks what the separation looks like with the floor, the
@@ -189,8 +215,30 @@ GSA_PROBLEM = {
         [0.00, 0.20],   # fear_compliance_trust_floor  (default 0.10)
         [0.00, 0.10],   # civilian_coup_signal_damping (default 0.05)
         [0.00, 0.40],   # stability_rights_bonus       (default 0.20)
+        # Brackets the live Myanmar default (0.25) and reaches down past the
+        # real historical base rate (0.054, Powell & Thyne V2026.08.29, 4
+        # successful coups in 78 years) so the GSA can answer what Scenario
+        # C's collapse looks like at the real rate, not just near the
+        # disclosed calibration value. Upper bound doubles the default for
+        # symmetry. Scenario A has no YEAR_ZERO_COUP_RISK field at all (MFU's
+        # SimulationConfig predates it) — run_sobol_gsa skips this parameter
+        # for Scenario A with a logged notice rather than erroring or
+        # silently no-opping; see OPTIONAL_GSA_PARAMS below.
+        [0.00, 0.50],   # coup_risk (default 0.25, historical base rate 0.054)
     ],
 }
+
+# GSA parameters that are legitimately absent from one or more constitutions
+# by design, not a schema bug. Currently only coup_risk: MFU's own
+# SimulationConfig predates YEAR_ZERO_COUP_RISK entirely, and
+# model_phase3.py:399 falls back to a hardcoded 0.25 default for Scenario A
+# specifically rather than reading a live field, so there is no dataclass
+# field on A's constitution to override. Every other GSA parameter is
+# confirmed present (though not always bracketed — see docs/bias_audit.md
+# Section 5.3) on all seven constitutions, so a missing field for any of
+# those remains a genuine schema defect and run_sobol_gsa must keep raising
+# loudly for it, exactly as before this parameter was added.
+OPTIONAL_GSA_PARAMS = {"coup_risk"}
 
 # Maps each GSA parameter name to the live CONSTITUTION attribute it overrides
 # (section, attribute) — section is an attribute of the CONSTITUTION singleton
@@ -212,7 +260,116 @@ GSA_PARAM_MAP = {
     "fear_compliance_trust_floor":             ("rights", "FEAR_COMPLIANCE_TRUST_FLOOR"),
     "civilian_coup_signal_damping":            ("rights", "CIVILIAN_COUP_SIGNAL_DAMPING"),
     "stability_rights_bonus":                  ("rights", "STABILITY_RIGHTS_BONUS"),
+    # Added 2026-10-29 (memory 5j decision 6). Absent on Scenario A only
+    # (MFU's SimulationConfig predates this field) — see OPTIONAL_GSA_PARAMS.
+    "coup_risk":                                ("simulation", "YEAR_ZERO_COUP_RISK"),
 }
+
+# ── GSA PARAMETER CLASSIFICATION, scope enforcement ──────────────────────────
+# Decided 2026-10-29 (senior-data-analyst, the GSA-scope decision flagged in
+# memory section 5j's "NEW FINDING" subsection and docs/bias_audit.md 5.3).
+# The 14 GSA_PROBLEM parameters are not one kind of thing, and a single
+# MFU-centred bound set is not equally defensible for all of them on every
+# scenario. Three classes, verified directly against every constitution's
+# live default (not spot-checked):
+#
+#   "institutional": an MFU-authored constitutional design choice. Genuinely
+#     a free parameter only on Scenario A/MFU. On every other scenario this
+#     is instead a fixed, sourced fact of that country's own real
+#     constitutional text (its own veto threshold, its own resource split,
+#     its own IIG trigger, etc.), so GSA_PROBLEM's MFU-centred bound samples
+#     a region that scenario's real government mostly does not occupy.
+#     Measured directly: 6 of these 9 fail to bracket Scenario C's live
+#     default, and every one of SK/TH/PK/CL/DE fails to bracket at least
+#     four of the nine. Perturb ONLY on a scenario whose own live default
+#     this bound set actually brackets (currently: Scenario A for all nine).
+#
+#   "calibration": a real-world initial-condition input, sourced (or
+#     explicitly disclosed as a deliberate departure, as with Myanmar's
+#     coup_risk) per scenario, not an institutional design choice at all.
+#     year_zero_corruption is 0.878 on BOTH A and C (the same calibrated
+#     anchor, deliberately), so [0.75, 1.00] legitimately covers those two
+#     scenarios and no others (SK 0.458, TH 0.683, PK 0.637, CL 0.067,
+#     DE 0.020 all fail). coup_risk is differentiated per country too
+#     (SK 0.02, TH 0.12, PK 0.086, CL 0.05, DE 0.00, C 0.25
+#     disclosed-inflated), it is genuinely a calibration input, NOT a
+#     Ka-Nova modelling constant, and it is currently bracketed by
+#     [0.00, 0.50] on every scenario that has the field only because that
+#     bound was deliberately built wide enough to span the real historical
+#     range across all six countries that carry it. This is empirically
+#     true today, verified against every scenario's live value, but it is not
+#     structurally guaranteed the way the three modelling constants below
+#     are, and must be re-checked explicitly if a future scenario's own
+#     coup-risk calibration ever falls outside [0.00, 0.50].
+#
+#   "modelling_constant": a Ka-Nova engine/feedback constant. Confirmed
+#     byte-identical across all seven real constitutions
+#     (docs/bias_audit.md Section 2.4): nobody has ever researched a
+#     country-specific fear-compliance floor, coup-signal damping or
+#     stability bonus, they were backfilled as a single modelling decision
+#     applied uniformly to every scenario. Because the live value genuinely
+#     IS the same on every scenario, there is no per-country real value the
+#     shared bound could sample away from, so perturbing these on ANY
+#     scenario is legitimate with the one shared bound set below; this is
+#     the only class for which "legitimate on any scenario" is actually true.
+#
+# See docs/gsa_scope.md for the full verdict, the manuscript scope sentence,
+# and the per-run publishability table this classification was built to
+# support. _gsa_scope_violations() below enforces this at runtime rather
+# than leaving it as a documentation promise the next caller can ignore.
+GSA_PARAM_CLASS = {
+    "merit_performance_weight":              "institutional",
+    "analysis_threshold":                    "institutional",
+    "state_share":                           "institutional",
+    "ethnic_direct_share":                   "institutional",
+    "trust_acceleration_multiplier":         "institutional",
+    "trust_acceleration_trigger_corruption": "institutional",
+    "iig_investigation_trigger":             "institutional",
+    "iig_entry_merit_min":                   "institutional",
+    "coup_trigger_loyalty":                  "institutional",
+    "year_zero_corruption":                  "calibration",
+    "coup_risk":                             "calibration",
+    "fear_compliance_trust_floor":           "modelling_constant",
+    "civilian_coup_signal_damping":          "modelling_constant",
+    "stability_rights_bonus":                "modelling_constant",
+}
+
+
+def _gsa_scope_violations(target_constitution, active_names: list, scenario: str) -> list:
+    """
+    Pure parameter-space check, no model runs. For every name in
+    `active_names` classified "institutional" or "calibration" (see
+    GSA_PARAM_CLASS), compares `scenario`'s own live default against the
+    declared GSA_PROBLEM bound. Returns a list of
+    (name, cls, lo, hi, live_value) tuples for every violation.
+    "modelling_constant" parameters are exempt by design — their live value
+    is identical on every scenario (verified in docs/bias_audit.md 2.4), so
+    there is no real per-scenario value a shared bound could exclude.
+    """
+    bounds = dict(zip(GSA_PROBLEM["names"], GSA_PROBLEM["bounds"]))
+    violations = []
+    for name in active_names:
+        cls = GSA_PARAM_CLASS.get(name, "institutional")  # fail safe: unclassified = restricted
+        if cls == "modelling_constant":
+            continue
+        section, attr = GSA_PARAM_MAP[name]
+        # Defensive: run_sobol_gsa already filters OPTIONAL_GSA_PARAMS that are
+        # absent from the target constitution out of active_names before calling
+        # this, so the real path never hits the missing case. Called standalone
+        # with an unfiltered name list, though, a genuinely absent field (for
+        # example MFU has no simulation.YEAR_ZERO_COUP_RISK) previously raised a
+        # bare AttributeError from inside this helper, which reads as a bug in
+        # the scope check rather than as "that parameter does not exist here".
+        # Skip it instead: a field the constitution does not define has no live
+        # value for a bound to exclude, so it cannot be a scope violation.
+        section_obj = getattr(target_constitution, section, None)
+        if section_obj is None or not hasattr(section_obj, attr):
+            continue
+        live_value = float(getattr(section_obj, attr))
+        lo, hi = bounds[name]
+        if not (lo <= live_value <= hi):
+            violations.append((name, cls, lo, hi, live_value))
+    return violations
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -615,9 +772,34 @@ class CalibrationValidator:
         self.loader = loader
 
     def validate_year_zero(self) -> pd.DataFrame:
-        """Compare Year Zero simulation output to Myanmar real data."""
+        """
+        Compare Year Zero simulation output to Myanmar real data.
+
+        SCENARIO SCOPING, added 2026-10-29. MYANMAR_BASELINES is Myanmar-
+        specific, so this validator is only meaningful for the Myanmar
+        scenarios. It previously took the mean across every row at year 0,
+        which was harmless while only A and C existed but silently blends all
+        seven scenarios' year-zero values together once the 7-constitution
+        campaign is loaded, averaging (for example) Germany's 0.020 and
+        Chile's 0.067 in with Myanmar's 0.878 and then comparing that
+        meaningless blend against a Myanmar baseline. Now restricted to the
+        Myanmar-anchored scenarios. Validating each non-Myanmar scenario
+        against its OWN country baselines is a separate, larger task: it needs
+        a per-country baseline table, which does not exist yet. See
+        docs/calibration_provenance.md.
+        """
+
+        MYANMAR_SCENARIOS = ("A", "C")
 
         year_zero = self.loader.get_year(0)
+        if "scenario" in year_zero.columns:
+            present = set(year_zero["scenario"].unique())
+            dropped = sorted(present - set(MYANMAR_SCENARIOS))
+            if dropped:
+                print(f"   validate_year_zero: restricted to Myanmar scenarios "
+                      f"{list(MYANMAR_SCENARIOS)}; excluded {dropped} "
+                      f"(MYANMAR_BASELINES does not apply to them)")
+            year_zero = year_zero[year_zero["scenario"].isin(MYANMAR_SCENARIOS)]
         rows = []
 
         for kpi, baseline in MYANMAR_BASELINES.items():
@@ -995,6 +1177,7 @@ class SensitivityAnalyzer:
         n_steps: int = 50,
         use_llm: bool = False,
         output: Optional[Path] = None,
+        allow_unscoped_params: bool = False,
     ) -> dict:
         """
         MoS 3 — Sensitivity Analysis (real Sobol GSA, not a feasibility stub).
@@ -1012,10 +1195,12 @@ class SensitivityAnalyzer:
         is the actual sensitivity-analysis deliverable referenced in the
         module docstring and requested by both IEEE Access reviewers.
 
-        Total runs = n_sample x (k + 2), k = GSA_PROBLEM["num_vars"] (13),
-        i.e. 960 at the default n_sample=64. (The 2k+2 form applies only
-        when calc_second_order=True; this method passes False, so the
-        earlier 2k+2 figure overstated the cost by ~87%.)
+        Total runs = n_sample x (k + 2), k = GSA_PROBLEM["num_vars"] (14, or
+        13 on Scenario A, which lacks YEAR_ZERO_COUP_RISK — see
+        OPTIONAL_GSA_PARAMS), i.e. 1024 at the default n_sample=64 on a
+        14-parameter run. (The 2k+2 form applies only when
+        calc_second_order=True; this method passes False, so the earlier
+        2k+2 figure overstated the cost by ~87%.)
         Defaults (n_sample=64, n_citizens=1000) match the RunPod-scale design
         in feasibility_check.py — reduce both for a fast local smoke test.
 
@@ -1024,15 +1209,44 @@ class SensitivityAnalyzer:
         2026-10-21; previously always mutated the MFU singleton, so any
         scenario other than "A" silently perturbed nothing).
 
-        Scope note for the manuscript: the ten constitutional parameters are
-        MFU-specific tunable constants, and Scenario C's 2008 encoding is a
-        separately-sourced fixed historical document rather than a free
-        parameter space. The three feedback/dynamics parameters, however, are
-        Ka-Nova modelling choices rather than provisions of any real
-        constitution, so perturbing them is legitimate on ANY scenario — and
-        for the trust floor it is only meaningful on a military chain, since
-        that is the only chain where the floor binds. Running this on C/TH/PK
-        for `trust_index` is what quantifies Reviewer 1 pt.2 for trust.
+        Scope note for the manuscript, corrected 2026-10-29 (see
+        GSA_PARAM_CLASS and docs/gsa_scope.md, which supersedes an earlier
+        version of this note that grouped `coup_risk` with the three
+        feedback constants; verified against every scenario's live default,
+        that grouping does not hold, see below). Three classes, not two:
+        nine are MFU-authored institutional design choices, genuinely free
+        parameters only on Scenario A. On every other scenario they are
+        fixed facts of that country's own real constitutional text, so the
+        bound set below only legitimately scopes to Scenario A for these
+        nine. `year_zero_corruption` is a calibration input shared by A and
+        C only (both 0.878); it does not bracket SK/TH/PK/CL/DE. `coup_risk`
+        is ALSO a calibration input, differentiated per country, not a
+        modelling constant. It currently brackets every scenario that
+        carries the field only because the bound was deliberately built
+        wide enough to span the real historical range, not because it is
+        scenario-invariant by nature. Only `fear_compliance_trust_floor`,
+        `civilian_coup_signal_damping` and `stability_rights_bonus` are
+        genuinely Ka-Nova modelling constants rather than provisions of any
+        real constitution, confirmed byte-identical across all seven real
+        constitutions, so perturbing THOSE THREE ONLY is legitimate on ANY
+        scenario with this one shared bound set. For the trust floor this is
+        only mechanically meaningful on a military chain, since that is the
+        only chain where the floor binds. Running `trust_index` on C for
+        just the three modelling constants (as the published
+        `sobol_sensitivity_C_trust_index.csv` headline already does) is what
+        quantifies Reviewer 1 pt.2 for trust; it does NOT license a claim
+        about the other ten/eleven parameters' contribution on that run,
+        both because several were (at the time) consumed via bare MFU
+        reads (memory 5i, since fixed) and because most of their bounds do
+        not bracket Scenario C at all (this note, and bias_audit.md 5.3).
+
+        This method enforces the restriction at runtime via
+        `_gsa_scope_violations()` rather than leaving it as a documentation
+        promise: by default it raises before any model run if an
+        "institutional" or "calibration" parameter's bound does not bracket
+        `scenario`'s own live default. Pass `allow_unscoped_params=True` to
+        proceed anyway (e.g. for a deliberately-disclosed exploratory run);
+        doing so must be stated explicitly in any resulting table.
         """
         if not SALIB_AVAILABLE:
             raise ImportError(
@@ -1043,15 +1257,6 @@ class SensitivityAnalyzer:
         import dataclasses
         from model_phase3 import KaNovaModelPhase3
 
-        param_values = salib_sobol_sample.sample(GSA_PROBLEM, n_sample, calc_second_order=False)
-        total_runs = param_values.shape[0]
-        print(f"\nSobol GSA: {total_runs} model runs "
-              f"(n_sample={n_sample}, k={GSA_PROBLEM['num_vars']}, kpi={kpi}, scenario={scenario})")
-
-        # Each CONSTITUTION section (merit, chambers, federal, iig, military,
-        # simulation) is a frozen dataclass — individual fields can't be
-        # mutated in place. Snapshot the whole section objects so every
-        # override is reverted exactly, even if a run raises.
         # LATENT BUG FIXED 2026-10-21. This always mutated the MFU singleton
         # imported at module load, but since the bug #11 registry refactor the
         # model loads its constitution via get_scenario(scenario). So calling
@@ -1059,28 +1264,94 @@ class SensitivityAnalyzer:
         # CONSTITUTION_2008, and every override was silently a no-op — the GSA
         # would have reported near-zero sensitivity for every parameter and
         # looked like a valid result. Resolve the target from the registry so
-        # the object perturbed is the object the run actually reads.
+        # the object perturbed is the object the run actually reads. Moved
+        # ahead of sampling (2026-10-29) so the effective problem size (see
+        # below) is known before SALib draws samples.
         from config.scenario_registry import get_scenario
         target_constitution = get_scenario(scenario).constitution
 
-        section_names = sorted({section for section, _ in GSA_PARAM_MAP.values()})
         missing = [
-            (s, f) for name, (s, f) in GSA_PARAM_MAP.items()
+            (name, s, f) for name, (s, f) in GSA_PARAM_MAP.items()
             if not hasattr(getattr(target_constitution, s, None), f)
         ]
-        if missing:
+        hard_missing = [(name, s, f) for name, s, f in missing if name not in OPTIONAL_GSA_PARAMS]
+        if hard_missing:
             raise AttributeError(
                 f"Scenario {scenario!r}'s constitution is missing GSA target "
-                f"fields {missing}. Backfill them before running the GSA on "
-                f"this scenario rather than letting overrides silently no-op."
+                f"fields {[(s, f) for _, s, f in hard_missing]}. Backfill them "
+                f"before running the GSA on this scenario rather than letting "
+                f"overrides silently no-op."
             )
+
+        # Parameters in OPTIONAL_GSA_PARAMS that are genuinely absent from
+        # this scenario's constitution are dropped from THIS run's problem
+        # (not silently no-opped, not a hard error) with a logged notice.
+        # Currently only coup_risk on Scenario A.
+        skipped = [name for name, _, _ in missing if name in OPTIONAL_GSA_PARAMS]
+        if skipped:
+            print(f"GSA notice: scenario {scenario!r}'s constitution has no "
+                  f"field for {skipped} — skipping {len(skipped)} of "
+                  f"{GSA_PROBLEM['num_vars']} parameters for this run rather "
+                  f"than erroring or silently no-opping.")
+        active_names = [n for n in GSA_PROBLEM["names"] if n not in skipped]
+        active_bounds = [b for n, b in zip(GSA_PROBLEM["names"], GSA_PROBLEM["bounds"]) if n not in skipped]
+        problem = {"num_vars": len(active_names), "names": active_names, "bounds": active_bounds}
+
+        # Scope enforcement (2026-10-29, senior-data-analyst decision, see
+        # GSA_PARAM_CLASS and docs/gsa_scope.md). Fails fast, before any
+        # model run, if an "institutional" or "calibration" parameter's
+        # declared bound does not bracket THIS scenario's own live default.
+        # This is the structural fix for the finding in docs/bias_audit.md
+        # 5.3 / memory 5j: 61% of spot-checked non-MFU defaults sit outside
+        # the MFU-centred GSA_PROBLEM bounds, and a documentation-only scope
+        # note does not stop the next caller from running (and publishing)
+        # exactly that violation.
+        violations = _gsa_scope_violations(target_constitution, active_names, scenario)
+        if violations:
+            lines = [
+                f"  - {name} ({cls}): bound [{lo}, {hi}] does not bracket "
+                f"scenario {scenario!r}'s own live default {live}"
+                for name, cls, lo, hi, live in violations
+            ]
+            msg = (
+                f"GSA scope: {len(violations)} of {len(active_names)} active "
+                f"parameter(s) are outside the region scenario {scenario!r}'s "
+                f"own government actually occupies:\n" + "\n".join(lines) +
+                "\n\nThese are institutional-design or calibration "
+                "parameters (GSA_PARAM_CLASS), not Ka-Nova modelling "
+                "constants, so the current MFU-centred GSA_PROBLEM bounds "
+                "only legitimately scope to the scenario(s) they were "
+                "centred on (see docs/gsa_scope.md)."
+            )
+            if not allow_unscoped_params:
+                raise ValueError(
+                    msg + "\n\nRefusing to sample outside this region. Run "
+                    "this KPI on a scenario the bound set actually brackets "
+                    "for these parameters, restrict to the modelling "
+                    "constants only, or pass allow_unscoped_params=True to "
+                    "proceed anyway and disclose the departure explicitly "
+                    "in any resulting table."
+                )
+            print("GSA scope WARNING (allow_unscoped_params=True, "
+                  "proceeding anyway, disclose this explicitly):\n" + msg)
+
+        param_values = salib_sobol_sample.sample(problem, n_sample, calc_second_order=False)
+        total_runs = param_values.shape[0]
+        print(f"\nSobol GSA: {total_runs} model runs "
+              f"(n_sample={n_sample}, k={problem['num_vars']}, kpi={kpi}, scenario={scenario})")
+
+        # Each CONSTITUTION section (merit, chambers, federal, iig, military,
+        # simulation) is a frozen dataclass — individual fields can't be
+        # mutated in place. Snapshot the whole section objects so every
+        # override is reverted exactly, even if a run raises.
+        section_names = sorted({GSA_PARAM_MAP[name][0] for name in active_names})
         originals = {section: getattr(target_constitution, section) for section in section_names}
 
         Y = np.zeros(total_runs)
         try:
             for row_idx, row in enumerate(param_values):
                 overrides_by_section = {}
-                for col_idx, name in enumerate(GSA_PROBLEM["names"]):
+                for col_idx, name in enumerate(active_names):
                     section, attr = GSA_PARAM_MAP[name]
                     overrides_by_section.setdefault(section, {})[attr] = float(row[col_idx])
                 for section, field_overrides in overrides_by_section.items():
@@ -1116,10 +1387,10 @@ class SensitivityAnalyzer:
                 f"{int(np.isnan(Y).sum())}/{total_runs} runs — check KPI_COLUMNS / model_phase3.get_results()."
             )
 
-        Si = salib_sobol_analyze.analyze(GSA_PROBLEM, Y, calc_second_order=False, print_to_console=False)
+        Si = salib_sobol_analyze.analyze(problem, Y, calc_second_order=False, print_to_console=False)
 
         rows = []
-        for i, name in enumerate(GSA_PROBLEM["names"]):
+        for i, name in enumerate(problem["names"]):
             rows.append({
                 "parameter": name,
                 "S1": round(float(Si["S1"][i]), 4),
@@ -1423,6 +1694,15 @@ if __name__ == "__main__":
                         help="Sobol n_sample; total runs = n_sample*(2k+2) (default: 64)")
     parser.add_argument("--gsa-citizens", type=int, default=1000)
     parser.add_argument("--gsa-steps", type=int, default=50)
+    # Scope-enforcement escape hatch (2026-10-29, see GSA_PARAM_CLASS and
+    # docs/gsa_scope.md). Off by default: run_sobol_gsa refuses to sample
+    # outside the region a scenario's own government actually occupies for
+    # its institutional/calibration parameters. Only pass this for a
+    # deliberately-disclosed exploratory run.
+    parser.add_argument("--gsa-allow-unscoped", action="store_true",
+                        help="Allow institutional/calibration GSA parameters whose bound does "
+                             "not bracket this scenario's own live default (default: refuse). "
+                             "Any resulting table must disclose this explicitly.")
     args = parser.parse_args()
 
     if args.gsa:
@@ -1435,6 +1715,7 @@ if __name__ == "__main__":
             n_citizens=args.gsa_citizens,
             n_steps=args.gsa_steps,
             use_llm=False,
+            allow_unscoped_params=args.gsa_allow_unscoped,
         )
         raise SystemExit(0)
 
