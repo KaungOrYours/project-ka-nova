@@ -337,6 +337,28 @@ class ThreeChamberSystem:
 
     def generate_annual_policy(self, year: int):
         """Generate one policy proposal per year for chambers to vote on."""
+        from agents.official import EthnicLeaderAgent
+
+        # ethnic_impact must cover every ethnicity actually represented on
+        # the Ethnic Leaders Council in this run, not a hardcoded 4-of-8
+        # Myanmar subset. The hardcoded subset made a "yes" vote
+        # arithmetically impossible for any leader whose ethnicity fell
+        # outside it (score cap 0.405 < 0.50 threshold, see
+        # EthnicLeaderAgent.cast_veto_vote in agents/official.py), in every
+        # scenario, including A and C (docs/bias_audit.md finding #22).
+        # Deriving the key set from the live council roster covers whatever
+        # ethnicities are actually seated this run, and degrades safely to
+        # an empty dict (no crash via Policy.__init__'s `ethnic_impact or
+        # {}`, no phantom entries) if a scenario's council roster is empty.
+        # This does NOT rename or re-derive each country's own ethnic
+        # composition (ETHNIC_ARCHETYPE_PROPORTIONS, a separate tracked
+        # task) — it only ensures no seat is structurally unreachable.
+        ethnic_leaders = [
+            a for a in self.model.schedule.agents
+            if isinstance(a, EthnicLeaderAgent)
+        ]
+        represented_ethnicities = {leader.ethnicity for leader in ethnic_leaders}
+
         policy = Policy(
             policy_id=f"POL_{year}_{random.randint(1000, 9999)}",
             policy_type=random.choice([
@@ -345,10 +367,8 @@ class ThreeChamberSystem:
             ]),
             benefit_score=random.uniform(0.30, 0.85),
             ethnic_impact={
-                "Bamar": random.uniform(0.30, 0.80),
-                "Shan": random.uniform(0.30, 0.80),
-                "Karen": random.uniform(0.30, 0.80),
-                "Kachin": random.uniform(0.30, 0.80)
+                ethnicity: random.uniform(0.30, 0.80)
+                for ethnicity in represented_ethnicities
             },
             evidence_quality=random.uniform(0.40, 0.90),
             long_term_benefit=random.uniform(0.35, 0.85),
