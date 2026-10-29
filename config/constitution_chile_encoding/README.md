@@ -955,3 +955,214 @@ samples in any meaningful sense. Three options, all needing Kaung:
     width in every results table — defensible only if stated up front, never discovered by a reviewer.
 Note also that the ratio rule does not reproduce the existing baseline: Myanmar's locked 11,000
 implies 55,000,000, but Myanmar's own World Bank 2008 population is 48,390,793, i.e. 9,678 at 1:5000.
+
+---
+
+# 7. Real personal income tax bracket structure at year zero (1990)
+
+*Added 2026-10-29 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement. Reason this section exists: the `SCHEMA FIX 2026-10-29` tag in
+`config/constitution_chile.py` added equal-width poverty-line bands (0 to 1x, 1 to 2x, and so on)
+around the already-authored marginal rates purely to stop a `TypeError` crash once bug #11's
+constitution-propagation fix made each scenario read its own `economic.TAX_BRACKETS`. Those widths
+were never sourced, and they reach a published metric: `agents/citizen.py:862-867` deducts tax from
+citizen income, `:904` computes `gdp_contribution = productivity * income * 0.001` into state GDP,
+and the live Gini (`agents/institutional.py:141`) is the dispersion of state GDP. This section
+documents the real year-zero statute. Additive only, nothing above is changed. No
+`config/constitution*.py` file is edited here; the tuples below are a proposal for the encoding
+step.*
+
+## 7.1 What the consumer function actually requires
+
+Read from `agents/citizen.py`, `_calculate_progressive_tax()` (line 869) and its caller
+`_pay_taxes()` (line 838). Identical for all seven scenarios, so this subsection is repeated
+verbatim in every encoding package.
+
+| Requirement | Why | Consequence of getting it wrong |
+|---|---|---|
+| Schema is `Tuple[Tuple[float, float, float], ...]` = `(low_multiple, high_multiple, marginal_rate)` | The loop unpacks three values per band | A flat tuple of bare rates raises `TypeError` on unpack. This was the bug #11 follow-on crash |
+| Bands must be sorted strictly ascending by `low_multiple` | The loop `break`s as soon as `taxable <= bracket_low` | An out-of-order band silently truncates the rest of the schedule, no error raised |
+| Bands must be contiguous, `band[i].high == band[i+1].low` | `income_in_bracket = min(taxable, bracket_high) - bracket_low` | A gap leaves that income slice untaxed; an overlap taxes it twice. No validation catches either |
+| The top band's `high_multiple` must be exactly `float("inf")` | `bracket_high` is set to infinity only on the literal test `high_mult != float('inf')` | A finite top band silently leaves all income above it untaxed |
+| Any number of bands is fine | No `len()` assumption anywhere | 2-band and 18-band schedules both work |
+| Multiples are of the live simulated poverty line, not currency | `bracket_low = poverty_line * low_mult` | |
+| Income at or below 1.0x the poverty line is always untaxed | `if income <= poverty_line: return 0.0` guards the whole function | A non-zero rate on a band starting at 0.0 therefore applies to the first poverty-line slice only for citizens who are above the poverty line |
+| `Constitution.validate()` does not inspect `TAX_BRACKETS` at all | Verified by grep | A malformed schedule passes validation and fails at runtime, or worse, silently miscomputes |
+
+The poverty line itself is not constitutional. `agents/institutional.py:289` starts
+`TaxSystemAgent.poverty_line` at 1000.0, `:303-311` updates it annually and clamps it to
+[500, 5000], and `agents/citizen.py:861` falls back to 1000.0 if the key is missing. At the default
+`gdp_growth_rate` of 0.02 the line grows about 0.4 percent a year, so roughly 1232 by year 50.
+
+## 7.2 Critical engine finding: the simulated income distribution is far narrower than any real one
+
+This is the most important thing in this section and it applies to all seven scenarios.
+
+`agents/citizen.py:1222-1227`, `_init_income()`, is
+`1000.0 * min(2.0, age/30) * (1 + education_level*1.5) * uniform(0.8, 1.2)`, with
+`education_level` drawn by age band in `_init_education()` (max 1.0). Income thereafter changes only
+by tax paid (`:865`) and the Article VIII elite transfer (`:925-926`), both small. Simulated over
+200,000 working-age draws against the initial poverty line of 1000:
+
+| quantile | p1 | p5 | p10 | p25 | p50 | p75 | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| income / poverty line | 0.97x | 1.18x | 1.35x | 1.87x | 2.68x | 3.46x | 4.11x | 4.49x | 5.06x | 5.63x |
+
+**There is zero probability mass above about 5.6x the poverty line.** Any real bracket boundary above
+that is mechanically inert.
+
+This is a limitation of the income generator, not of the tax encoding, and a reviewer can find it in
+ten minutes. Two honest options, both requiring Kaung's decision:
+- (a) encode the real brackets and disclose which real bands cannot fire in this engine;
+- (b) widen `_init_income()`'s dispersion so real brackets can bind, which is a simulation-design
+  change affecting every scenario including the locked Scenario A and C numbers.
+
+Do **not** rescale the brackets to "fit" the engine. That would reintroduce exactly the invented
+content this section exists to remove.
+
+## 7.3 The real schedule in force at year zero
+
+Year zero for `CL` is **1990** (Aylwin inaugurated 11 March 1990; this file encodes the 1990 to 2005
+elected-Congress era per `.claude/memory.md` section 4a decision 4).
+
+Chile is structurally different from every other country in this set in one respect that matters:
+**its tax brackets are not denominated in pesos at all.** They are denominated in UTA (Unidad
+Tributaria Anual) and UTM (Unidad Tributaria Mensual), inflation-indexed tax units. That is a real
+constitutional-economy fact worth recording, because it means Chile's schedule did not suffer the
+bracket-creep erosion that destroyed the real progressivity of Myanmar's and Pakistan's schedules
+over the same period.
+
+| Item | Value | Source |
+|---|---|---|
+| Instrument | **Decreto Ley 824 de 1974, Ley sobre Impuesto a la Renta, Articulo 52**, the Impuesto Global Complementario, the annual comprehensive personal income tax | Biblioteca del Congreso Nacional de Chile, Ley Chile, `idNorma=6368`, consolidated text **as in force at version date 1990-06-28**, retrieved 2026-10-29 via the BCN XML service `https://www.bcn.cl/leychile/consulta/obtxml?opt=7&idNorma=6368&idVersion=1990-06-28` |
+| Structure | **8 bands, exempt to 10 UTA then 5% rising to 50% above 150 UTA** | Same |
+| Why Art. 52 and not Art. 43 | Art. 52 is the annual tax on all personal income, which is what the engine models (an annual `self.income`). Art. 43 No. 1 is the monthly Impuesto Unico de Segunda Categoria on wages only. See the integrity note below: BCN's consolidated Art. 43 text for 1990 is almost certainly stale, while Art. 52's is internally coherent | Researcher's judgement, stated |
+
+Statutory bands, Art. 52, as in force 1990:
+
+| band | annual tax base | marginal rate |
+|---|---|---|
+| 1 | up to 10 UTA | exempt |
+| 2 | over 10 and not over 30 UTA | 5% |
+| 3 | over 30 and not over 50 UTA | 10% |
+| 4 | over 50 and not over 70 UTA | 15% |
+| 5 | over 70 and not over 90 UTA | 25% |
+| 6 | over 90 and not over 120 UTA | 35% |
+| 7 | over 120 and not over 150 UTA | 45% |
+| 8 | over 150 UTA | 50% |
+
+### Data-integrity note on BCN's historical versioning, read this before trusting Art. 43
+
+BCN's version graph for DL 824 records **no amendment at all to Articulo 43 between 1974 and
+15 September 1993**. Requesting the 1984, 1985, 1990 and 1991 versions all return the original 1974
+scale (3.5% on income up to 2 UTM, rising to 60% above 80 UTM); the 1994 version returns the first
+recorded change, the Ley 19.247 scale (exempt to 10 UTM, 5 / 10 / 15 / 25 / 35 / 45). A 60 percent
+top monthly rate coexisting with a 50 percent top annual rate is not credible, and Ley 18.293 (1984)
+and Ley 18.775 (14 January 1989) are both known to have amended the Income Tax Law in that window.
+**Conclusion: BCN's consolidated Art. 43 is incomplete for 1974 to 1993 and must not be cited for
+1990.** Art. 52's 1990 text, by contrast, matches the independently well-attested "10 UTA exempt,
+top rate 50 percent" structure, and BCN serves a demonstrably maintained version graph for the norm
+as a whole (the current version correctly returns the modern 13.5 UTM / 4% to 40% schedule), so the
+Art. 52 text is used. **I could not independently confirm the Art. 52 text against a second
+primary source**, so treat it as single-sourced and have a human cross-check it against the Diario
+Oficial or an SII circular before print.
+
+### The currently encoded rates are partly wrong
+
+`config/constitution_chile.py` currently holds `(0.00, 0.05, 0.10, 0.15, 0.20)` tagged
+"GUESS, not addressed in the research package". The bottom four (0, 5, 10, 15) are in fact correct
+for 1990. The fifth is not: the real schedule continues 25, 35, 45, 50 and has eight bands, not
+five. **Recommendation: extend to the real eight bands.**
+
+## 7.4 Benchmark and the conversion
+
+Two quantities are needed: the peso value of a UTA in 1990, and a 1990 subsistence benchmark.
+
+| Item | Value | Source and status |
+|---|---|---|
+| UTM, December 1990 | **12,275 CLP** | Chilean UTM series (SII / Banco Central de Chile series `PRE_UTM`), as tabulated at `https://utmchile.cl/utm-historico/1990/`. **Status: secondary aggregator.** The 1990 series runs 9,576 CLP in January to 12,275 CLP in December, a 28.19 percent rise, which is consistent with Chile's 1990 inflation. A human should re-pull from SII's own historical UTM table before print |
+| **UTA, 1990** | **12 x 12,275 = 147,300 CLP** | UTA is defined as twelve times the December UTM of the year |
+| Subsistence benchmark used, labelled **PROXY, NOT A POVERTY LINE** | **Ingreso minimo mensual, 26,000 CLP per month from 1 June 1990**, that is **312,000 CLP per year** | Chilean statutory minimum income. DerechoPedia, "Ingreso Minimo Mensual" historical table (attributing the June 1990 value to Ley 18.981); La Tercera's own historical minimum-wage series also begins at 26,000 CLP in 1990. **Status: secondary, consistent across two independent sources** |
+
+**Why a minimum-wage proxy and not the CASEN poverty line.** Chile does have a real contemporaneous
+official poverty line: CASEN 1990 (MIDEPLAN), the survey that produced the canonical 38.6 percent
+poverty rate and 12.9 percent indigence rate for 1990, built on a basic food basket with an Orshansky
+coefficient of 2 in urban areas and 1.75 in rural. **I could not retrieve its peso value from any
+accessible primary or reputable secondary source in this pass.** The MIDEPLAN digitised document
+(`desarrollosocialyfamilia.gob.cl/btca/.../mds-45-1998.pdf`), the CEPAL repository (Feres 2001), the
+Observatorio Social poverty series PDF and a U. de Chile thesis were all attempted and all either
+timed out, returned HTTP errors or did not contain the 1990 figure. A widely repeated "38,066 pesos"
+figure could not be confirmed and appears to belong to a later year. **This is a real gap: the CASEN
+1990 peso poverty line is the correct benchmark and should replace the minimum-wage proxy when
+someone with library access can retrieve it.** Until then the proxy is labelled as a proxy.
+
+Conversion is `(UTA_count x 147,300) / 312,000`:
+
+| band threshold | CLP (1990) | multiple of annual minimum income |
+|---|---|---|
+| 10 UTA | 1,473,000 | 4.72 |
+| 30 UTA | 4,419,000 | 14.16 |
+| 50 UTA | 7,365,000 | 23.61 |
+| 70 UTA | 10,311,000 | 33.05 |
+| 90 UTA | 13,257,000 | 42.49 |
+| 120 UTA | 17,676,000 | 56.65 |
+| 150 UTA | 22,095,000 | 70.82 |
+
+Worth noting for the methodology section: Chile's exempt threshold at **4.72x** the annual minimum
+income and Thailand's at **4.65x** the national poverty line are almost identical, despite 27 years
+and two continents between them. That is a genuine cross-country regularity, not an artefact of the
+conversion.
+
+Base mismatch, disclosed and not corrected: Art. 52 applies to the **renta bruta global** after the
+deductions of Art. 55, while the engine applies the schedule to gross `self.income`.
+
+## 7.5 Proposed `economic.TAX_BRACKETS` for `CL`
+
+Validated against every structural requirement in 7.1 (ascending, contiguous, `inf`-terminated,
+rates in [0, 1], 8 bands).
+
+```python
+    # REAL, sourced 2026-10-29. DL 824 (Ley sobre Impuesto a la Renta) Art. 52,
+    # Impuesto Global Complementario, consolidated text as in force at
+    # 1990-06-28 (Biblioteca del Congreso Nacional, Ley Chile idNorma=6368).
+    # 8 bands denominated in UTA, converted via UTA 1990 = 12 x UTM Dec 1990
+    # (12,275 CLP) = 147,300 CLP, expressed as multiples of the annual
+    # statutory minimum income (26,000 CLP/month from 1 Jun 1990 = 312,000
+    # CLP/year). That benchmark is a labelled PROXY: the CASEN 1990 peso
+    # poverty line could not be retrieved, see README section 7.4.
+    # EXTENDS the previous five GUESS rates, whose bottom four (0/5/10/15)
+    # were coincidentally correct and whose fifth (0.20) was not.
+    # NOTE: bands 3 to 8 sit above about 5.6x and are mechanically inert in
+    # this engine (README section 7.2).
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,   4.72, 0.00),   # exempt, to 10 UTA
+        (4.72,  14.16, 0.05),   # 10 to 30 UTA
+        (14.16, 23.61, 0.10),   # 30 to 50 UTA
+        (23.61, 33.05, 0.15),   # 50 to 70 UTA
+        (33.05, 42.49, 0.25),   # 70 to 90 UTA
+        (42.49, 56.65, 0.35),   # 90 to 120 UTA
+        (56.65, 70.82, 0.45),   # 120 to 150 UTA
+        (70.82, float("inf"), 0.50),   # above 150 UTA
+    )
+```
+
+Measured effect, effective average tax rate at the engine's own income quantiles:
+
+| income | 1.35x (p10) | 1.87x (p25) | 2.68x (p50) | 3.46x (p75) | 4.11x (p90) | 5.06x (p99) |
+|---|---|---|---|---|---|---|
+| current placeholder widths | 1.30% | 2.33% | 4.40% | 6.33% | 7.83% | 10.12% |
+| proposed real widths | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.34% |
+
+Chile's simulated personal income tax goes to approximately zero. That propagates to the published
+state-GDP Gini column for `CL`. **Chile must be re-run after this change.**
+
+## 7.6 Sourcing status
+
+| Item | Status |
+|---|---|
+| Art. 52 band thresholds in UTA and rates, 1990 | **SINGLE-SOURCED** from BCN's consolidated text at the 1990 version date. Structure independently consistent with the well-attested "10 UTA exempt, 50% top" description, but not cross-checked against a second primary document |
+| Art. 43 No. 1 (monthly wage tax), 1990 | **NOT USABLE.** BCN's consolidated text for 1990 is demonstrably stale, see the integrity note in 7.3 |
+| UTM December 1990 = 12,275 CLP | **SECONDARY AGGREGATOR**, internally consistent with 1990 inflation. Needs one SII pull |
+| Ingreso minimo mensual, June 1990 = 26,000 CLP | **SECONDARY, two independent sources agree** |
+| CASEN 1990 peso poverty line | **COULD NOT ESTABLISH.** Five document routes attempted and failed. This is the correct benchmark and remains an open gap. Minimum wage used as a labelled proxy instead |
+| Base mismatch (renta bruta global after Art. 55 deductions versus gross income) | **DISCLOSED, NOT CORRECTED** |

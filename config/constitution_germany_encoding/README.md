@@ -1050,3 +1050,226 @@ affected — which matters, because Germany is the scenario carrying the stronge
 claim and it should not be the one weakened by sampling noise. Note also that Myanmar's locked 11,000
 implies 55,000,000 while its own World Bank 2008 population is 48,390,793 (= 9,678 at 1:5000), so the
 ratio rule does not reproduce the already-published baseline.
+
+---
+
+# 7. Real personal income tax bracket structure at year zero (1949)
+
+*Added 2026-10-29 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement. Reason this section exists: the `SCHEMA FIX 2026-10-29` tag in
+`config/constitution_germany.py` added equal-width poverty-line bands (0 to 1x, 1 to 2x, and so on)
+around the already-authored marginal rates purely to stop a `TypeError` crash once bug #11's
+constitution-propagation fix made each scenario read its own `economic.TAX_BRACKETS`. Those widths
+were never sourced, and they reach a published metric: `agents/citizen.py:862-867` deducts tax from
+citizen income, `:904` computes `gdp_contribution = productivity * income * 0.001` into state GDP,
+and the live Gini (`agents/institutional.py:141`) is the dispersion of state GDP. This section
+documents the real year-zero statute. Additive only, nothing above is changed. No
+`config/constitution*.py` file is edited here; the tuples below are a proposal for the encoding
+step.*
+
+## 7.1 What the consumer function actually requires
+
+Read from `agents/citizen.py`, `_calculate_progressive_tax()` (line 869) and its caller
+`_pay_taxes()` (line 838). Identical for all seven scenarios, so this subsection is repeated
+verbatim in every encoding package.
+
+| Requirement | Why | Consequence of getting it wrong |
+|---|---|---|
+| Schema is `Tuple[Tuple[float, float, float], ...]` = `(low_multiple, high_multiple, marginal_rate)` | The loop unpacks three values per band | A flat tuple of bare rates raises `TypeError` on unpack. This was the bug #11 follow-on crash |
+| Bands must be sorted strictly ascending by `low_multiple` | The loop `break`s as soon as `taxable <= bracket_low` | An out-of-order band silently truncates the rest of the schedule, no error raised |
+| Bands must be contiguous, `band[i].high == band[i+1].low` | `income_in_bracket = min(taxable, bracket_high) - bracket_low` | A gap leaves that income slice untaxed; an overlap taxes it twice. No validation catches either |
+| The top band's `high_multiple` must be exactly `float("inf")` | `bracket_high` is set to infinity only on the literal test `high_mult != float('inf')` | A finite top band silently leaves all income above it untaxed |
+| Any number of bands is fine | No `len()` assumption anywhere | 2-band and 18-band schedules both work |
+| Multiples are of the live simulated poverty line, not currency | `bracket_low = poverty_line * low_mult` | |
+| Income at or below 1.0x the poverty line is always untaxed | `if income <= poverty_line: return 0.0` guards the whole function | A non-zero rate on a band starting at 0.0 therefore applies to the first poverty-line slice only for citizens who are above the poverty line |
+| `Constitution.validate()` does not inspect `TAX_BRACKETS` at all | Verified by grep | A malformed schedule passes validation and fails at runtime, or worse, silently miscomputes |
+
+The poverty line itself is not constitutional. `agents/institutional.py:289` starts
+`TaxSystemAgent.poverty_line` at 1000.0, `:303-311` updates it annually and clamps it to
+[500, 5000], and `agents/citizen.py:861` falls back to 1000.0 if the key is missing. At the default
+`gdp_growth_rate` of 0.02 the line grows about 0.4 percent a year, so roughly 1232 by year 50.
+
+## 7.2 Critical engine finding: the simulated income distribution is far narrower than any real one
+
+This is the most important thing in this section and it applies to all seven scenarios.
+
+`agents/citizen.py:1222-1227`, `_init_income()`, is
+`1000.0 * min(2.0, age/30) * (1 + education_level*1.5) * uniform(0.8, 1.2)`, with
+`education_level` drawn by age band in `_init_education()` (max 1.0). Income thereafter changes only
+by tax paid (`:865`) and the Article VIII elite transfer (`:925-926`), both small. Simulated over
+200,000 working-age draws against the initial poverty line of 1000:
+
+| quantile | p1 | p5 | p10 | p25 | p50 | p75 | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| income / poverty line | 0.97x | 1.18x | 1.35x | 1.87x | 2.68x | 3.46x | 4.11x | 4.49x | 5.06x | 5.63x |
+
+**There is zero probability mass above about 5.6x the poverty line.** Any real bracket boundary above
+that is mechanically inert.
+
+This is a limitation of the income generator, not of the tax encoding, and a reviewer can find it in
+ten minutes. Two honest options, both requiring Kaung's decision:
+- (a) encode the real brackets and disclose which real bands cannot fire in this engine;
+- (b) widen `_init_income()`'s dispersion so real brackets can bind, which is a simulation-design
+  change affecting every scenario including the locked Scenario A and C numbers.
+
+Do **not** rescale the brackets to "fit" the engine. That would reintroduce exactly the invented
+content this section exists to remove.
+
+## 7.3 The real schedule in force at year zero
+
+Year zero for `DE` is **1949** (Basic Law promulgated 23 May 1949; this file encodes the text as
+amended through 1968 per `.claude/memory.md` section 4a decision 3). Germany is the one scenario in
+this set where the year-zero tax schedule is **fully and primary-sourced**, and where the real
+schedule genuinely binds across most of the engine's income distribution.
+
+| Item | Value | Source |
+|---|---|---|
+| Instrument | **Einkommensteuergesetz, Stufengrenzsatztarif in force 1948 to 1953**, originating in the Allied Control Council's February 1946 decision to raise the top assessed income-tax rate to 95 percent (Gesetz Nr. 12 des Alliierten Kontrollrates, 1946) and carried into Deutsche Mark terms by the 1948 currency reform | Consolidated announcement: *Bekanntmachung der Neufassung des Einkommensteuergesetzes*, **Bundesgesetzblatt I, Nr. 3, 1952, S. 33-53**. Full 17-band table transcribed in the German Wikipedia article *Tarifgeschichte der Einkommensteuer in Deutschland* (raw wikitext retrieved 2026-10-29), which cites that BGBl. reference directly and separately records the tariff's validity period as **1948 to 1953** with Grundfreibetrag 750 DM, entry rate 10 percent and top rate 95 percent from 250,000 DM |
+| Structure | **17 bands plus a tax-free allowance, 10% to 95%** | Same |
+| Preceding tariff, for context | 1946 to 1948, in Reichsmark: allowance 600 RM, entry rate 17 percent, top rate 95 percent from 60,000 RM (Gesetz Nr. 12 des Alliierten Kontrollrates, Jahrgang 1946, Ausgabe 4, S. 68) | Same |
+| Following tariffs, for context | 1953 to 1954: allowance 800 DM, entry 9 percent, nominal top 80 percent from 220,000 DM capped at 70 percent of taxable income (Gesetz zur Neuordnung von Steuern, BGBl. I 1953 S. 413). 1955 to 1957: allowance 900 DM, entry 8 percent, 63.45 percent from 605,000 DM capped at 55 percent (BGBl. I 1954 Nr. 41 S. 393) | Same |
+
+Statutory bands in force 1948 to 1953, including 1949 (DM, on zu versteuerndes Einkommen):
+
+| band | taxable income | marginal rate | | band | taxable income | marginal rate |
+|---|---|---|---|---|---|---|
+| 0 | 0 to 750 | 0% (tax 0 DM) | | 9 | 20,000 to 30,000 | 50% |
+| 1 | over 750 to 1,200 | 10% | | 10 | 30,000 to 40,000 | 55% |
+| 2 | over 1,200 to 2,400 | 15% | | 11 | 40,000 to 60,000 | 60% |
+| 3 | over 2,400 to 3,600 | 20% | | 12 | 60,000 to 80,000 | 70% |
+| 4 | over 3,600 to 4,800 | 25% | | 13 | 80,000 to 100,000 | 75% |
+| 5 | over 4,800 to 6,000 | 30% | | 14 | 100,000 to 150,000 | 80% |
+| 6 | over 6,000 to 7,200 | 35% | | 15 | 150,000 to 200,000 | 85% |
+| 7 | over 7,200 to 9,000 | 40% | | 16 | 200,000 to 250,000 | 90% |
+| 8 | over 9,000 to 20,000 | 45% | | 17 | over 250,000 | 95% |
+
+### The currently encoded rates are wrong for this scenario, and badly
+
+`config/constitution_germany.py` currently holds `(0.00, 0.14, 0.24, 0.42, 0.45)` tagged
+"GUESS, not constitutional; illustrative only". **Those are the modern German rates**: 14 percent
+Eingangssteuersatz, 42 percent Spitzensteuersatz and the 45 percent Reichensteuer, that is the
+2007 to 2022 schedule, 58 to 73 years after this scenario's year zero. The real 1949 top rate was
+**95 percent**, more than double the encoded maximum. For a scenario whose entire purpose is a
+historical backtest of the 1949 Basic Law, encoding the 2007 tax schedule is the single largest
+realism defect found in this pass. **Recommendation: replace.**
+
+Separately, this is not a Basic Law provision and should not be presented as one. The existing
+comment is right that the Basic Law names no economic system (wirtschaftspolitische Neutralitaet);
+income tax rates were and are ordinary federal statute. Keep that framing.
+
+## 7.4 Benchmark and the conversion
+
+**There is no contemporaneous official poverty line for West Germany in 1949.** Statutory social
+assistance with a standardised national rate structure begins with the Bundessozialhilfegesetz of
+1962; in 1949 relief ran through pre-federal Fuersorge arrangements with no uniform national
+subsistence figure. Stating a 1949 German poverty line would be an invention.
+
+Two benchmarks, both real and both labelled:
+
+| Benchmark | Value | Source | Role |
+|---|---|---|---|
+| **A, used for the conversion. The statute's own tax-free Existenzminimum** | **Grundfreibetrag 750 DM per year**, in force 1948 to 1953 | Same BGBl. I 1952 Nr. 3 reference as the schedule, and the Wikipedia *Entwicklung der Eingangs- und Spitzensteuersaetze* table's own 1948-1953 row | Conversion basis, labelled **PROXY** |
+| **B, cross-check. Official average annual earnings** | **1949: 2,838 DM.** Series context: 1948 = 2,219, 1950 = 3,161, 1951 = 3,579 | **Anlage 1 SGB VI, Durchschnittsentgelt in Euro/DM/RM**, retrieved 2026-10-29 from `https://www.gesetze-im-internet.de/sgb_6/anlage_1.html` (Fundstelle: BGBl. I 2002, 869-870). This is the German pension system's statutory average-earnings table and is a primary legal source | Cross-check only |
+
+The 750 DM allowance was **26.4 percent of 1949 average earnings** (750 / 2,838). That is a low
+relative threshold by modern standards and is consistent with the extremely heavy Allied-era tax
+burden the schedule describes. It also means benchmark A sits lower relative to the earnings
+distribution than Thailand's or Chile's consumption-based lines do, so **Germany's multiples below
+are not strictly comparable to Thailand's or Chile's.** Flag for `senior-data-analyst`: the engine
+applies every scenario's multiples to the same simulated poverty line, so a benchmark that sits at a
+different point in its own country's distribution shifts that scenario's whole tax schedule relative
+to the others. This is a genuine cross-scenario comparability issue and should be disclosed in the
+methodology, not papered over.
+
+Conversion is `threshold_DM / 750`:
+
+| threshold (DM) | multiple | | threshold (DM) | multiple |
+|---|---|---|---|---|
+| 750 | 1.00 | | 40,000 | 53.33 |
+| 1,200 | 1.60 | | 60,000 | 80.00 |
+| 2,400 | 3.20 | | 80,000 | 106.67 |
+| 3,600 | 4.80 | | 100,000 | 133.33 |
+| 4,800 | 6.40 | | 150,000 | 200.00 |
+| 6,000 | 8.00 | | 200,000 | 266.67 |
+| 7,200 | 9.60 | | 250,000 | 333.33 |
+| 9,000 | 12.00 | | | |
+| 20,000 | 26.67 | | | |
+| 30,000 | 40.00 | | | |
+
+Documented alternative if a relative benchmark is preferred: 50 percent of 1949 average earnings is
+1,419 DM, under which the 750 DM allowance becomes 0.53x and the 1,200 DM threshold 0.85x, that is
+both fall below the engine's hard sub-poverty-line guard and the entire schedule shifts up a band.
+Benchmark A is recommended precisely because it preserves the real first threshold at exactly 1.0x,
+which is what the engine's guard already assumes.
+
+Base-mismatch note: unlike Korea, Thailand, Chile and Pakistan, the German 750 DM figure is a true
+zero-rate band in the tariff itself, so for Germany the engine's structure matches the statute's
+structure. Standard Werbungskosten and Sonderausgaben deductions still applied on top, so this still
+understates the real tax-free point, but by far less than in the other five.
+
+## 7.5 Proposed `economic.TAX_BRACKETS` for `DE`
+
+Validated against every structural requirement in 7.1 (ascending, contiguous, `inf`-terminated,
+rates in [0, 1], 18 bands).
+
+```python
+    # REAL, sourced 2026-10-29. Einkommensteuergesetz Stufengrenzsatztarif in
+    # force 1948 to 1953 (so including 1949, this scenario's year zero),
+    # 17 bands plus a 750 DM Grundfreibetrag, 10% to 95%, per Bekanntmachung
+    # der Neufassung des Einkommensteuergesetzes, BGBl. I 1952 Nr. 3, S. 33-53.
+    # Converted to multiples of the statutory Grundfreibetrag itself (750 DM),
+    # a labelled PROXY: West Germany had no official poverty line in 1949
+    # (BSHG dates from 1962). Cross-check: 750 DM was 26.4% of 1949 average
+    # annual earnings of 2,838 DM (Anlage 1 SGB VI).
+    # See config/constitution_germany_encoding/README.md section 7.
+    # REPLACES the previous (0.00, 0.14, 0.24, 0.42, 0.45) rates, which were
+    # the MODERN (2007-2022) German rates, not 1949's. The real 1949 top
+    # marginal rate was 95 percent.
+    # Income tax is ordinary federal statute, NOT a Basic Law provision.
+    # NOTE: bands above about 5.6x are mechanically inert in this engine
+    # (README section 7.2), so bands 5 and up cannot fire.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,     1.00, 0.00),   # Grundfreibetrag, to 750 DM
+        (1.00,     1.60, 0.10),   # over 750 to 1,200 DM
+        (1.60,     3.20, 0.15),   # to 2,400 DM
+        (3.20,     4.80, 0.20),   # to 3,600 DM
+        (4.80,     6.40, 0.25),   # to 4,800 DM
+        (6.40,     8.00, 0.30),   # to 6,000 DM
+        (8.00,     9.60, 0.35),   # to 7,200 DM
+        (9.60,    12.00, 0.40),   # to 9,000 DM
+        (12.00,   26.67, 0.45),   # to 20,000 DM
+        (26.67,   40.00, 0.50),   # to 30,000 DM
+        (40.00,   53.33, 0.55),   # to 40,000 DM
+        (53.33,   80.00, 0.60),   # to 60,000 DM
+        (80.00,  106.67, 0.70),   # to 80,000 DM
+        (106.67, 133.33, 0.75),   # to 100,000 DM
+        (133.33, 200.00, 0.80),   # to 150,000 DM
+        (200.00, 266.67, 0.85),   # to 200,000 DM
+        (266.67, 333.33, 0.90),   # to 250,000 DM
+        (333.33, float("inf"), 0.95),   # above 250,000 DM
+    )
+```
+
+Measured effect, effective average tax rate at the engine's own income quantiles:
+
+| income | 1.35x (p10) | 1.87x (p25) | 2.68x (p50) | 3.46x (p75) | 4.11x (p90) | 5.06x (p99) |
+|---|---|---|---|---|---|---|
+| current placeholder widths and modern rates | 3.63% | 6.51% | 11.31% | 16.57% | 20.67% | 25.24% |
+| proposed real 1949 schedule | 2.59% | 5.37% | 8.28% | 10.17% | 11.73% | 13.54% |
+
+Note the irony worth recording in the methodology: the real 1949 schedule, with a 95 percent top
+rate, produces a **lower** simulated effective burden than the placeholder built around modern rates,
+because the engine's income distribution never reaches the bands where the Allied-era confiscatory
+rates actually applied. That is a clean illustration of section 7.2's point. **Germany must be
+re-run after this change.**
+
+## 7.6 Sourcing status
+
+| Item | Status |
+|---|---|
+| 1948 to 1953 band thresholds and rates | **CONFIRMED**, named instrument with Bundesgesetzblatt citation. Read from German Wikipedia's transcription of the BGBl. text, not from the BGBl. PDF itself (bgbl.de serves a Xaver viewer). The same article's independent summary table corroborates allowance, entry rate, top rate and validity period, so the transcription is internally cross-checked. **One human pull of BGBl. I 1952 Nr. 3, S. 33-53 is still advisable before print** |
+| Validity of that tariff in 1949 specifically | **CONFIRMED** by the article's own `1948-1953` row, which cites the same BGBl. reference |
+| Grundfreibetrag 750 DM | **CONFIRMED**, same source, twice |
+| 1949 average annual earnings 2,838 DM | **CONFIRMED** from a primary legal source (Anlage 1 SGB VI on gesetze-im-internet.de) |
+| Any 1949 West German poverty line | **DOES NOT EXIST.** Standardised statutory social assistance begins with the BSHG 1962. Grundfreibetrag used as a labelled proxy |
+| Cross-scenario comparability of the benchmark | **FLAGGED, UNRESOLVED.** See 7.4 |

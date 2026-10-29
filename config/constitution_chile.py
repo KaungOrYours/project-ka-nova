@@ -794,7 +794,40 @@ class EconomicConfig:
     """Art. 19 No.21-25 (economic rights) + Art. 97-98 (Central Bank)"""
 
     ECONOMIC_SYSTEM: str = "open_market_with_subsidiarity_doctrine"   # CONFIDENT — Art. 1 (grupos intermedios/subsidiarity) + Art. 19 No.21
-    TAX_BRACKETS: Tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20)   # GUESS — not addressed in the research package
+    # REAL, sourced 2026-10-29. CONFIDENT, SINGLE-SOURCED (not
+    # independently cross-checked against a second primary document;
+    # see README for the Art. 43-versus-Art. 52 data-integrity note).
+    # DL 824 de 1974, Ley sobre Impuesto a la Renta, Articulo 52
+    # (Impuesto Global Complementario, the annual comprehensive
+    # personal income tax), consolidated text as in force at
+    # 1990-06-28, Biblioteca del Congreso Nacional de Chile, Ley Chile
+    # idNorma=6368. 8 bands, exempt to 10 UTA then 5% rising to 50%
+    # above 150 UTA. Converted via UTA 1990 = 12 x UTM Dec 1990 (12,275
+    # CLP, secondary aggregator) = 147,300 CLP, expressed as multiples
+    # of a labelled PROXY, NOT A POVERTY LINE: the statutory minimum
+    # income (26,000 CLP/month from 1 Jun 1990 = 312,000 CLP/year),
+    # because the real CASEN 1990 peso poverty line could not be
+    # retrieved after five documented routes. See
+    # config/constitution_chile_encoding/README.md section 7 for the
+    # full derivation and the base-mismatch caveat (Art. 52 applies
+    # after Art. 55 deductions; the engine applies gross income).
+    # EXTENDS the previous (0.00, 0.05, 0.10, 0.15, 0.20), whose bottom
+    # four rates were coincidentally correct for 1990 but whose fifth
+    # (0.20) was not, the real schedule continues 25/35/45/50 across
+    # eight bands, not five, and REPLACES the 2026-10-29 SCHEMA FIX
+    # placeholder widths.
+    # NOTE: bands 3 to 8 sit above about 5.6x the poverty line and are
+    # mechanically inert in this engine (README section 7.2).
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,   4.72, 0.00),
+        (4.72,  14.16, 0.05),
+        (14.16, 23.61, 0.10),
+        (23.61, 33.05, 0.15),
+        (33.05, 42.49, 0.25),
+        (42.49, 56.65, 0.35),
+        (56.65, 70.82, 0.45),
+        (70.82, float('inf'), 0.50),
+    )
     BLACK_MONEY_PENALTY: str = "law_prescribed"                        # GUESS
 
     # GUESS-with-caveat — Chile's subsoil/mineral resources carry a real
@@ -1862,6 +1895,33 @@ class ChileConstitution:
         self.ELITE_ROLE_TITLES = ELITE_ROLE_TITLES
         self.ELITE_SYSTEM_PROMPTS = ELITE_SYSTEM_PROMPTS
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29,
+        identical logic to config/constitution.py's
+        MFUConstitution._tax_brackets_structurally_valid (see that
+        docstring for the full rationale): three-tuples, contiguous and
+        therefore strictly-ascending bands, rate in [0, 1], top band's
+        high_multiple literally float('inf'). Before this, validate()
+        never inspected TAX_BRACKETS at all. See
+        docs/tax_bracket_inertness.md."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical Chile-1980-as-reformed-1989 constitutional constraints"""
         checks = [
@@ -1886,6 +1946,8 @@ class ChileConstitution:
             self.iig.REGIME_PROTECTION_OBJECTIVE is False,
             # Central Bank constitutional independence (Art. 97-98) must be encoded
             self.economic.CENTRAL_BANK_INDEPENDENT is True,
+            # TAX_BRACKETS structural contract, added 2026-10-29.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
         return all(checks)
 

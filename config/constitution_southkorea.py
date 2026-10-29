@@ -854,9 +854,50 @@ class EconomicConfig:
     # balanced growth, income distribution, prevent market domination, and
     # "democratise the economy."
     ECONOMIC_SYSTEM: str = "market_economy_with_economic_democratization_article_119"
-    # GUESS — simplified real-world-informed proxy of Korea's progressive
-    # marginal income-tax brackets; statutory (tax Acts), not constitutional.
-    TAX_BRACKETS: Tuple[float, ...] = (0.06, 0.15, 0.24, 0.35, 0.42)
+    # REAL, sourced 2026-10-29. CONFIDENT. Statutory (tax Acts), not
+    # constitutional. Income Tax Act (소득세법) Art. 70(1), version in
+    # force through calendar 1988 ([시행 1988. 1. 1.] [법률 제3930호,
+    # 1987. 5. 30.]), 16 bands, 6% to 55%, on the global income tax base.
+    # Retrieved from the Korea Ministry of Government Legislation
+    # National Law Information Center (law.go.kr), confirmed
+    # byte-identical across the 1986, 1987 and 1988 effective-date
+    # retrievals (changes only at 1989); corroborated by Kwack and Lee,
+    # "Tax Reform in Korea" (NBER-EASE Vol. 1, 1992). Converted to
+    # multiples of a labelled PROXY, NOT A POVERTY LINE: the 1988
+    # statutory minimum wage annualised at 3,700 won/day x 300 days =
+    # 1,110,000 won/year (Minimum Wage Commission of Korea), because
+    # Korea had no official poverty line until 1999. See
+    # config/constitution_southkorea_encoding/README.md section 7 for
+    # the full derivation and the base-mismatch caveat: the real base is
+    # net of the basic/dependant exemptions and the wage deduction, the
+    # engine applies the schedule to gross income, so the 1.62x first
+    # threshold understates the real effective entry point. Kwack and
+    # Lee report about 60% of workers fell in the zero bracket under
+    # this regime.
+    # REPLACES the previous (0.06, 0.15, 0.24, 0.35, 0.42), which were
+    # the 2018-2022 Korean statutory rates, thirty years after this
+    # scenario's year zero (the 6% entry rate matched 1988 only by
+    # coincidence), and the 2026-10-29 SCHEMA FIX placeholder widths.
+    # NOTE: bands 6 to 16 sit above about 5.6x the poverty line and are
+    # mechanically inert in this engine (README section 7.2).
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,   1.62, 0.06),
+        (1.62,   2.25, 0.08),
+        (2.25,   3.15, 0.10),
+        (3.15,   4.32, 0.12),
+        (4.32,   5.68, 0.15),
+        (5.68,   7.21, 0.18),
+        (7.21,   9.01, 0.21),
+        (9.01,  11.26, 0.24),
+        (11.26, 13.96, 0.27),
+        (13.96, 17.12, 0.31),
+        (17.12, 20.72, 0.35),
+        (20.72, 26.13, 0.39),
+        (26.13, 33.33, 0.43),
+        (33.33, 42.34, 0.47),
+        (42.34, 54.05, 0.51),
+        (54.05, float('inf'), 0.55),
+    )
     # GUESS — ordinary criminal/tax law applies; no "High Treason" framing
     # as in MFU.
     BLACK_MONEY_PENALTY: str = "criminal_prosecution_under_tax_and_criminal_law"
@@ -1883,6 +1924,33 @@ class SouthKorea1987Constitution:
         self.ELITE_ROLE_TITLES = ELITE_ROLE_TITLES
         self.ELITE_SYSTEM_PROMPTS = ELITE_SYSTEM_PROMPTS
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29,
+        identical logic to config/constitution.py's
+        MFUConstitution._tax_brackets_structurally_valid (see that
+        docstring for the full rationale): three-tuples, contiguous and
+        therefore strictly-ascending bands, rate in [0, 1], top band's
+        high_multiple literally float('inf'). Before this, validate()
+        never inspected TAX_BRACKETS at all. See
+        docs/tax_bracket_inertness.md."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical South Korea 1987 constitution constraints.
         NOTE: these assertions are SK-specific and deliberately differ from
@@ -1909,6 +1977,8 @@ class SouthKorea1987Constitution:
             # Civilian chain requirement: the engine-required field must be
             # present and numeric.
             isinstance(self.tatmadaw_transition.TRUST_GAIN_PER_CLEAN_YEAR, float),
+            # TAX_BRACKETS structural contract, added 2026-10-29.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
         return all(checks)
 

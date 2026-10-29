@@ -746,3 +746,167 @@ Unequal N means systematically unequal CI widths for reasons unrelated to consti
 Reviewer 2's objection relocated into population size. Thailand at 14,232 also increases compute cost
 by ~29% per run relative to 11,000, and Pakistan by ~79%; flag to `senior-devops-engineer` for the
 RunPod budget estimate in memory.md §4.
+
+---
+
+# 7. Real personal income tax bracket structure at year zero (2017)
+
+*Added 2026-10-29 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement. Reason this section exists: the `SCHEMA FIX 2026-10-29` tag in
+`config/constitution_thailand.py` added equal-width poverty-line bands (0 to 1x, 1 to 2x, and so on)
+around the already-authored marginal rates purely to stop a `TypeError` crash once bug #11's
+constitution-propagation fix made each scenario read its own `economic.TAX_BRACKETS`. Those widths
+were never sourced, and they reach a published metric: `agents/citizen.py:862-867` deducts tax from
+citizen income, `:904` computes `gdp_contribution = productivity * income * 0.001` into state GDP,
+and the live Gini (`agents/institutional.py:141`) is the dispersion of state GDP. This section
+replaces the placeholder widths with the real 2017 statute. Additive only, nothing above is changed.
+No `config/constitution*.py` file is edited here; the tuples below are a proposal for the encoding
+step.*
+
+## 7.1 What the consumer function actually requires
+
+Read from `agents/citizen.py`, `_calculate_progressive_tax()` (line 869) and its caller
+`_pay_taxes()` (line 838). Identical for all seven scenarios, so this subsection is repeated
+verbatim in every encoding package.
+
+| Requirement | Why | Consequence of getting it wrong |
+|---|---|---|
+| Schema is `Tuple[Tuple[float, float, float], ...]` = `(low_multiple, high_multiple, marginal_rate)` | The loop unpacks three values per band | A flat tuple of bare rates raises `TypeError` on unpack. This was the bug #11 follow-on crash |
+| Bands must be sorted strictly ascending by `low_multiple` | The loop `break`s as soon as `taxable <= bracket_low` | An out-of-order band silently truncates the rest of the schedule, no error raised |
+| Bands must be contiguous, `band[i].high == band[i+1].low` | `income_in_bracket = min(taxable, bracket_high) - bracket_low` | A gap leaves that income slice untaxed; an overlap taxes it twice. No validation catches either |
+| The top band's `high_multiple` must be exactly `float("inf")` | `bracket_high` is set to infinity only on the literal test `high_mult != float('inf')` | A finite top band silently leaves all income above it untaxed |
+| Any number of bands is fine | No `len()` assumption anywhere | 2-band and 18-band schedules both work |
+| Multiples are of the live simulated poverty line, not currency | `bracket_low = poverty_line * low_mult` | |
+| Income at or below 1.0x the poverty line is always untaxed | `if income <= poverty_line: return 0.0` guards the whole function | A non-zero rate on a band starting at 0.0 therefore applies to the first poverty-line slice only for citizens who are above the poverty line |
+| `Constitution.validate()` does not inspect `TAX_BRACKETS` at all | Verified by grep | A malformed schedule passes validation and fails at runtime, or worse, silently miscomputes |
+
+The poverty line itself is not constitutional. `agents/institutional.py:289` starts
+`TaxSystemAgent.poverty_line` at 1000.0, `:303-311` updates it annually and clamps it to
+[500, 5000], and `agents/citizen.py:861` falls back to 1000.0 if the key is missing. At the default
+`gdp_growth_rate` of 0.02 the line grows about 0.4 percent a year, so roughly 1232 by year 50.
+
+## 7.2 Critical engine finding: the simulated income distribution is far narrower than any real one
+
+This is the most important thing in this section and it applies to all seven scenarios.
+
+`agents/citizen.py:1222-1227`, `_init_income()`, is
+`1000.0 * min(2.0, age/30) * (1 + education_level*1.5) * uniform(0.8, 1.2)`, with
+`education_level` drawn by age band in `_init_education()` (max 1.0). Income thereafter changes only
+by tax paid (`:865`) and the Article VIII elite transfer (`:925-926`), both small. Simulated over
+200,000 working-age draws against the initial poverty line of 1000:
+
+| quantile | p1 | p5 | p10 | p25 | p50 | p75 | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| income / poverty line | 0.97x | 1.18x | 1.35x | 1.87x | 2.68x | 3.46x | 4.11x | 4.49x | 5.06x | 5.63x |
+
+**There is zero probability mass above about 5.6x the poverty line.** Any real bracket boundary above
+that is mechanically inert. Thailand's real zero-rate band alone runs to 4.65x (see 7.3), so under a
+faithful encoding only about 3.4 percent of Thai citizen agents pay any income tax at all, and all of
+them sit in the 5 percent band.
+
+This is a limitation of the income generator, not of the tax encoding, and a reviewer can find it in
+ten minutes. Two honest options, both requiring Kaung's decision:
+- (a) encode the real brackets and disclose that the real exempt threshold exceeds most of the
+  engine's income range, so Thailand's personal income tax is close to inert by construction;
+- (b) widen `_init_income()`'s dispersion so real brackets can bind, which is a simulation-design
+  change affecting every scenario including the locked Scenario A and C numbers.
+
+Do **not** rescale the brackets to "fit" the engine. That would reintroduce exactly the invented
+content this section exists to remove.
+
+## 7.3 The real 2017 Thai schedule
+
+| Item | Value | Source |
+|---|---|---|
+| Instrument | Revenue Code Amendment Act (No. 44) B.E. 2560, gazetted **27 January 2017**, applicable from the 2017 tax year | US Library of Congress / Thai Revenue Department; rate table reproduced at Sherrings, "Thailand Personal Income Tax Rates" (https://sherrings.com/personal-income-tax-rates-thailand.html) and Orbis Alliance, "New Thailand Personal Income Tax Structure for 2017" |
+| Base | **Net** assessable income, that is after expense deductions and personal allowances | Revenue Code |
+
+Statutory bands on net income (THB):
+
+| band | net income | marginal rate |
+|---|---|---|
+| 1 | 1 to 150,000 | exempt |
+| 2 | 150,001 to 300,000 | 5% |
+| 3 | 300,001 to 500,000 | 10% |
+| 4 | 500,001 to 750,000 | 15% |
+| 5 | 750,001 to 1,000,000 | 20% |
+| 6 | 1,000,001 to 2,000,000 | 25% |
+| 7 | 2,000,001 to 5,000,000 | 30% |
+| 8 | above 5,000,000 | 35% |
+
+**The eight rates already encoded in `config/constitution_thailand.py` (0.00, 0.05, 0.10, 0.15, 0.20,
+0.25, 0.30, 0.35) are correct for 2017.** Thailand is the only one of the six where the original
+encoding pass got the rates right. Only the band widths were placeholder, and they were wrong by one
+to two orders of magnitude.
+
+## 7.4 Poverty line and the conversion
+
+| Item | Value | Source and status |
+|---|---|---|
+| National monetary poverty line, 2017 | **2,686 THB per person per month** = **32,232 THB per year** | NESDC (Office of the National Economic and Social Development Council) official national poverty line. Reported in secondary coverage of the NESDC series (Nation Thailand, "More than 6% of all Thais still live on less than 2,803 baht per month"; World Bank, *Taking the Pulse of Poverty and Inequality in Thailand*, 2020). **Status: the 2017 point value is secondary-verified only.** What was verified from a primary-publisher document is the surrounding series: UNICEF Thailand / NESDC, *Measuring Poverty in Thailand* (p. 2), states the national poverty line was "579 Baht in 1988 and 2,803 Baht per person per month in 2021". A human should re-pull the exact 2017 value from NESDC's own poverty spreadsheet before it appears in print |
+
+Conversion is `threshold_THB / 32,232`:
+
+| statutory threshold (THB) | multiple of 2017 poverty line |
+|---|---|
+| 150,000 | 4.6538 |
+| 300,000 | 9.3075 |
+| 500,000 | 15.5125 |
+| 750,000 | 23.2688 |
+| 1,000,000 | 31.0251 |
+| 2,000,000 | 62.0501 |
+| 5,000,000 | 155.1253 |
+
+Caveat, real and not cosmetic: Thai bands apply to **net** income after deductions and allowances,
+while the engine applies the schedule to gross `self.income`. A faithful threshold conversion
+therefore understates the real tax-free point, not overstates it. Direction of the error is stated
+rather than corrected, because correcting it would require inventing a deduction stage the engine
+does not have.
+
+## 7.5 Proposed `economic.TAX_BRACKETS` for `TH`
+
+Validated against every structural requirement in 7.1 (ascending, contiguous, `inf`-terminated,
+rates in [0, 1], 8 bands).
+
+```python
+    # REAL, sourced 2026-10-29. Revenue Code Amendment Act (No. 44) B.E. 2560
+    # (gazetted 27 Jan 2017), net-income bands, converted to multiples of the
+    # NESDC 2017 national poverty line of 2,686 THB per person per month
+    # (32,232 THB per year). See config/constitution_thailand_encoding/README.md
+    # section 7. Rates are UNCHANGED from the previous encoding, which already
+    # had them right; only the placeholder band widths are replaced.
+    # NOTE: bands above about 5.6x the poverty line are mechanically inert in
+    # this engine (README section 7.2), so bands 3 to 8 cannot fire.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,    4.65, 0.00),   # exempt to 150,000 THB
+        (4.65,    9.31, 0.05),   # 150,001 to 300,000
+        (9.31,   15.51, 0.10),   # 300,001 to 500,000
+        (15.51,  23.27, 0.15),   # 500,001 to 750,000
+        (23.27,  31.03, 0.20),   # 750,001 to 1,000,000
+        (31.03,  62.05, 0.25),   # 1,000,001 to 2,000,000
+        (62.05, 155.13, 0.30),   # 2,000,001 to 5,000,000
+        (155.13, float("inf"), 0.35),   # above 5,000,000
+    )
+```
+
+Measured effect on the published numbers, effective average tax rate at the engine's own income
+quantiles:
+
+| income | 1.35x (p10) | 1.87x (p25) | 2.68x (p50) | 3.46x (p75) | 4.11x (p90) | 5.06x (p99) |
+|---|---|---|---|---|---|---|
+| current placeholder widths | 1.30% | 2.33% | 4.40% | 6.33% | 7.83% | 10.18% |
+| proposed real widths | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.41% |
+
+So this change takes Thailand's simulated personal income tax from roughly 1 to 10 percent effective
+to approximately zero. That propagates to post-tax income, to `gdp_contribution`, and therefore to
+the published state-GDP Gini column for `TH`. **Thailand must be re-run after this change, and the
+Gini comparison against `TH` must not be read as continuous with any pre-change figure.**
+
+## 7.6 Sourcing status
+
+| Item | Status |
+|---|---|
+| 2017 statutory band thresholds and rates | **CONFIRMED**, named instrument with gazette date |
+| 2017 poverty line of 2,686 THB per person per month | **SECONDARY-VERIFIED**, needs one primary NESDC pull before print |
+| Net-versus-gross base mismatch | **DISCLOSED, NOT CORRECTED** |
+| Inertness of bands above 5.6x | **MEASURED**, see 7.2 |

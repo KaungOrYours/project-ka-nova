@@ -914,7 +914,60 @@ class EconomicConfig:
     # Basic Law itself names no economic system at all (wirtschaftspolitische
     # Neutralitat doctrine). Flagged as practice, not text.
     ECONOMIC_SYSTEM: str = "soziale_marktwirtschaft_social_market_economy_practice_not_textual"
-    TAX_BRACKETS: Tuple[float, ...] = (0.0, 0.14, 0.24, 0.42, 0.45)   # GUESS — not constitutional; illustrative only
+    # REAL, sourced 2026-10-29. CONFIDENT. Einkommensteuergesetz
+    # Stufengrenzsatztarif in force 1948 to 1953 (including 1949, this
+    # scenario's year zero), 17 bands plus a 750 DM Grundfreibetrag,
+    # 10% to 95%, per Bekanntmachung der Neufassung des
+    # Einkommensteuergesetzes, Bundesgesetzblatt I 1952 Nr. 3, S. 33-53
+    # (read via the German Wikipedia transcription of that text, which
+    # independently cross-checks against the same article's own
+    # summary table of allowance / entry rate / top rate / validity
+    # period; one human pull of the BGBl. PDF is still advisable before
+    # print). Converted to multiples of the statute's own tax-free
+    # Grundfreibetrag (750 DM), a labelled PROXY: West Germany had no
+    # official poverty line in 1949 (standardised social assistance
+    # begins with the BSHG, 1962). Cross-check: 750 DM was 26.4% of
+    # 1949 average annual earnings of 2,838 DM (Anlage 1 SGB VI, a
+    # primary legal source). See
+    # config/constitution_germany_encoding/README.md section 7 for the
+    # full derivation and the flagged cross-scenario comparability
+    # caveat: this benchmark sits at a different point in its own
+    # earnings distribution than Thailand's or Chile's
+    # consumption-based lines, so Germany's multiples are not strictly
+    # comparable to theirs. Income tax is ordinary federal statute, NOT
+    # a Basic Law provision; the Basic Law itself names no economic
+    # system (wirtschaftspolitische Neutralitaet).
+    # REPLACES the previous (0.00, 0.14, 0.24, 0.42, 0.45), which were
+    # the MODERN (2007-2022) German rates (14% Eingangssteuersatz, 42%
+    # Spitzensteuersatz, the 45% Reichensteuer), 58 to 73 years after
+    # this scenario's year zero and the single largest realism defect
+    # found in the whole six-constitution tax-bracket pass (the real
+    # 1949 top rate was 95%, more than double the old encoded maximum),
+    # and the 2026-10-29 SCHEMA FIX placeholder widths.
+    # NOTE: bands above about 5.6x the poverty line are mechanically
+    # inert in this engine (README section 7.2), so bands 5 and up
+    # cannot fire; the real 95% top rate therefore never bites a
+    # simulated citizen.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,     1.00, 0.00),
+        (1.00,     1.60, 0.10),
+        (1.60,     3.20, 0.15),
+        (3.20,     4.80, 0.20),
+        (4.80,     6.40, 0.25),
+        (6.40,     8.00, 0.30),
+        (8.00,     9.60, 0.35),
+        (9.60,    12.00, 0.40),
+        (12.00,   26.67, 0.45),
+        (26.67,   40.00, 0.50),
+        (40.00,   53.33, 0.55),
+        (53.33,   80.00, 0.60),
+        (80.00,  106.67, 0.70),
+        (106.67, 133.33, 0.75),
+        (133.33, 200.00, 0.80),
+        (200.00, 266.67, 0.85),
+        (266.67, 333.33, 0.90),
+        (333.33, float('inf'), 0.95),
+    )
     BLACK_MONEY_PENALTY: str = "ordinary_criminal_law_stgb_tax_evasion"   # GUESS/statutory
 
     # CONFIDENT — Art. 14(1) protects private property; Art. 15 permits
@@ -2002,6 +2055,33 @@ class GermanyConstitution:
         self.ELITE_ROLE_TITLES = ELITE_ROLE_TITLES
         self.ELITE_SYSTEM_PROMPTS = ELITE_SYSTEM_PROMPTS
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29,
+        identical logic to config/constitution.py's
+        MFUConstitution._tax_brackets_structurally_valid (see that
+        docstring for the full rationale): three-tuples, contiguous and
+        therefore strictly-ascending bands, rate in [0, 1], top band's
+        high_multiple literally float('inf'). Before this, validate()
+        never inspected TAX_BRACKETS at all. See
+        docs/tax_bracket_inertness.md."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical Basic Law (as amended through 1968) constraints"""
         checks = [
@@ -2015,6 +2095,8 @@ class GermanyConstitution:
             self.military.COUP_LEGAL_MECHANISM is False,
             # Merit weights must still sum to 1.0
             self.merit.weights_valid,
+            # TAX_BRACKETS structural contract, added 2026-10-29.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
         return all(checks)
 

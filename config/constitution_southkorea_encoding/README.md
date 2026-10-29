@@ -788,3 +788,209 @@ not 11,000. **The ratio rule as stated is not consistent with the already-publis
 hardcodes Myanmar's 14 names with no constitution access (memory.md bug #16's deliberately-deferred
 note). The state-name generalisation has to land in `citizen.py` before any of this takes effect, or
 the new names will `KeyError` in `_assign_ethnicity()`.
+
+---
+
+# 7. Real personal income tax bracket structure at year zero (1988)
+
+*Added 2026-10-29 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement. Reason this section exists: the `SCHEMA FIX 2026-10-29` tag in
+`config/constitution_southkorea.py` added equal-width poverty-line bands (0 to 1x, 1 to 2x, and so on)
+around the already-authored marginal rates purely to stop a `TypeError` crash once bug #11's
+constitution-propagation fix made each scenario read its own `economic.TAX_BRACKETS`. Those widths
+were never sourced, and they reach a published metric: `agents/citizen.py:862-867` deducts tax from
+citizen income, `:904` computes `gdp_contribution = productivity * income * 0.001` into state GDP,
+and the live Gini (`agents/institutional.py:141`) is the dispersion of state GDP. This section
+documents the real year-zero statute. Additive only, nothing above is changed. No
+`config/constitution*.py` file is edited here; the tuples below are a proposal for the encoding
+step.*
+
+## 7.1 What the consumer function actually requires
+
+Read from `agents/citizen.py`, `_calculate_progressive_tax()` (line 869) and its caller
+`_pay_taxes()` (line 838). Identical for all seven scenarios, so this subsection is repeated
+verbatim in every encoding package.
+
+| Requirement | Why | Consequence of getting it wrong |
+|---|---|---|
+| Schema is `Tuple[Tuple[float, float, float], ...]` = `(low_multiple, high_multiple, marginal_rate)` | The loop unpacks three values per band | A flat tuple of bare rates raises `TypeError` on unpack. This was the bug #11 follow-on crash |
+| Bands must be sorted strictly ascending by `low_multiple` | The loop `break`s as soon as `taxable <= bracket_low` | An out-of-order band silently truncates the rest of the schedule, no error raised |
+| Bands must be contiguous, `band[i].high == band[i+1].low` | `income_in_bracket = min(taxable, bracket_high) - bracket_low` | A gap leaves that income slice untaxed; an overlap taxes it twice. No validation catches either |
+| The top band's `high_multiple` must be exactly `float("inf")` | `bracket_high` is set to infinity only on the literal test `high_mult != float('inf')` | A finite top band silently leaves all income above it untaxed |
+| Any number of bands is fine | No `len()` assumption anywhere | 2-band and 18-band schedules both work |
+| Multiples are of the live simulated poverty line, not currency | `bracket_low = poverty_line * low_mult` | |
+| Income at or below 1.0x the poverty line is always untaxed | `if income <= poverty_line: return 0.0` guards the whole function | A non-zero rate on a band starting at 0.0 therefore applies to the first poverty-line slice only for citizens who are above the poverty line |
+| `Constitution.validate()` does not inspect `TAX_BRACKETS` at all | Verified by grep | A malformed schedule passes validation and fails at runtime, or worse, silently miscomputes |
+
+The poverty line itself is not constitutional. `agents/institutional.py:289` starts
+`TaxSystemAgent.poverty_line` at 1000.0, `:303-311` updates it annually and clamps it to
+[500, 5000], and `agents/citizen.py:861` falls back to 1000.0 if the key is missing. At the default
+`gdp_growth_rate` of 0.02 the line grows about 0.4 percent a year, so roughly 1232 by year 50.
+
+## 7.2 Critical engine finding: the simulated income distribution is far narrower than any real one
+
+This is the most important thing in this section and it applies to all seven scenarios.
+
+`agents/citizen.py:1222-1227`, `_init_income()`, is
+`1000.0 * min(2.0, age/30) * (1 + education_level*1.5) * uniform(0.8, 1.2)`, with
+`education_level` drawn by age band in `_init_education()` (max 1.0). Income thereafter changes only
+by tax paid (`:865`) and the Article VIII elite transfer (`:925-926`), both small. Simulated over
+200,000 working-age draws against the initial poverty line of 1000:
+
+| quantile | p1 | p5 | p10 | p25 | p50 | p75 | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| income / poverty line | 0.97x | 1.18x | 1.35x | 1.87x | 2.68x | 3.46x | 4.11x | 4.49x | 5.06x | 5.63x |
+
+**There is zero probability mass above about 5.6x the poverty line.** Any real bracket boundary above
+that is mechanically inert.
+
+This is a limitation of the income generator, not of the tax encoding, and a reviewer can find it in
+ten minutes. Two honest options, both requiring Kaung's decision:
+- (a) encode the real brackets and disclose which real bands cannot fire in this engine;
+- (b) widen `_init_income()`'s dispersion so real brackets can bind, which is a simulation-design
+  change affecting every scenario including the locked Scenario A and C numbers.
+
+Do **not** rescale the brackets to "fit" the engine. That would reintroduce exactly the invented
+content this section exists to remove.
+
+## 7.3 The real schedule in force at year zero
+
+Year zero for `SK` is **1988** (the 1987 Constitution entered force 25 February 1988), so the
+instrument is the Income Tax Act as it stood through calendar 1988, before the December 1988 reform.
+
+| Item | Value | Source |
+|---|---|---|
+| Instrument | **Income Tax Act (소득세법) Article 70(1)**, version `[시행 1988. 1. 1.] [법률 제3930호, 1987. 5. 30., 타법개정]`. The rate table itself was last substantively amended by Act No. 3576 of 21 December 1982 and was unchanged through 1988 | Korea Ministry of Government Legislation, National Law Information Center (`law.go.kr`), historical article view for 소득세법 제70조 at effective dates 1986-01-01, 1987-01-01, **1988-01-01** and 1989-01-01, retrieved 2026-10-29 via `https://law.go.kr/LSW/lsLinkProc.do?lsNm=소득세법&efYd=19880101&lsClsCd=L&mode=11&joNo=007000`. The four retrievals were compared directly: the table is byte-identical for 1986, 1987 and 1988, and changes at 1989 |
+| Structure | **16-band progressive scale, 6% to 55%**, on 종합소득과세표준 (global income tax base) | Same |
+| Corroboration | Taewon Kwack and Kye-Sik Lee, "Tax Reform in Korea", in Ito and Krueger (eds.), *The Political Economy of Tax Reform*, NBER-EASE Vol. 1, University of Chicago Press, 1992, pp. 117-136 (NBER chapter c8515). Records that the 1988 reform cut "the number of brackets and the marginal tax rates", and describes the post-reform scale as "eight brackets ... ranging from 5 to 50 percent ... the bracket for the top marginal rate is over 50 million won", which matches the 1989-01-01 `law.go.kr` text exactly | Verified by direct text extraction from the NBER PDF |
+
+Statutory bands in force through 1988 (KRW, on the global income tax base):
+
+| band | tax base | marginal rate | | band | tax base | marginal rate |
+|---|---|---|---|---|---|---|
+| 1 | up to 1,800,000 | 6% | | 9 | 12,500,001 to 15,500,000 | 27% |
+| 2 | 1,800,001 to 2,500,000 | 8% | | 10 | 15,500,001 to 19,000,000 | 31% |
+| 3 | 2,500,001 to 3,500,000 | 10% | | 11 | 19,000,001 to 23,000,000 | 35% |
+| 4 | 3,500,001 to 4,800,000 | 12% | | 12 | 23,000,001 to 29,000,000 | 39% |
+| 5 | 4,800,001 to 6,300,000 | 15% | | 13 | 29,000,001 to 37,000,000 | 43% |
+| 6 | 6,300,001 to 8,000,000 | 18% | | 14 | 37,000,001 to 47,000,000 | 47% |
+| 7 | 8,000,001 to 10,000,000 | 21% | | 15 | 47,000,001 to 60,000,000 | 51% |
+| 8 | 10,000,001 to 12,500,000 | 24% | | 16 | above 60,000,000 | 55% |
+
+For the record, the schedule that replaced it, `[시행 1989. 1. 1.] [법률 제4019호, 1988. 12. 26.]`,
+8 bands: 5% to 2,500,000; 10% to 5,000,000; 15% to 8,000,000; 20% to 12,000,000; 25% to 17,000,000;
+30% to 23,000,000; 40% to 50,000,000; 50% above 50,000,000.
+
+### The currently encoded rates are wrong for this scenario
+
+`config/constitution_southkorea.py` currently holds `(0.06, 0.15, 0.24, 0.35, 0.42)`. **Those are
+the 2018 to 2022 Korean statutory rates** (6 / 15 / 24 / 35 / 38 / 40 / 42), thirty years after this
+scenario's year zero, with two bands dropped. The 6 percent entry rate happens to be correct for
+1988 by coincidence; 15, 24, 35 and 42 are not. The existing `GUESS` tag is accurate as far as it
+goes, but the comment calls them a "simplified real-world-informed proxy of Korea's progressive
+marginal income-tax brackets" without saying which era, and a reviewer checking them will land on
+the modern schedule. **Recommendation: replace, do not preserve.**
+
+## 7.4 Benchmark and the conversion, and why it is a labelled proxy rather than a poverty line
+
+**There is no contemporaneous official poverty line for Korea in 1988.** Korea's official minimum
+cost of living (최저생계비) was first statutorily computed under the National Basic Living Security
+Act regime, from 1999. Stating otherwise would be an invention.
+
+Nearest defensible contemporaneous subsistence benchmark, and the one used here, labelled **PROXY,
+NOT A POVERTY LINE**:
+
+| Item | Value | Source |
+|---|---|---|
+| Statutory minimum wage, first year of the Korean minimum-wage regime, applicable 1 Jan 1988 to 31 Dec 1988 | Group 1: **462.50 won per hour**, **3,700 won per day (8-hour basis)**. Group 2: 487.50 won per hour, 3,900 won per day. Deliberated 24 Dec 1987, notified 31 Dec 1987 | Minimum Wage Commission of Korea (최저임금위원회), 연도별 최저임금 결정현황 (1988 to 2000) table, `https://www.minimumwage.go.kr/minWage/policy/decisionMain.do`, retrieved 2026-10-29. Note the Commission's own table gives no monthly figure for 1988; the 209-hour monthly column starts later |
+| Annualisation used here | **3,700 x 300 working days = 1,110,000 won per year** (Group 1) | **This arithmetic is mine, not the Commission's.** It is stated explicitly so the engineer can substitute a different convention. At 240 hours per month the hourly rate gives 1,332,000 won per year instead, which would scale every multiple below by 0.833 |
+| Independent cross-check | Korea's 1988 GDP per capita was roughly 3.4 million won (about USD 4,700 at the 1988 rate of about 731 won/USD). A conventional relative poverty line of one third of mean income gives about 1.13 million won, within 2 percent of the minimum-wage annualisation above | Order-of-magnitude cross-check only, not a cited poverty line |
+
+Conversion is `threshold_KRW / 1,110,000`:
+
+| threshold (KRW) | multiple | | threshold (KRW) | multiple |
+|---|---|---|---|---|
+| 1,800,000 | 1.62 | | 15,500,000 | 13.96 |
+| 2,500,000 | 2.25 | | 19,000,000 | 17.12 |
+| 3,500,000 | 3.15 | | 23,000,000 | 20.72 |
+| 4,800,000 | 4.32 | | 29,000,000 | 26.13 |
+| 6,300,000 | 5.68 | | 37,000,000 | 33.33 |
+| 8,000,000 | 7.21 | | 47,000,000 | 42.34 |
+| 10,000,000 | 9.01 | | 60,000,000 | 54.05 |
+| 12,500,000 | 11.26 | | | |
+
+### Base mismatch, disclosed and not corrected
+
+The Korean schedule applies to 종합소득과세표준, the tax base **after** the basic personal exemption,
+dependant exemptions and the wage-and-salary income deduction. The engine applies the schedule to
+gross `self.income` with no deduction stage. So the 1.62x figure for the first threshold **understates
+the real effective entry point, substantially.** Kwack and Lee (1992, p. 126) state that under this
+regime "about 60 percent of workers and 65 percent of proprietors belong to the zero bracket" and
+(p. 125) "only about 40 percent of workers pay income tax". That is the sourced fact to cite if a
+zero-rate first band is wanted. **The exact 1988 exemption and deduction amounts were not sourced in
+this pass**, so no zero band is invented here.
+
+## 7.5 Proposed `economic.TAX_BRACKETS` for `SK`
+
+Validated against every structural requirement in 7.1 (ascending, contiguous, `inf`-terminated,
+rates in [0, 1], 16 bands).
+
+```python
+    # REAL, sourced 2026-10-29. Income Tax Act (소득세법) Art. 70(1), version
+    # in force through calendar 1988 ([시행 1988. 1. 1.] [법률 제3930호]),
+    # 16 bands, 6% to 55%, retrieved from law.go.kr. Converted to multiples of
+    # the 1988 statutory minimum wage annualised at 3,700 won/day x 300 days =
+    # 1,110,000 won/year (Minimum Wage Commission of Korea). That benchmark is
+    # a labelled PROXY: Korea had no official poverty line in 1988.
+    # See config/constitution_southkorea_encoding/README.md section 7.
+    # REPLACES the previous (0.06, 0.15, 0.24, 0.35, 0.42) rates, which were the
+    # 2018-2022 Korean statutory rates, not 1988's.
+    # NOTE: bands 6 to 16 sit above about 5.6x the poverty line and are
+    # mechanically inert in this engine (README section 7.2).
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,   1.62, 0.06),   # to 1,800,000 won
+        (1.62,   2.25, 0.08),
+        (2.25,   3.15, 0.10),
+        (3.15,   4.32, 0.12),
+        (4.32,   5.68, 0.15),
+        (5.68,   7.21, 0.18),
+        (7.21,   9.01, 0.21),
+        (9.01,  11.26, 0.24),
+        (11.26, 13.96, 0.27),
+        (13.96, 17.12, 0.31),
+        (17.12, 20.72, 0.35),
+        (20.72, 26.13, 0.39),
+        (26.13, 33.33, 0.43),
+        (33.33, 42.34, 0.47),
+        (42.34, 54.05, 0.51),
+        (54.05, float("inf"), 0.55),   # above 60,000,000 won
+    )
+```
+
+Documented alternative if Kaung prefers the Sixth Republic's own fiscal policy rather than the
+inherited Fifth Republic schedule, the 1989 8-band version:
+`((0.00, 2.25, 0.05), (2.25, 4.50, 0.10), (4.50, 7.21, 0.15), (7.21, 10.81, 0.20),
+(10.81, 15.32, 0.25), (15.32, 20.72, 0.30), (20.72, 45.05, 0.40), (45.05, float("inf"), 0.50))`.
+Pick one deliberately and record which.
+
+Measured effect, effective average tax rate at the engine's own income quantiles:
+
+| income | 1.35x (p10) | 1.87x (p25) | 2.68x (p50) | 3.46x (p75) | 4.11x (p90) | 5.06x (p99) |
+|---|---|---|---|---|---|---|
+| current placeholder widths and modern rates | 8.33% | 10.19% | 13.93% | 17.66% | 20.59% | 24.61% |
+| proposed real 1988 schedule | 6.00% | 6.27% | 7.11% | 7.94% | 8.58% | 9.66% |
+
+The direction is a roughly 40 to 60 percent reduction in simulated effective tax, flowing into
+post-tax income, `gdp_contribution` and the published state-GDP Gini column for `SK`. **South Korea
+must be re-run after this change.**
+
+## 7.6 Sourcing status
+
+| Item | Status |
+|---|---|
+| 1988 statutory band thresholds and rates | **CONFIRMED** from the Korean government's own law database, four effective-date versions cross-compared |
+| 1989 post-reform schedule | **CONFIRMED**, same source, independently corroborated by Kwack and Lee (1992) |
+| 1988 statutory minimum wage, hourly and daily | **CONFIRMED** from the Minimum Wage Commission's own table |
+| Annualisation to 1,110,000 won per year | **MY ARITHMETIC, LABELLED**. 300-working-day convention, substitutable |
+| Any 1988 Korean poverty line | **DOES NOT EXIST.** Official measurement begins 1999. A minimum-wage proxy is used and labelled as such |
+| 1988 basic exemption and wage-income deduction amounts | **NOT SOURCED.** Base mismatch disclosed, not corrected |

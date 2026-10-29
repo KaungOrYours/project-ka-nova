@@ -1283,7 +1283,35 @@ class SimulationConfig:
     SCENARIO_C: str = "military_baseline_current_myanmar"
 
     # Starting conditions (Year Zero)
-    YEAR_ZERO_CORRUPTION: float = 0.72    # V-Dem baseline Myanmar
+    #
+    # DESIGN NOTE, applies to this whole block. MFU is a self-designed
+    # counterfactual constitution and has no real-world year zero of its own.
+    # By design it starts from Myanmar's real observed conditions, and every
+    # value below is deliberately identical to the matching value in
+    # config/constitution_2008.py, so that Scenario A and Scenario C form a
+    # controlled pair differing only in constitutional structure. This is the
+    # basis of the paper's A vs C divergence claim. Do not change a value here
+    # without changing the matching value in constitution_2008.py and
+    # re-running BOTH scenarios.
+    #
+    # CONFIDENT, real observation at Scenario C's instrument-promulgation year.
+    # V-Dem Dataset v16 (2026), variable v2x_corr (political corruption index,
+    # 0 = clean to 1 = highly corrupt), Myanmar, 2008 = 0.878 (flat at 0.878
+    # across 1989 to 2009). Access route: Our World in Data grapher
+    # political-corruption-index.csv, verified 2026-10-29.
+    #
+    # CHANGED 2026-10-29 from 0.72, which was labelled "V-Dem baseline Myanmar"
+    # and is NOT a V-Dem figure: Myanmar's complete v2x_corr series (237
+    # observations, 1789 to 2025) contains no year equal to 0.72, and no
+    # sub-index does either. 0.72 was an inverted Transparency International
+    # CPI score (28 of 100 in 2016, 2020 and 2021, so 1 - 0.28 = 0.72), an
+    # anchor on contemporary Myanmar rather than an observation at 2008. Moved
+    # to the real value so Myanmar matches the convention the other five
+    # constitutions already follow, each of which sits on a real V-Dem
+    # observation at its own year zero. Verified before applying: the A vs C
+    # corruption gap survives at 0.84 (was 0.91) and C's collapse year is
+    # unchanged. All previously published corruption numbers are superseded.
+    YEAR_ZERO_CORRUPTION: float = 0.878
     YEAR_ZERO_TRUST: float = 0.22         # World Bank baseline
     YEAR_ZERO_GINI: float = 0.55          # World Bank baseline
     YEAR_ZERO_EMPLOYMENT: float = 0.58
@@ -1448,6 +1476,50 @@ class MFUConstitution:
         self.north_star = NorthStarConfig()
         self.simulation = SimulationConfig()
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29.
+        Before this, Constitution.validate() never inspected TAX_BRACKETS
+        at all, so a malformed schedule passed validation and then either
+        raised TypeError or silently miscomputed at runtime inside
+        agents/citizen.py._calculate_progressive_tax(). Covers, in order:
+        (1) every band must unpack to exactly three values
+        (low_multiple, high_multiple, rate), a flat tuple of bare rates
+        raises TypeError on unpack;
+        (2) and (3) bands must be contiguous and therefore strictly
+        ascending (band[i].high == band[i+1].low, enforced here by
+        requiring each band's low_multiple to equal the running high,
+        a gap leaves income untaxed, an overlap taxes it twice, and an
+        out-of-order band makes the consumer's own `break` silently
+        truncate the rest of the schedule with no error);
+        (4) the top band's high_multiple must be literally float('inf'),
+        since the consumer only switches to infinity on that exact test
+        and a finite top band silently leaves all income above it
+        untaxed. Also sanity-checks each rate falls in [0, 1]. Does not
+        constrain band count, matching the consumer's own lack of a
+        len() assumption. See docs/tax_bracket_inertness.md for the
+        measured effect of this schedule's content on each scenario."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                # Covers a flat tuple of bare rates (each "band" is a bare
+                # float with no len()) exactly as much as a band with the
+                # wrong tuple length; both are the real bug #11 follow-on
+                # crash this check exists to catch before runtime.
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical constitutional constraints"""
         checks = [
@@ -1478,13 +1550,17 @@ class MFUConstitution:
 
             # Archetypes must sum to 1.0
             abs(sum(self.simulation.ARCHETYPES.values()) - 1.0) < 1e-9,
+
+            # TAX_BRACKETS structural contract, added 2026-10-29. Applies
+            # to all seven constitutions, see _tax_brackets_structurally_valid.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
 
         passed = all(checks)
         if passed:
-            print("Constitution validated — all constraints satisfied")
+            print("Constitution validated, all constraints satisfied")
         else:
-            print("❌ Constitution validation FAILED — check parameters")
+            print("Constitution validation FAILED, check parameters")
             for i, check in enumerate(checks):
                 if not check:
                     print(f"   Failed check {i+1}")

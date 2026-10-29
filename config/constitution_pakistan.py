@@ -903,7 +903,44 @@ class EconomicConfig:
     # the Principles of Policy."
     ECONOMIC_SYSTEM: str = "mixed_economy_principles_of_policy_non_justiciable_art30_2"
 
-    TAX_BRACKETS: Tuple[float, ...] = (0.0, 0.05, 0.10, 0.20, 0.30)   # GUESS proxy
+    # PARTIALLY SOURCED, 2026-10-29. CONFIDENT on the threshold and the
+    # structural finding that the tax barely reached the population;
+    # GUESS, EXPLICITLY FLAGGED on the top rate. Income Tax Ordinance,
+    # 1979 (Ordinance No. XXXI of 1979), in force throughout 1985, rates
+    # set in the First Schedule and amended annually by Finance Acts.
+    # The 1985-86 First Schedule slab table COULD NOT BE SOURCED after
+    # seven documented routes; see
+    # config/constitution_pakistan_encoding/README.md section 7.3(b) for
+    # what was attempted (Ahmed and Stern 1986/1991 and the Dec 1986
+    # National Taxation Reform Commission report are the likely
+    # remaining sources and are not online). What IS sourced (World
+    # Bank, "Governance and Fiscal Reform: A Study of Pakistan", PSD
+    # Occasional Paper No. 21, Dec 1995): the personal exemption limit
+    # was Rs 40,000/year in 1990-91, "about four times per capita
+    # income" (para. 2.19), and the maximum marginal personal rate was
+    # cut TO 35% by the Finance Act 1991 (para. 5.6), so it EXCEEDED 35%
+    # before then, which makes 0.35 a lower-bound GUESS, not an
+    # observation. 16.10 = Rs 40,000 / Rs 2,484, the annualised urban
+    # "poor" poverty line for 1984-85 from Malik (1988), The Pakistan
+    # Development Review 27(4) Part II, Table 1, a PEER-REVIEWED
+    # ESTIMATE, not an official line (Pakistan had none until the
+    # 2000s). Because Rs 40,000 is nominal 1990-91 against a 1984-85
+    # line, 16.10 is an UPPER BOUND on the real 1985 ratio, not an
+    # estimate of it. The 0.35 rate is DELIBERATELY PLACED WHERE IT
+    # CANNOT AFFECT ANY PUBLISHED NUMBER: the engine's income
+    # distribution has zero mass above about 5.6x the poverty line
+    # (README section 7.2), so no simulated citizen ever reaches
+    # 16.10x and the rate never fires. Per .claude/memory.md section 11
+    # a guess is acceptable only for a parameter the paper does not
+    # lean on, and this one is provably inert.
+    # REPLACES the previous (0.00, 0.05, 0.10, 0.20, 0.30), whose top
+    # rate (0.30) was inconsistent with the one hard fact available
+    # (the pre-1991 maximum exceeded 35%), and the 2026-10-29 SCHEMA
+    # FIX placeholder widths.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,  16.10, 0.00),
+        (16.10, float('inf'), 0.35),
+    )
     BLACK_MONEY_PENALTY: str = "law_prescribed"    # GUESS — no specific citation
 
     # GUESS, directionally informed — Art. 161's well-head-royalty-to-
@@ -1799,6 +1836,33 @@ class PakistanConstitution:
         self.ELITE_ROLE_TITLES = ELITE_ROLE_TITLES
         self.ELITE_SYSTEM_PROMPTS = ELITE_SYSTEM_PROMPTS
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29,
+        identical logic to config/constitution.py's
+        MFUConstitution._tax_brackets_structurally_valid (see that
+        docstring for the full rationale): three-tuples, contiguous and
+        therefore strictly-ascending bands, rate in [0, 1], top band's
+        high_multiple literally float('inf'). Before this, validate()
+        never inspected TAX_BRACKETS at all. See
+        docs/tax_bracket_inertness.md."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical Pakistan 1973+8th Amendment constraints."""
         checks = [
@@ -1814,6 +1878,8 @@ class PakistanConstitution:
             self.judiciary.COURT_INDEPENDENCE is False,
             # Merit weights must still sum to 1.0.
             self.merit.weights_valid,
+            # TAX_BRACKETS structural contract, added 2026-10-29.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
         return all(checks)
 

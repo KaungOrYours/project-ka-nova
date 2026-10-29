@@ -615,7 +615,52 @@ class EconomicConfig:
     ECONOMIC_SYSTEM: str = "market_economy"   # Section 35
 
     # Section 36 — Mixed economy with state, cooperatives, private
-    TAX_BRACKETS: Tuple[float, ...] = (0.0, 0.05, 0.10, 0.20, 0.30)  # Proxy — not specified in constitution
+    # REAL, sourced 2026-10-29. CONFIDENT on the rate range and the
+    # allowance structure; PROXY on the thresholds. Income Tax Law 1974
+    # (Myanmar Income Tax Law, MITL), in force throughout 2008, taxed
+    # resident salary income progressively at 3% to 30% (DFDL, "Tax
+    # Reforms in Myanmar"; FAO / Myanmar Investment Commission country
+    # investment guide, section 6.4), with a basic allowance of 20% of
+    # income capped at K 6,000. The exact 2008 kyat slab thresholds
+    # COULD NOT BE SOURCED after seven documented routes (MoFR
+    # Notification 121/2006, the likely instrument, is not online); see
+    # config/constitution_2008_encoding/README.md section 7.3 for what
+    # was attempted. Bands below are OPTION 1, the recommended default:
+    # the nearest documented full schedule, MoFR Notification 107/2012
+    # (effective 1 Apr 2012), a dated PROXY four years after year zero
+    # and after a deliberate re-denomination, converted to multiples of
+    # the IHLCA-II (2009/10) poverty line of 376,151 kyat per adult
+    # equivalent per year (IHLCA-I PRIMARY-SOURCE VERIFIED; IHLCA-II
+    # figure SECONDARY-VERIFIED). This proxy UNDERSTATES the real 2008
+    # top rate (20% here vs. the real 30%). OPTION 2, recorded for
+    # visibility and NOT used here: the sourced 2008 rate range encoded
+    # literally, ((0.00, 1.00, 0.03), (1.00, float('inf'), 0.30)),
+    # faithful to the one thing that IS sourced about 2008, but it
+    # reduces in practice to a flat 30% tax above the poverty line given
+    # the engine's own sub-poverty-line guard. See README section 7.5
+    # for the full two-option comparison. REPLACES the 2026-10-29
+    # SCHEMA FIX placeholder (equal-width bands, rates carried over from
+    # a pre-existing "Proxy, not specified in constitution" tag); that
+    # placeholder's widths were unsourced and this entry corrects both
+    # the widths and, where the research found them wrong, the rates
+    # (the real entry rate is 3%, not the 0% the placeholder carried).
+    # NOTE: bands above about 5.6x the poverty line are mechanically
+    # inert in this engine (README section 7.2), so only the bottom five
+    # of these twelve bands can ever fire for a simulated citizen.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,   1.33, 0.01),
+        (1.33,   2.66, 0.02),
+        (2.66,   3.99, 0.03),
+        (3.99,   5.32, 0.04),
+        (5.32,   7.98, 0.05),
+        (7.98,  10.63, 0.06),
+        (10.63, 15.95, 0.07),
+        (15.95, 21.27, 0.09),
+        (21.27, 26.59, 0.11),
+        (26.59, 39.88, 0.13),
+        (39.88, 53.17, 0.15),
+        (53.17, float('inf'), 0.20),
+    )
     BLACK_MONEY_PENALTY: str = "law_prescribed"   # Not specified as High_Treason like MFU
 
     # Section 37(a) — Union owns ALL land and natural resources
@@ -1035,7 +1080,22 @@ class SimulationConfig:
     SCENARIO: str = "C"
     SCENARIO_NAME: str = "Military_2008_Constitution"
     CONSTITUTIONAL_FRAMEWORK: str = "2008_myanmar_military_constitution"
-    YEAR_ZERO_CORRUPTION: float = 0.72    # Real Myanmar CPI 2023 (Transparency International)
+    # CONFIDENT, real observation at this instrument's promulgation year.
+    # V-Dem Dataset v16 (2026), variable v2x_corr (political corruption index,
+    # 0 = clean to 1 = highly corrupt), Myanmar, 2008 = 0.878 (flat at 0.878
+    # across 1989 to 2009). Access route: Our World in Data grapher
+    # political-corruption-index.csv, verified 2026-10-29.
+    #
+    # Deliberately identical to config/constitution.py's matching value so
+    # that A and C form a controlled pair. Changing this requires changing
+    # that value and re-running BOTH scenarios.
+    #
+    # CHANGED 2026-10-29 from 0.72, which was labelled "Real Myanmar CPI 2023
+    # (Transparency International)". That label named the right instrument and
+    # the wrong year: CPI 2023 for Myanmar is 20 of 100, which inverts to 0.80,
+    # not 0.72. 0.72 is the inverted CPI score for 2016, 2020 and 2021
+    # (28 of 100). See constitution.py's year-zero block for the full note.
+    YEAR_ZERO_CORRUPTION: float = 0.878
     YEAR_ZERO_TRUST: float = 0.22         # World Bank Governance 2022
     YEAR_ZERO_GINI: float = 0.55          # World Bank 2017
     YEAR_ZERO_EMPLOYMENT: float = 0.58    # Myanmar Census 2014
@@ -1178,6 +1238,33 @@ class Myanmar2008Constitution:
         self.north_star = NorthStarConfig()
         self.simulation = SimulationConfig()
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29,
+        identical logic to config/constitution.py's
+        MFUConstitution._tax_brackets_structurally_valid (see that
+        docstring for the full rationale): three-tuples, contiguous and
+        therefore strictly-ascending bands, rate in [0, 1], top band's
+        high_multiple literally float('inf'). Before this, validate()
+        never inspected TAX_BRACKETS at all. See
+        docs/tax_bracket_inertness.md."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical 2008 constitution constraints"""
         checks = [
@@ -1189,6 +1276,8 @@ class Myanmar2008Constitution:
             self.emergency.TOTAL_POWER_TRANSFER_POSSIBLE is True,
             # Merit weights must still sum to 1.0 (even if loyalty-dominant)
             self.merit.weights_valid,
+            # TAX_BRACKETS structural contract, added 2026-10-29.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
         return all(checks)
 

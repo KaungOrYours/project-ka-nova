@@ -861,7 +861,36 @@ class EconomicConfig:
     CENTRAL_BANK_ANNUAL_REPORT: bool = True
     CENTRAL_BANK_CHAMBERS_CAN_DIRECT: bool = False
 
-    TAX_BRACKETS: Tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35)   # GUESS — proxy, not package-cited
+    # REAL, sourced 2026-10-29. CONFIDENT. Revenue Code Amendment Act
+    # (No. 44) B.E. 2560, gazetted 27 Jan 2017, applicable from the 2017
+    # tax year, 8 bands, 0% to 35%, on net assessable income (after
+    # deductions and allowances). These rates were ALREADY CORRECT in
+    # the prior encoding, the only one of the six where that was true;
+    # only the band widths were placeholder. Converted to multiples of
+    # the NESDC (Office of the National Economic and Social Development
+    # Council) 2017 national poverty line, 2,686 THB per person per
+    # month = 32,232 THB per year (SECONDARY-VERIFIED; needs one primary
+    # NESDC pull before print). See
+    # config/constitution_thailand_encoding/README.md section 7 for the
+    # full derivation and the base-mismatch caveat: Thai bands apply to
+    # net income after deductions, the engine applies the schedule to
+    # gross income, so these thresholds understate the real tax-free
+    # point, not overstate it.
+    # REPLACES the 2026-10-29 SCHEMA FIX placeholder widths; rates
+    # unchanged.
+    # NOTE: bands above about 5.6x the poverty line are mechanically
+    # inert in this engine (README section 7.2), so bands 3 to 8 cannot
+    # fire; only about 3.4% of simulated citizens pay any tax at all.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,    4.65, 0.00),
+        (4.65,    9.31, 0.05),
+        (9.31,   15.51, 0.10),
+        (15.51,  23.27, 0.15),
+        (23.27,  31.03, 0.20),
+        (31.03,  62.05, 0.25),
+        (62.05, 155.13, 0.30),
+        (155.13, float('inf'), 0.35),
+    )
     BLACK_MONEY_PENALTY: str = "law_prescribed"    # GUESS — not package-cited
 
     STATE_OWNS_RESOURCES: bool = False             # GUESS — no Section-37-style citation found for Thailand in the package
@@ -1803,6 +1832,33 @@ class ThailandConstitution:
         self.ELITE_ROLE_TITLES: Dict[str, str] = ELITE_ROLE_TITLES
         self.ELITE_SYSTEM_PROMPTS: Dict[str, str] = _build_elite_prompts(self)
 
+    @staticmethod
+    def _tax_brackets_structurally_valid(brackets) -> bool:
+        """Structural check for economic.TAX_BRACKETS, added 2026-10-29,
+        identical logic to config/constitution.py's
+        MFUConstitution._tax_brackets_structurally_valid (see that
+        docstring for the full rationale): three-tuples, contiguous and
+        therefore strictly-ascending bands, rate in [0, 1], top band's
+        high_multiple literally float('inf'). Before this, validate()
+        never inspected TAX_BRACKETS at all. See
+        docs/tax_bracket_inertness.md."""
+        if not brackets:
+            return False
+        running_low = 0.0
+        for band in brackets:
+            try:
+                low, high, rate = band
+            except (TypeError, ValueError):
+                return False
+            if low != running_low:
+                return False
+            if not (0.0 <= rate <= 1.0):
+                return False
+            if high != float('inf') and high <= low:
+                return False
+            running_low = high
+        return running_low == float('inf')
+
     def validate(self) -> bool:
         """Validate critical Thailand 2017 constitution constraints."""
         checks = [
@@ -1831,6 +1887,8 @@ class ThailandConstitution:
             self.merit.weights_valid,
             # Archetypes must still sum to 1.0 (locked population design).
             abs(sum(self.simulation.ARCHETYPES.values()) - 1.0) < 1e-9,
+            # TAX_BRACKETS structural contract, added 2026-10-29.
+            self._tax_brackets_structurally_valid(self.economic.TAX_BRACKETS),
         ]
         return all(checks)
 

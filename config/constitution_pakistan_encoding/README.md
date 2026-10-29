@@ -884,3 +884,202 @@ population, so Chile's confidence intervals will be systematically wider for rea
 constitutional structure. Note also that Myanmar's locked 11,000 implies 55,000,000, but Myanmar's own
 World Bank 2008 population is 48,390,793, which at 1:5000 is 9,678 — **the ratio rule as stated does
 not reproduce the already-published baseline.**
+
+---
+
+# 7. Real personal income tax bracket structure at year zero (1985)
+
+*Added 2026-10-29 by `senior-researcher`, per `.claude/memory.md` section 11's standing realism
+requirement. Reason this section exists: the `SCHEMA FIX 2026-10-29` tag in
+`config/constitution_pakistan.py` added equal-width poverty-line bands (0 to 1x, 1 to 2x, and so on)
+around the already-authored marginal rates purely to stop a `TypeError` crash once bug #11's
+constitution-propagation fix made each scenario read its own `economic.TAX_BRACKETS`. Those widths
+were never sourced, and they reach a published metric: `agents/citizen.py:862-867` deducts tax from
+citizen income, `:904` computes `gdp_contribution = productivity * income * 0.001` into state GDP,
+and the live Gini (`agents/institutional.py:141`) is the dispersion of state GDP. This section
+documents the real year-zero statute. Additive only, nothing above is changed. No
+`config/constitution*.py` file is edited here; the tuples below are a proposal for the encoding
+step.*
+
+## 7.1 What the consumer function actually requires
+
+Read from `agents/citizen.py`, `_calculate_progressive_tax()` (line 869) and its caller
+`_pay_taxes()` (line 838). Identical for all seven scenarios, so this subsection is repeated
+verbatim in every encoding package.
+
+| Requirement | Why | Consequence of getting it wrong |
+|---|---|---|
+| Schema is `Tuple[Tuple[float, float, float], ...]` = `(low_multiple, high_multiple, marginal_rate)` | The loop unpacks three values per band | A flat tuple of bare rates raises `TypeError` on unpack. This was the bug #11 follow-on crash |
+| Bands must be sorted strictly ascending by `low_multiple` | The loop `break`s as soon as `taxable <= bracket_low` | An out-of-order band silently truncates the rest of the schedule, no error raised |
+| Bands must be contiguous, `band[i].high == band[i+1].low` | `income_in_bracket = min(taxable, bracket_high) - bracket_low` | A gap leaves that income slice untaxed; an overlap taxes it twice. No validation catches either |
+| The top band's `high_multiple` must be exactly `float("inf")` | `bracket_high` is set to infinity only on the literal test `high_mult != float('inf')` | A finite top band silently leaves all income above it untaxed |
+| Any number of bands is fine | No `len()` assumption anywhere | 2-band and 18-band schedules both work |
+| Multiples are of the live simulated poverty line, not currency | `bracket_low = poverty_line * low_mult` | |
+| Income at or below 1.0x the poverty line is always untaxed | `if income <= poverty_line: return 0.0` guards the whole function | A non-zero rate on a band starting at 0.0 therefore applies to the first poverty-line slice only for citizens who are above the poverty line |
+| `Constitution.validate()` does not inspect `TAX_BRACKETS` at all | Verified by grep | A malformed schedule passes validation and fails at runtime, or worse, silently miscomputes |
+
+The poverty line itself is not constitutional. `agents/institutional.py:289` starts
+`TaxSystemAgent.poverty_line` at 1000.0, `:303-311` updates it annually and clamps it to
+[500, 5000], and `agents/citizen.py:861` falls back to 1000.0 if the key is missing. At the default
+`gdp_growth_rate` of 0.02 the line grows about 0.4 percent a year, so roughly 1232 by year 50.
+
+## 7.2 Critical engine finding: the simulated income distribution is far narrower than any real one
+
+This is the most important thing in this section and it applies to all seven scenarios.
+
+`agents/citizen.py:1222-1227`, `_init_income()`, is
+`1000.0 * min(2.0, age/30) * (1 + education_level*1.5) * uniform(0.8, 1.2)`, with
+`education_level` drawn by age band in `_init_education()` (max 1.0). Income thereafter changes only
+by tax paid (`:865`) and the Article VIII elite transfer (`:925-926`), both small. Simulated over
+200,000 working-age draws against the initial poverty line of 1000:
+
+| quantile | p1 | p5 | p10 | p25 | p50 | p75 | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| income / poverty line | 0.97x | 1.18x | 1.35x | 1.87x | 2.68x | 3.46x | 4.11x | 4.49x | 5.06x | 5.63x |
+
+**There is zero probability mass above about 5.6x the poverty line.** Any real bracket boundary above
+that is mechanically inert.
+
+This is a limitation of the income generator, not of the tax encoding, and a reviewer can find it in
+ten minutes. Two honest options, both requiring Kaung's decision:
+- (a) encode the real brackets and disclose which real bands cannot fire in this engine;
+- (b) widen `_init_income()`'s dispersion so real brackets can bind, which is a simulation-design
+  change affecting every scenario including the locked Scenario A and C numbers.
+
+Do **not** rescale the brackets to "fit" the engine. That would reintroduce exactly the invented
+content this section exists to remove.
+
+## 7.3 The real schedule in force at year zero: COULD NOT BE ESTABLISHED
+
+Year zero for `PK` is **1985** (RCO 1985 and the Eighth Amendment; instrument is the 1973
+Constitution as revived in 1985 with the Eighth Amendment, per `.claude/memory.md` section 4).
+
+**This is the one country in the set where the real bracket thresholds could not be sourced, and
+this subsection says so plainly rather than filling the gap.** What follows is (a) what was
+established, (b) what was attempted and failed, and (c) the nearest defensible proxy, labelled as a
+proxy.
+
+### (a) What IS established
+
+| Fact | Value | Source |
+|---|---|---|
+| Governing instrument | **Income Tax Ordinance, 1979 (Ordinance No. XXXI of 1979)**, promulgated 28 June 1979, in force throughout 1985. Rates were set in its **First Schedule** and amended annually by Finance Acts | Text of the Ordinance (Khalid Zafar & Associates compilation; Pakistan Code) |
+| Personal income tax exemption limit, **1990-91** | **Rs 40,000 per year**, described as "equivalent to about four times the per capita income" | World Bank, *Governance and Fiscal Reform: A Study of Pakistan*, PSD Occasional Paper No. 21, December 1995, para. 2.19. Retrieved 2026-10-29 and read directly from the World Bank document server |
+| Maximum marginal personal rate before 1991 | **Above 35 percent.** The Finance Act of 1991 "announced an immediate slashing of personal income tax rates, with the maximum marginal tax rate cut to 35 percent" | Same source, para. 5.6. This establishes a **lower bound** on the 1985 top rate, not its value |
+| Structural character of the tax | "Income taxes in Pakistan have been largely restricted to corporate profits and salary income (through deduction at source by employers), large publicly quoted companies and multinationals, and taxpayers living in the metropolitan areas." Direct taxes were under 2 percent of GDP, of which over 86 percent was corporate | Same source, paras. 2.17 and 2.19 |
+| A National Taxation Reform Commission was constituted in 1985 and reported in December 1986 | Yes | Secondary, multiple |
+
+### (b) What was attempted and failed
+
+The First Schedule rate table for assessment year 1985-86 was sought in: the full text of the Income
+Tax Ordinance 1979 as compiled (253 pages, extracted; the First Schedule's Part I rate table is not
+present in the compilation, which post-dates 2000); FBR's own document server; pakistancode.gov.pk;
+the Pakistan Development Review archive at PIDE; MPRA working papers on Pakistani income-tax
+redistribution (Munich 16700, which cites Alauddin and Raza 1981 and Malik and Saqib 1985 but
+reproduces no 1980s schedule); the Georgia State ICePP assessment of Pakistan's federal tax system;
+and the World Bank paper above (which contains revenue-composition tables but no rate schedule).
+Ahmed and Stern's 1986 *Pakistan Development Review* paper and their 1991 book are the most likely
+remaining sources and are not online.
+
+**A reasonable guess is not acceptable here if the paper leans on it, per section 11.** The proposal
+in 7.5 is therefore built so that the one unsourced number in it is provably unable to affect any
+published value.
+
+### The currently encoded rates
+
+`config/constitution_pakistan.py` currently holds `(0.00, 0.05, 0.10, 0.20, 0.30)` tagged
+"GUESS proxy". The top rate of 0.30 is **below** the sourced lower bound of 35 percent for the
+pre-1991 maximum, so it is not merely unsourced, it is inconsistent with the one hard fact that is
+available. The entry structure (a zero band only one poverty-line multiple wide) is also wrong by a
+factor of roughly sixteen, see 7.4.
+
+## 7.4 Poverty line and the conversion
+
+Pakistan had **no official government poverty line in 1985**; official poverty measurement dates from
+the early 2000s (the 2,350-calorie line at Rs 673.54 per adult equivalent per month in 1998-99
+prices). The nearest defensible contemporaneous figure is a peer-reviewed estimate:
+
+| Item | Value | Source and status |
+|---|---|---|
+| Monthly per-capita poverty lines, **1984-85**, at current prices | Rural: **Rs 159.00** ("very poor") and **Rs 172.00** ("poor"). Urban: **Rs 185.00** ("very poor") and **Rs 207.00** ("poor") | **Muhammad Hussain Malik, "Some New Evidence on the Incidence of Poverty in Pakistan", *The Pakistan Development Review* Vol. XXVII No. 4 Part II (Winter 1988), pp. 509-515, Table 1.** Retrieved 2026-10-29 and read directly from PIDE's own archive (`file.pide.org.pk/pdfpdr/1988/509-515.pdf`). Built from the 1984-85 Household Income and Expenditure Survey, calorie-based food line plus a non-food allowance, adult-equivalence scales from Irfan and Amjad (1983). **Status: PEER-REVIEWED ACADEMIC ESTIMATE, not an official poverty line.** Must be labelled as such |
+| Annualised, used here | Urban "poor": **Rs 207 x 12 = Rs 2,484 per year**. Rural "very poor": Rs 159 x 12 = Rs 1,908 per year | My arithmetic, stated |
+
+Conversion of the one sourced threshold:
+
+| threshold | basis | multiple |
+|---|---|---|
+| Rs 40,000 exemption limit (1990-91) | urban "poor" line, Rs 2,484/yr (1984-85) | **16.10** |
+| Rs 40,000 exemption limit (1990-91) | rural "very poor" line, Rs 1,908/yr (1984-85) | **20.96** |
+
+Two caveats that cut in opposite directions and are both stated:
+1. The Rs 40,000 figure is **nominal 1990-91** and the poverty line is **1984-85**. Pakistani
+   inflation over that period means the 1985 exemption limit in 1985 rupees was lower than
+   Rs 40,000, so **16.10 is an upper bound on the real 1985 ratio**, not an estimate of it.
+2. The World Bank's own independent characterisation, that the exemption limit was "about four times
+   the per capita income", points the same way regardless of the poverty line chosen: the threshold
+   was extraordinarily high relative to the income distribution, and Pakistan's personal income tax
+   simply did not reach the general population. **That is the real structural fact, and it is
+   sourced.** Encoding it faithfully means encoding a tax that collects essentially nothing, which is
+   historically correct for Pakistan 1985 rather than a modelling artefact.
+
+## 7.5 Proposed `economic.TAX_BRACKETS` for `PK`
+
+Validated against every structural requirement in 7.1 (ascending, contiguous, `inf`-terminated,
+rates in [0, 1], 2 bands).
+
+```python
+    # PARTIALLY SOURCED, 2026-10-29. The Income Tax Ordinance 1979 First
+    # Schedule slab table for assessment year 1985-86 COULD NOT BE SOURCED;
+    # see config/constitution_pakistan_encoding/README.md section 7.3 for
+    # what was attempted. What IS sourced (World Bank, Governance and Fiscal
+    # Reform: A Study of Pakistan, PSD Occasional Paper No. 21, Dec 1995):
+    #   - the personal exemption limit was Rs 40,000/yr in 1990-91, about
+    #     four times per capita income (para. 2.19);
+    #   - the maximum marginal personal rate was cut TO 35% by the Finance
+    #     Act 1991, so it exceeded 35% before then (para. 5.6).
+    # 16.10 = Rs 40,000 / Rs 2,484, the annualised urban "poor" poverty line
+    # for 1984-85 from Malik (1988), The Pakistan Development Review 27(4)
+    # Part II, Table 1, a PEER-REVIEWED ESTIMATE and not an official line
+    # (Pakistan had none until the 2000s). Because the Rs 40,000 figure is
+    # nominal 1990-91 against a 1984-85 line, 16.10 is an UPPER BOUND.
+    # The 0.35 rate is a FLAGGED GUESS, set at the sourced lower bound for
+    # the pre-1991 maximum. It is deliberately placed where it CANNOT affect
+    # any published number: the engine's income distribution has zero mass
+    # above about 5.6x the poverty line (README section 7.2), so no citizen
+    # agent ever reaches 16.10x and the rate never fires. Per
+    # .claude/memory.md section 11, a guess is acceptable only for a
+    # parameter the paper does not lean on; this one is provably inert.
+    TAX_BRACKETS: Tuple[Tuple, ...] = (
+        (0.00,  16.10, 0.00),   # below the real exemption limit: no tax
+        (16.10, float("inf"), 0.35),   # FLAGGED GUESS, mechanically inert
+    )
+```
+
+Measured effect, effective average tax rate at the engine's own income quantiles:
+
+| income | 1.35x (p10) | 1.87x (p25) | 2.68x (p50) | 3.46x (p75) | 4.11x (p90) | 5.06x (p99) |
+|---|---|---|---|---|---|---|
+| current placeholder widths | 1.30% | 2.33% | 4.40% | 6.99% | 9.32% | 13.20% |
+| proposed, sourced threshold | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% |
+
+Pakistan's simulated personal income tax becomes exactly zero for every citizen agent in every year.
+That is the historically faithful outcome and it is defensible, but it is a large change to
+post-tax income, `gdp_contribution` and therefore the published state-GDP Gini column for `PK`.
+**Pakistan must be re-run after this change, and the methodology section must state that `PK`'s
+personal income tax is inert by sourced design, not by oversight.**
+
+If Kaung prefers a schedule that actually fires, the only honest route is to source the real 1985-86
+First Schedule from a library (Ahmed and Stern 1986, or the National Taxation Reform Commission
+report of December 1986, or the *Pakistan Economic Survey 1985-86*). Do not interpolate one.
+
+## 7.6 Sourcing status
+
+| Item | Status |
+|---|---|
+| Income Tax Ordinance 1979 as the governing instrument in 1985 | **CONFIRMED** |
+| 1985-86 First Schedule slab thresholds and rates | **COULD NOT ESTABLISH.** Seven routes attempted, listed in 7.3(b). Open gap |
+| Exemption limit Rs 40,000 per year (1990-91) and "about four times per capita income" | **CONFIRMED** from a World Bank paper read directly |
+| Pre-1991 maximum marginal rate above 35 percent | **CONFIRMED** as a lower bound only |
+| 1984-85 poverty lines (Rs 159 / 172 / 185 / 207 per capita per month) | **CONFIRMED** from the PIDE journal PDF, labelled as a peer-reviewed academic estimate, not an official line |
+| The 0.35 top rate in the proposal | **FLAGGED GUESS**, placed where it provably cannot affect output |
+| 16.10 multiple | **DERIVED**, with a stated nominal-year mismatch making it an upper bound |
