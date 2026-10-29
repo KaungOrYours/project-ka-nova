@@ -875,7 +875,7 @@ class CitizenAgent(Agent):
         if income <= poverty_line:
             return 0.0
 
-        brackets = CONSTITUTION.economic.TAX_BRACKETS
+        brackets = self.model.CONSTITUTION.economic.TAX_BRACKETS
         taxable = income
         tax = 0.0
 
@@ -944,7 +944,7 @@ class CitizenAgent(Agent):
             # Boost state knowledge capital
             self.model.states[self.state_id]["knowledge_capital"] = (
                 self.model.states[self.state_id].get("knowledge_capital", 0.0) +
-                CONSTITUTION.science.PHD_KNOWLEDGE_CAPITAL_BOOST
+                self.model.CONSTITUTION.science.PHD_KNOWLEDGE_CAPITAL_BOOST
             )
             self.model.shared_data["phd_graduates"] += 1
 
@@ -1009,7 +1009,7 @@ class CitizenAgent(Agent):
 
         # Eligible for IIG Academy after NS (Article 7.0.1)
         self.iig_academy_eligible = (
-            self.merit_score >= CONSTITUTION.iig.ENTRY_MERIT_MIN
+            self.merit_score >= active_constitution.iig.ENTRY_MERIT_MIN
         )
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -1086,7 +1086,7 @@ class CitizenAgent(Agent):
 
         # Rights violation — major grievance spike (Article 2.4)
         if self.model.shared_data.get("rights_violated", False):
-            grievance_change += CONSTITUTION.rights.RIGHTS_VIOLATION_GRIEVANCE_SPIKE
+            grievance_change += self.model.CONSTITUTION.rights.RIGHTS_VIOLATION_GRIEVANCE_SPIKE
 
         # Good governance reduces grievance
         if trust > 0.65 and employment > 0.80:
@@ -1170,13 +1170,19 @@ class CitizenAgent(Agent):
 
     def _calculate_merit(self) -> float:
         """
-        M = (Productivity * 0.40) + (Education * 0.30)
-            + (Performance * 0.20) + (Civic * 0.10)
+        M = (Productivity * PRODUCTIVITY_WEIGHT) + (Education * EDUCATION_WEIGHT)
+            + (Performance * PERFORMANCE_WEIGHT) + (Civic * CIVIC_WEIGHT)
+        Weights come from the active constitution (self.model.CONSTITUTION.merit),
+        not a fixed literal. MFU v7's own weights are 0.35/0.25/0.20/0.20
+        (the old v6 split documented here previously, 0.40/0.30/0.20/0.10, is
+        stale, the code has read v7 fields since the v7 encoding; see
+        .claude/memory.md bug #11/#7). Every other constitution defines its
+        own `merit` section, so this is scenario-aware, not MFU-only.
         All components: 0.0 to 1.0
         Result: 0.0 to 1.0
         """
 
-        c = CONSTITUTION.merit
+        c = self.model.CONSTITUTION.merit
         merit = (
             self.productivity * c.PRODUCTIVITY_WEIGHT +
             self.education_level * c.EDUCATION_WEIGHT +
@@ -1284,7 +1290,7 @@ class CitizenAgent(Agent):
 
         if self.trauma_score > 0.40:
             return random.choice(
-                CONSTITUTION.psychology.TRAUMA_CATEGORIES
+                self.model.CONSTITUTION.psychology.TRAUMA_CATEGORIES
             )
 
         return None
@@ -1317,7 +1323,7 @@ class CitizenAgent(Agent):
             self.corruption_tolerance = max(
                 0.0,
                 self.corruption_tolerance -
-                CONSTITUTION.crypto_justice.SHAME_REGISTER_CORRUPTION_REDUCTION
+                self.model.CONSTITUTION.crypto_justice.SHAME_REGISTER_CORRUPTION_REDUCTION
                 * distance_decay
             )
 
@@ -1346,7 +1352,7 @@ class CitizenAgent(Agent):
         self.corruption_tolerance = max(
             0.0,
             self.corruption_tolerance * (
-                1.0 - CONSTITUTION.crypto_justice.SHAME_REGISTER_CORRUPTION_REDUCTION
+                1.0 - self.model.CONSTITUTION.crypto_justice.SHAME_REGISTER_CORRUPTION_REDUCTION
             )
         )
 
@@ -1369,7 +1375,7 @@ class CitizenAgent(Agent):
         """
 
         return (
-            self.merit_score >= CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE and
+            self.merit_score >= self.model.CONSTITUTION.merit.MERIT_MIN_PUBLIC_OFFICE and
             not self.corruption_detected and
             self.national_service_completed and
             self.is_alive and
@@ -1384,8 +1390,8 @@ class CitizenAgent(Agent):
 
         return (
             self.national_service_completed and
-            self.merit_score >= CONSTITUTION.iig.ENTRY_MERIT_MIN and
-            self.age >= CONSTITUTION.iig.ENTRY_MIN_AGE and
+            self.merit_score >= self.model.CONSTITUTION.iig.ENTRY_MERIT_MIN and
+            self.age >= self.model.CONSTITUTION.iig.ENTRY_MIN_AGE and
             not self.corruption_detected
         )
 

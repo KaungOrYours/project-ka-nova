@@ -250,7 +250,18 @@ class OfficialAgent(CitizenAgent):
         self._update_approval_rating(local_env)
         self._update_term()
 
-        if (self.model.current_year % CONSTITUTION.merit.RECERTIFICATION_INTERVAL == 0
+        # Guard against RECERTIFICATION_INTERVAL == 0 (same semantics and
+        # same fix pattern as institutions/court.py's REVIEW_INTERVAL
+        # guard, bug #12): only MFU/A encodes a real 4-year recertification
+        # cycle, every other constitution (2008 Myanmar, Thailand,
+        # Pakistan, Chile, Germany, South Korea) encodes 0, meaning "no
+        # recertification cycle exists", not a crash. Before the bug #11
+        # propagation fix this bare read always resolved to MFU's 4
+        # regardless of scenario, so the zero case was never reached; now
+        # that it reads the active constitution, the guard is required.
+        recert_interval = self.model.CONSTITUTION.merit.RECERTIFICATION_INTERVAL
+        if (recert_interval > 0
+                and self.model.current_year % recert_interval == 0
                 and self.model.current_year > 0):
             self._merit_recertification()
 
@@ -389,7 +400,7 @@ class OfficialAgent(CitizenAgent):
     def _psych_screening_update(self):
         self.psych_screen_months += 12
 
-        screening_interval = CONSTITUTION.psychology.SCREENING_INTERVAL_MONTHS
+        screening_interval = self.model.CONSTITUTION.psychology.SCREENING_INTERVAL_MONTHS
 
         if self.psych_screen_months >= screening_interval:
             self.psych_screen_months = 0
@@ -397,7 +408,7 @@ class OfficialAgent(CitizenAgent):
 
         if self.psych_probation:
             self.psych_probation_months += 12
-            if self.psych_probation_months >= CONSTITUTION.psychology.SEVERE_PROBATION_MONTHS:
+            if self.psych_probation_months >= self.model.CONSTITUTION.psychology.SEVERE_PROBATION_MONTHS:
                 self._complete_probation()
 
     def _conduct_psych_screening(self):
@@ -411,8 +422,8 @@ class OfficialAgent(CitizenAgent):
         review_variation = random.gauss(0, 0.05)
         psych_score = max(0.0, min(1.0, psych_score + review_variation))
 
-        stable_threshold = CONSTITUTION.psychology.OUTCOME_STABLE_THRESHOLD
-        severe_threshold = CONSTITUTION.psychology.OUTCOME_SEVERE_THRESHOLD
+        stable_threshold = self.model.CONSTITUTION.psychology.OUTCOME_STABLE_THRESHOLD
+        severe_threshold = self.model.CONSTITUTION.psychology.OUTCOME_SEVERE_THRESHOLD
 
         if psych_score <= stable_threshold:
             self.psych_status = "stable"
@@ -449,7 +460,7 @@ class OfficialAgent(CitizenAgent):
         self.psych_status = "stable"
 
     def stop_treatment(self):
-        consequence = CONSTITUTION.psychology.STOP_CONSEQUENCE
+        consequence = self.model.CONSTITUTION.psychology.STOP_CONSEQUENCE
         if consequence == "automatic_temporary_disqualification":
             self.psych_probation = True
             self.psych_status = "severe"
@@ -464,7 +475,7 @@ class OfficialAgent(CitizenAgent):
     def _merit_recertification(self):
         self.merit_score = self._calculate_merit()
 
-        if self.merit_score < CONSTITUTION.merit.RECERTIFICATION_FAIL_THRESHOLD:
+        if self.merit_score < self.model.CONSTITUTION.merit.RECERTIFICATION_FAIL_THRESHOLD:
             self._fail_recertification()
         else:
             self.model.shared_data.setdefault("recertification_passed", []).append({
@@ -510,7 +521,7 @@ class OfficialAgent(CitizenAgent):
         self.no_confidence_votes += 1
 
         required = self.role_config.get("removal_chambers", 2)
-        requires_president = CONSTITUTION.executive.CHANCELLOR_DISMISSAL_REQUIRES_PRESIDENT
+        requires_president = self.model.CONSTITUTION.executive.CHANCELLOR_DISMISSAL_REQUIRES_PRESIDENT
 
         if self.no_confidence_votes >= required:
             if self.role == "chancellor":
@@ -772,7 +783,7 @@ class ChancellorAgent(OfficialAgent):
             age=random.randint(38, 58)
         )
         self.chamber_service_years_ago = random.randint(
-            CONSTITUTION.executive.CHANCELLOR_COOLING_OFF, 20
+            self.model.CONSTITUTION.executive.CHANCELLOR_COOLING_OFF, 20
         )
 
     def step(self):
@@ -795,7 +806,7 @@ class ChancellorAgent(OfficialAgent):
                 quality = self.merit_score * 0.60 + random.uniform(0.0, 0.20)
                 if self.psych_probation:
                     quality *= (
-                        1.0 - CONSTITUTION.psychology.TRAUMA_DISTORTION_RANGE[0]
+                        1.0 - self.model.CONSTITUTION.psychology.TRAUMA_DISTORTION_RANGE[0]
                     )
                 self.model.shared_data["policy_quality"] = max(
                     0.0, min(1.0, quality)
@@ -965,7 +976,7 @@ class EthnicLeaderAgent(OfficialAgent):
 
     def consider_presidential_run(self) -> bool:
         eligible = (
-            self.terms_served >= CONSTITUTION.chambers.ETHNIC_PRESIDENTIAL_MIN_TERMS
+            self.terms_served >= self.model.CONSTITUTION.chambers.ETHNIC_PRESIDENTIAL_MIN_TERMS
             and self.ambition > 0.70
             and self.merit_score > 0.65
             and not self.permanently_disqualified
@@ -1009,11 +1020,11 @@ class AnalysisCouncilMember(OfficialAgent):
         self.evidence_base: List[Dict] = []
         self.methodology_published = False
         self.publish_days_before_veto = (
-            CONSTITUTION.safeguards.ANALYSIS_PUBLISH_BEFORE_VETO_DAYS
+            self.model.CONSTITUTION.safeguards.ANALYSIS_PUBLISH_BEFORE_VETO_DAYS
         )
 
-        if self.merit_score < CONSTITUTION.chambers.ANALYSIS_MERIT_MIN:
-            boost = CONSTITUTION.chambers.ANALYSIS_MERIT_MIN - self.merit_score + 0.05
+        if self.merit_score < self.model.CONSTITUTION.chambers.ANALYSIS_MERIT_MIN:
+            boost = self.model.CONSTITUTION.chambers.ANALYSIS_MERIT_MIN - self.merit_score + 0.05
             self.education_level = min(1.0, self.education_level + boost * 0.5)
             self.productivity = min(1.0, self.productivity + boost * 0.3)
             self.merit_score = self._calculate_merit()
@@ -1100,9 +1111,35 @@ class OfficialPopulation:
 
         # ── All agents below: unchanged from Phase 1, added to scheduler ──────
 
+        # NOTE (bug #11 propagation fix, 2026-10-29): ministry list and
+        # minister/analysis-council/congress state_ids now come from
+        # model.CONSTITUTION.{executive.MINISTRIES, simulation.
+        # SIMULATION_STATES}, the active scenario's own fields, not the
+        # bare MFU `CONSTITUTION` import. Before this fix every official's
+        # state_id was always one of MFU's 14 Myanmar names, while
+        # self.states (model_phase3.py's _initialize_states()) is built
+        # from the SAME active-constitution read and therefore held real
+        # non-Myanmar geography for SK/TH/PK/CL/DE. OfficialAgent inherits
+        # CitizenAgent._perceive_environment(), which looks itself up via
+        # `self.model.states.get(self.state_id, {})` — a `.get()` with a
+        # default, not `[...]` indexing, so this never raised KeyError.
+        # It silently returned {} for every official in every non-A/C
+        # scenario, so every official's corruption/employment/trust/
+        # ethnic_tension perception fell back to the method's hardcoded
+        # generic defaults (plus noise) for that official's entire
+        # lifetime, never reading its own state's real trajectory. This
+        # was a real cross-country data-integrity bug, not an inert one,
+        # confirmed by trace, not by a crash. It only ever matched by
+        # coincidence for A/C, since MFU and 2008 Myanmar's own
+        # SIMULATION_STATES happen to be the same 14 Myanmar names. The
+        # EthnicLeaderAgent/President/Chancellor's own separate hardcoded
+        # Myanmar state_id literals (this file, EthnicLeaderAgent.__init__
+        # state_map and the two `state_id="bamar_central"` literals above)
+        # are the same symptom but not a bare CONSTITUTION read, out of
+        # scope for this pass, flagged in .claude/memory.md instead.
         # Ministers (8)
-        for ministry in CONSTITUTION.executive.MINISTRIES:
-            state = random.choice(list(CONSTITUTION.simulation.SIMULATION_STATES))
+        for ministry in model.CONSTITUTION.executive.MINISTRIES:
+            state = random.choice(list(model.CONSTITUTION.simulation.SIMULATION_STATES))
             ethnicity = random.choice(ETHNIC_GROUPS)
             officials.append(OfficialAgent(
                 unique_id=agent_id,
@@ -1135,7 +1172,7 @@ class OfficialPopulation:
             "ethnic_studies", "technology", "finance", "sociology"
         ]
         for expertise in expertise_areas:
-            state = random.choice(list(CONSTITUTION.simulation.SIMULATION_STATES))
+            state = random.choice(list(model.CONSTITUTION.simulation.SIMULATION_STATES))
             ethnicity = random.choice(ETHNIC_GROUPS)
             officials.append(AnalysisCouncilMember(
                 unique_id=agent_id,
@@ -1148,7 +1185,7 @@ class OfficialPopulation:
 
         # Congress Members (50)
         for _ in range(50):
-            state = random.choice(list(CONSTITUTION.simulation.SIMULATION_STATES))
+            state = random.choice(list(model.CONSTITUTION.simulation.SIMULATION_STATES))
             ethnicity = random.choice(ETHNIC_GROUPS)
             officials.append(OfficialAgent(
                 unique_id=agent_id,

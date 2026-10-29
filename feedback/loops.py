@@ -156,16 +156,16 @@ class FeedbackEngine:
 
         # v7 — Trust acceleration trigger (Article VIII)
         corruption = m.shared_data.get("corruption_index", 1.0)
-        if corruption < CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_CORRUPTION:
+        if corruption < m.CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_CORRUPTION:
             streak = m.shared_data.get("low_corruption_streak", 0) + 1
         else:
             streak = 0
         m.shared_data["low_corruption_streak"] = streak
 
-        if streak >= CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_YEARS:
+        if streak >= m.CONSTITUTION.federal.TRUST_ACCELERATION_TRIGGER_YEARS:
             growth = new_trust - current_trust
             if growth > 0:
-                new_trust = current_trust + growth * CONSTITUTION.federal.TRUST_ACCELERATION_MULTIPLIER
+                new_trust = current_trust + growth * m.CONSTITUTION.federal.TRUST_ACCELERATION_MULTIPLIER
 
         new_trust = max(0.0, min(1.0, new_trust))
         m.shared_data["trust_index"] = new_trust
@@ -423,16 +423,23 @@ class FeedbackEngine:
         )
         m.shared_data["policy_quality"] = policy_quality
 
-        # Recertification year — every 4 years
+        # Recertification year — every 4 years under MFU/A. Guard against
+        # RECERTIFICATION_INTERVAL == 0 (same semantics/pattern as
+        # institutions/court.py's REVIEW_INTERVAL guard, bug #12, and
+        # agents/official.py's OfficialAgent.step() recertification guard):
+        # every constitution except MFU encodes 0, meaning no
+        # recertification cycle exists, not a ZeroDivisionError.
+        recert_interval = m.CONSTITUTION.merit.RECERTIFICATION_INTERVAL
         recert_year = (
-            self.year % CONSTITUTION.merit.RECERTIFICATION_INTERVAL == 0 and
+            recert_interval > 0 and
+            self.year % recert_interval == 0 and
             self.year > 0
         )
 
         if recert_year:
             disqualified = 0
             for official in officials:
-                if official.merit_score < CONSTITUTION.merit.RECERTIFICATION_FAIL_THRESHOLD:
+                if official.merit_score < m.CONSTITUTION.merit.RECERTIFICATION_FAIL_THRESHOLD:
                     official._fail_recertification()
                     disqualified += 1
 
@@ -622,7 +629,7 @@ class FeedbackEngine:
         # Gini check — feeds ECB trigger
         gini = m.shared_data.get("gini_coefficient", 0.55)
 
-        if gini > CONSTITUTION.federal.GINI_THRESHOLD:
+        if gini > m.CONSTITUTION.federal.GINI_THRESHOLD:
             # Automatic ECB trigger — redistribution pressure
             m.shared_data.setdefault("ecb_triggers", []).append({
                 "type": "inequality_threshold",
@@ -633,7 +640,7 @@ class FeedbackEngine:
             ranked = m.shared_data.get("state_ranking", [])
             if ranked:
                 dominant_state_id = ranked[0][0]
-                if ranked[0][1] > CONSTITUTION.federal.STATE_GDP_CAP:
+                if ranked[0][1] > m.CONSTITUTION.federal.STATE_GDP_CAP:
                     states[dominant_state_id]["resource_revenue"] *= 0.95
 
         return {
@@ -641,7 +648,7 @@ class FeedbackEngine:
             "total_resource_revenue": total_resource_revenue,
             "revenue_growth": revenue_growth,
             "gini": gini,
-            "ecb_triggered": gini > CONSTITUTION.federal.GINI_THRESHOLD
+            "ecb_triggered": gini > m.CONSTITUTION.federal.GINI_THRESHOLD
         }
 
     def loop_E4_phd_economy(self) -> dict:
@@ -678,7 +685,7 @@ class FeedbackEngine:
         ]
 
         # Knowledge capital accumulation
-        knowledge_boost = phd_grads * CONSTITUTION.science.PHD_KNOWLEDGE_CAPITAL_BOOST
+        knowledge_boost = phd_grads * m.CONSTITUTION.science.PHD_KNOWLEDGE_CAPITAL_BOOST
         current_knowledge = m.shared_data.get("knowledge_capital_index", 0.0)
         new_knowledge = min(1.0, current_knowledge + knowledge_boost * 0.01)
         m.shared_data["knowledge_capital_index"] = new_knowledge
@@ -704,8 +711,8 @@ class FeedbackEngine:
         m.shared_data["brain_drain_rate"] = brain_drain_rate
 
         # Royalty mechanism — reduces emigration among PhD graduates
-        if CONSTITUTION.science.RESEARCHER_ROYALTY_RATE > 0:
-            royalty_retention = CONSTITUTION.science.RESEARCHER_ROYALTY_RATE * 0.50
+        if m.CONSTITUTION.science.RESEARCHER_ROYALTY_RATE > 0:
+            royalty_retention = m.CONSTITUTION.science.RESEARCHER_ROYALTY_RATE * 0.50
             m.shared_data["phd_retention_bonus"] = royalty_retention
 
         return {
