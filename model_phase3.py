@@ -105,6 +105,35 @@ def get_coup_probability(m):
 def get_north_star_progress(m):
     return m.shared_data.get("north_star_progress", 0.0)
 
+# Per-term decomposition of the north-star composite (Kaung's decision 7,
+# .claude/memory.md section 5j; docs/bias_audit.md Section 3). The composite
+# is never re-weighted or retired — these seven reporters expose each
+# weighted term _update_north_star_progress already computes, so every
+# scenario's score is published decomposed rather than as one headline
+# number. Values are PRE-clip (the composite itself is clipped to [0,1] but
+# the seven terms are reported exactly as computed, see the sum-equals-
+# composite assertion in tests/test_north_star_decomposition.py).
+def get_north_star_term_corruption(m):
+    return m.shared_data.get("north_star_term_corruption", 0.0)
+
+def get_north_star_term_trust(m):
+    return m.shared_data.get("north_star_term_trust", 0.0)
+
+def get_north_star_term_coup(m):
+    return m.shared_data.get("north_star_term_coup", 0.0)
+
+def get_north_star_term_iig(m):
+    return m.shared_data.get("north_star_term_iig", 0.0)
+
+def get_north_star_term_gdp(m):
+    return m.shared_data.get("north_star_term_gdp", 0.0)
+
+def get_north_star_term_harmony(m):
+    return m.shared_data.get("north_star_term_harmony", 0.0)
+
+def get_north_star_term_gini(m):
+    return m.shared_data.get("north_star_term_gini", 0.0)
+
 def get_gini_coefficient(m):
     # Geographic inequality (dispersion of GDP across administrative units),
     # not citizen-income inequality. Written only by
@@ -273,6 +302,13 @@ class KaNovaModelPhase3(Model):
                 "institution_label":     lambda m: "iig_effectiveness" if m.chain_type == "civilian" else "intel_effectiveness",
                 "coup_probability":      get_coup_probability,
                 "north_star_progress":   get_north_star_progress,
+                "north_star_term_corruption": get_north_star_term_corruption,
+                "north_star_term_trust":      get_north_star_term_trust,
+                "north_star_term_coup":       get_north_star_term_coup,
+                "north_star_term_iig":        get_north_star_term_iig,
+                "north_star_term_gdp":        get_north_star_term_gdp,
+                "north_star_term_harmony":    get_north_star_term_harmony,
+                "north_star_term_gini":       get_north_star_term_gini,
                 "gini_coefficient":      get_gini_coefficient,
                 "ethnic_harmony":        get_ethnic_harmony,
                 "stability_index":       get_stability_index,
@@ -820,15 +856,32 @@ class KaNovaModelPhase3(Model):
         )
         gini        = self.shared_data.get("gini_coefficient", 0.55)
 
+        # Seven weighted terms, decomposed (Kaung's decision 7, memory 5j /
+        # docs/bias_audit.md Section 3). Published alongside the composite,
+        # never used to re-weight or retire it. These must sum to EXACTLY
+        # the pre-clip composite below — enforced by
+        # tests/test_north_star_decomposition.py, not just by inspection.
+        term_corruption = (1.0 - corruption) * 0.20
+        term_trust      = trust * 0.15
+        term_coup       = (1.0 - coup_risk) * 0.15
+        term_iig        = iig * 0.15
+        term_gdp        = min(gdp_growth * 5.0, 1.0) * 0.15
+        term_harmony    = harmony * 0.10
+        term_gini       = (1.0 - gini) * 0.10
+
         north_star = (
-            (1.0 - corruption) * 0.20
-            + trust * 0.15
-            + (1.0 - coup_risk) * 0.15
-            + iig * 0.15
-            + min(gdp_growth * 5.0, 1.0) * 0.15
-            + harmony * 0.10
-            + (1.0 - gini) * 0.10
+            term_corruption + term_trust + term_coup + term_iig
+            + term_gdp + term_harmony + term_gini
         )
+
+        self.shared_data["north_star_term_corruption"] = round(float(term_corruption), 4)
+        self.shared_data["north_star_term_trust"]       = round(float(term_trust), 4)
+        self.shared_data["north_star_term_coup"]        = round(float(term_coup), 4)
+        self.shared_data["north_star_term_iig"]          = round(float(term_iig), 4)
+        self.shared_data["north_star_term_gdp"]          = round(float(term_gdp), 4)
+        self.shared_data["north_star_term_harmony"]      = round(float(term_harmony), 4)
+        self.shared_data["north_star_term_gini"]          = round(float(term_gini), 4)
+
         self.shared_data["north_star_progress"] = round(
             float(np.clip(north_star, 0.0, 1.0)), 4
         )
