@@ -16,8 +16,14 @@ echo "Job:        ${JOB:-run}"
 echo "Use LLM:    ${USE_LLM:-true}"
 echo "============================================================"
 
-# JOB=run (default) — the Monte Carlo campaign via run_phase3.py
-# JOB=gsa         — Sobol global sensitivity analysis via analysis/kpi.py --gsa
+# JOB=run       (default) — the Monte Carlo campaign via run_phase3.py
+# JOB=gsa                 — Sobol global sensitivity analysis via analysis/kpi.py --gsa
+# JOB=benchmark            — the wall-clock-capped real-LLM-path throughput
+#   benchmark (scripts/benchmark_llm_throughput.py). Run this BEFORE any real
+#   scenario launch, not instead of one: it replaces the unmeasured
+#   "35,000 calls / 24-30 hrs" assumption with a measured number before a
+#   paid campaign is costed. Writes to its own throwaway results dir
+#   (BENCH_RESULTS_DIR below), never to results_phase3/.
 #
 # USE_LLM=true (default) — unchanged published behaviour: Ollama + --use-llm.
 # USE_LLM=false          — rule-based. Skips Ollama entirely (no serve, no
@@ -30,8 +36,8 @@ echo "============================================================"
 #   path through the pipeline at all.
 JOB="${JOB:-run}"
 USE_LLM="${USE_LLM:-true}"
-if [ "$JOB" != "run" ] && [ "$JOB" != "gsa" ]; then
-    echo "FATAL: JOB must be 'run' or 'gsa', got '${JOB}'" >&2
+if [ "$JOB" != "run" ] && [ "$JOB" != "gsa" ] && [ "$JOB" != "benchmark" ]; then
+    echo "FATAL: JOB must be 'run', 'gsa' or 'benchmark', got '${JOB}'" >&2
     exit 1
 fi
 if [ "$USE_LLM" != "true" ] && [ "$USE_LLM" != "false" ]; then
@@ -40,6 +46,13 @@ if [ "$USE_LLM" != "true" ] && [ "$USE_LLM" != "false" ]; then
 fi
 # A GSA is rule-based by construction (run_sobol_gsa passes use_llm=False).
 if [ "$JOB" = "gsa" ]; then USE_LLM="false"; fi
+# A benchmark with no LLM measures nothing it exists to measure — force it on
+# rather than silently producing an all-rule-based report that looks like a
+# real LLM-throughput measurement.
+if [ "$JOB" = "benchmark" ] && [ "$USE_LLM" = "false" ]; then
+    echo "NOTE: JOB=benchmark forces USE_LLM=true (a rule-based benchmark measures nothing)."
+    USE_LLM="true"
+fi
 
 # ── 1. Pull latest codebase ───────────────────────────────────────────────────
 echo ""
@@ -157,7 +170,44 @@ mkdir -p logs
 
 IFS=',' read -ra SCENARIO_LIST <<< "${SCENARIO:-A}"
 
-if [ "$JOB" = "gsa" ]; then
+if [ "$JOB" = "benchmark" ]; then
+    # Real-LLM-path throughput benchmark, run BEFORE costing/launching a real
+    # scenario. Wall-clock-capped by BENCH_BUDGET_SECONDS (default 900 = 15
+    # min), never by a fixed call count. Writes its own throwaway results
+    # dir (BENCH_RESULTS_DIR), never results_phase3/. Scenario list reuses
+    # $SCENARIO (default A,C — one civilian, one military chain, per the
+    # design constraint); survival-year/runs-plan/hourly-rate assumptions
+    # are documented defaults inside the script, overridable via
+    # BENCH_SURVIVAL_YEARS / BENCH_RUNS_PLAN / BENCH_HOURLY_RATES (each a
+    # JSON string / comma-list matching the script's own --survival-years /
+    # --runs-plan / --hourly-rates flags) if you want to override them here
+    # instead of editing the script.
+    echo "Running LLM throughput benchmark: scenarios=${SCENARIO:-A,C} budget=${BENCH_BUDGET_SECONDS:-900}s"
+    BENCH_ARGS=(
+        --budget-seconds "${BENCH_BUDGET_SECONDS:-900}"
+        --scenarios "${SCENARIO:-A,C}"
+        --citizens "${CITIZENS:-11000}"
+        --model "${LLM_MODEL:-llama3.2:3b}"
+        --results-dir "${BENCH_RESULTS_DIR:-/workspace/project-ka-nova/results_benchmark}"
+        --budget-dollars "${BENCH_BUDGET_DOLLARS:-80}"
+    )
+    [ -n "${BENCH_SURVIVAL_YEARS:-}" ] && BENCH_ARGS+=(--survival-years "${BENCH_SURVIVAL_YEARS}")
+    [ -n "${BENCH_RUNS_PLAN:-}" ]      && BENCH_ARGS+=(--runs-plan "${BENCH_RUNS_PLAN}")
+    [ -n "${BENCH_HOURLY_RATES:-}" ]   && BENCH_ARGS+=(--hourly-rates "${BENCH_HOURLY_RATES}")
+    python3 -u scripts/benchmark_llm_throughput.py "${BENCH_ARGS[@]}" >> "logs/benchmark.log" 2>&1
+    echo "=== BENCHMARK COMPLETE ===" >> "logs/benchmark.log"
+    # Completion ping, same convention and same chat as the pod-boot message
+    # above. Skipped silently when no bot token is configured, so a pod
+    # without Telegram set up does not fire a malformed request.
+    if [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
+        curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          -d chat_id="${TELEGRAM_CHAT_ID:-1096527379}" \
+          -d text="Ka-Nova LLM throughput benchmark complete. See logs/benchmark.log and ${BENCH_RESULTS_DIR:-/workspace/project-ka-nova/results_benchmark}/benchmark_summary.txt on the pod." \
+          > /dev/null
+    else
+        echo "NOTE: TELEGRAM_BOT_TOKEN unset, skipping benchmark completion ping."
+    fi
+elif [ "$JOB" = "gsa" ]; then
     # Sobol GSA. One invocation per scenario in SCENARIO, so
     # SCENARIO=A,C GSA_KPI=trust_index runs both. Reviewer 1 pt.2 wants the
     # trust/coup effect sizes shown not to be artifacts of the feedback

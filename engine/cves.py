@@ -46,11 +46,19 @@ from config.constitution import CONSTITUTION
 # overwriting them and needing a git checkout afterwards.
 RESULTS_DIR = Path(os.getenv("KA_NOVA_RESULTS_DIR", "results_phase3"))
 
-# L4 behaviour — CONFIRM WITH KAUNG: the two handoff docs conflict on this.
-# DEFAULT = "flag" (consistent with emergence claim — outliers may be real).
-# Change this one line to "strip" if Kaung says strip-and-failsafe.
-L4_MODE = "flag"   # "flag" = log only, keep decision
-                    # "strip" = clamp decision to 2-sigma range
+# L4 behaviour — SETTLED 2026-10-29, do not reopen.
+# The only handoff document that exists anywhere in repo history is
+# docs/Sam_Integration_Spec.md (dated 2026-06-15, authored by K.H., recoverable
+# via `git show 545db1c:docs/Sam_Integration_Spec.md`), and its L4 section is
+# unambiguous: "flag >3 sigma outliers, do NOT reject them". No second,
+# conflicting document was ever found; the earlier "two handoff docs conflict"
+# note here was mistaken and has been removed. Confirmed directly by K.H.
+# All 214 L4 outlier rows in the published data were computed in "flag" mode,
+# so "flag" is both the specified and the as-published behaviour. "strip" has
+# never run in any reported result. Keep "flag" unless a future paper
+# deliberately reports an L4 ablation, in which case disclose the mode change.
+L4_MODE = "flag"   # "flag" = log only, keep decision (specified + as-published)
+                    # "strip" = clamp decision to 2-sigma range (never used)
 
 # ── L2 ablation (Opening 4, 2026-10-21) ───────────────────────────────────────
 # The manuscript's Future Work already promises "a targeted ablation of
