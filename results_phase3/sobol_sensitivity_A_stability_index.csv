@@ -1,0 +1,14 @@
+parameter,S1,S1_conf,ST,ST_conf
+stability_rights_bonus,0.9908,0.3016,0.9872,0.2577
+merit_performance_weight,-0.0093,0.0264,0.0078,0.0033
+year_zero_corruption,-0.0202,0.0295,0.0063,0.0024
+trust_acceleration_trigger_corruption,-0.0113,0.0257,0.0055,0.0019
+analysis_threshold,-0.0067,0.0259,0.0054,0.0018
+coup_trigger_loyalty,-0.0268,0.0242,0.0051,0.0021
+iig_investigation_trigger,-0.0162,0.0228,0.005,0.0019
+fear_compliance_trust_floor,-0.0004,0.0202,0.0048,0.0018
+iig_entry_merit_min,0.0003,0.0214,0.0045,0.0019
+trust_acceleration_multiplier,-0.0272,0.0194,0.0042,0.0019
+state_share,-0.0047,0.0177,0.0041,0.0017
+civilian_coup_signal_damping,-0.0155,0.0176,0.004,0.0016
+ethnic_direct_share,0.0004,0.0183,0.0037,0.0015
