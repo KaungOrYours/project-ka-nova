@@ -298,7 +298,32 @@ def parse_decision(response_text: str, agent_role: str) -> dict:
                 result["budget_weight"] = float(np.clip(parsed["budget_weight"], 0.0, 1.0))
             if "ethnic_weights" in parsed:
                 ew = parsed["ethnic_weights"]
-                if isinstance(ew, list) and len(ew) == 8:
+                # Accept ANY list length. `len(ew) == 8` was a hardcoded
+                # Myanmar literal: bug #17 generalised the CVES L1 schema to
+                # each constitution's real ETHNIC_GROUPS count but never
+                # generalised this parser, so for every scenario whose count
+                # is not 8 the model's correctly-formatted answer was silently
+                # discarded here and ROLE_DEFAULTS' 8-element Myanmar vector
+                # was kept instead. L1's schema then rejected those 8 elements
+                # as the wrong length for the active constitution, which is a
+                # guaranteed parse failure on EVERY decision for South Korea
+                # (1), Pakistan (6), Chile (0) and Germany (0) — four of the
+                # seven scenarios.
+                #
+                # The cost was not only speed. On persistent L1 failure
+                # l1_parse returns ROLE_DEFAULTS, so the model's coup_signal
+                # was discarded with it and replaced by the default False.
+                # Measured on the pod: Germany at 26.2s per decision, 20 of 20
+                # parse failures, three retries each, and a recorded
+                # budget_weight of 0.35 where the model had actually said 0.0.
+                # Any "this constitution emits no coup signals" reading of
+                # those four scenarios was an artifact of this line.
+                #
+                # Length validation belongs to the CVES L1 schema, which knows
+                # the active constitution's real count; if the model returns a
+                # genuinely wrong length, L1 reprompts, which is the intended
+                # behaviour rather than a silent substitution.
+                if isinstance(ew, list):
                     result["ethnic_weights"] = [float(np.clip(w, 0.3, 3.0)) for w in ew]
             if "reason" in parsed:
                 result["reason"] = str(parsed["reason"])[:300]

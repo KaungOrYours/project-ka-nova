@@ -60,6 +60,8 @@ from langchain_core.messages import HumanMessage, SystemMessage  # noqa: E402
 from langchain_core.prompts import ChatPromptTemplate  # noqa: E402
 
 import engine.elite_agents_v3 as ea  # noqa: E402
+from config.scenario_registry import SCENARIOS  # noqa: E402
+from engine.cves import CVES  # noqa: E402
 from engine.elite_agents_v3 import _canonicalise_braces  # noqa: E402
 
 # A user message deliberately containing the characters that break an
@@ -136,6 +138,39 @@ def main() -> int:
                     json.loads(block.group(1))
                 except json.JSONDecodeError as exc:
                     failures.append(f"{code}/{role}: example decision block is not valid JSON ({exc})")
+                    continue
+
+                # Closed loop: the exact block we tell this scenario's model to
+                # emit must survive this scenario's own CVES L1 parse. This is
+                # the check that would have caught the hardcoded `len(ew) == 8`
+                # in parse_decision, which silently discarded the model's
+                # ethnic_weights for every constitution whose ETHNIC_GROUPS
+                # count was not 8 — South Korea (1), Pakistan (6), Chile (0),
+                # Germany (0) — and then failed L1 on the substituted Myanmar
+                # vector. Measured on the pod before the fix: Germany at 26.2s
+                # per decision, 20 of 20 parse failures, three retries each,
+                # with the model's own coup_signal discarded and replaced by
+                # the ROLE_DEFAULTS False. Any "this constitution emits no
+                # coup signals" conclusion drawn from those scenarios was an
+                # artifact of that line, not a property of the constitution.
+                entry = SCENARIOS[code]
+                cves = CVES(llm=None, constitution=entry.constitution,
+                            chain_type=entry.chain_type, scenario=code)
+                parsed = cves.l1_parse(
+                    f"<DECISION>{block.group(1)}</DECISION>", role, seen, "probe", None
+                )
+                if parsed.get("_l1_parse_failure"):
+                    failures.append(
+                        f"{code}/{role}: CVES L1 cannot parse this scenario's own example "
+                        f"decision block (n_ethnic={cves.n_ethnic})"
+                    )
+                    continue
+                declared = json.loads(block.group(1))
+                if "budget_weight" in declared and parsed.get("budget_weight") != declared["budget_weight"]:
+                    failures.append(
+                        f"{code}/{role}: L1 silently replaced budget_weight "
+                        f"{declared['budget_weight']} with {parsed.get('budget_weight')}"
+                    )
                     continue
 
             rendered_ok += 1

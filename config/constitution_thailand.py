@@ -1641,7 +1641,7 @@ IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. St
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.30, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.8, 0.8], "coup_signal": false, "reason": "Military stability assessment under the 2017 Constitution (Section 52 development role)"}}}}
+{{{{"budget_weight": 0.30, "ethnic_weights": [], "coup_signal": false, "reason": "Military stability assessment under the 2017 Constitution (Section 52 development role)"}}}}
 </DECISION>""",
 
         "crony_finance_minister": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
