@@ -785,7 +785,29 @@ class KaNovaModelPhase3(Model):
             self.shared_data["coup_attempted"] = False
 
     def _update_states(self):
-        """Update state-level economic and social variables."""
+        """Update state-level economic and social variables.
+
+        The five coefficients below used to be bare literals written inline
+        here, two of them inside the `chain_type` branch. That was kill shot
+        K2 of the adversarial review: the military branch read no
+        constitutional field at all, so all three guardianship scenarios
+        produced corruption as a straight line of slope exactly 0.0100/yr
+        differing only by year-zero intercept, and the Sobol GSA could never
+        detect it because `chain_type` was never a sampled parameter.
+
+        They now come from the active constitution at identical values, so
+        this is byte-identical by construction. The branch itself remains,
+        and remains real — it is disclosed in the paper rather than hidden.
+        """
+        sim = self.CONSTITUTION.simulation
+        # getattr with the historical literal as fallback: a constitution that
+        # predates these fields still runs, and still runs the same.
+        iig_reduction   = getattr(sim, "IIG_CORRUPTION_REDUCTION",  0.02)
+        unchecked_drift = getattr(sim, "UNCHECKED_CORRUPTION_DRIFT", 0.01)
+        gdp_iig         = getattr(sim, "GDP_IIG_COEFFICIENT",        0.01)
+        gdp_corruption  = getattr(sim, "GDP_CORRUPTION_COEFFICIENT", 0.01)
+        gdp_fdi         = getattr(sim, "GDP_FDI_COEFFICIENT",        0.005)
+
         for state_id, state in self.states.items():
             corruption = self.shared_data.get("corruption_index", 0.72)
             iig = self.shared_data.get("iig_effectiveness", 0.30)
@@ -793,20 +815,26 @@ class KaNovaModelPhase3(Model):
 
             state["gdp_growth"] = float(np.clip(
                 state["gdp_growth"] +
-                (iig * 0.01) -
-                (corruption * 0.01) +
-                (fdi * 0.005),
+                (iig * gdp_iig) -
+                (corruption * gdp_corruption) +
+                (fdi * gdp_fdi),
                 -0.10, 0.15
             ))
             if self.chain_type == "civilian":
                 # Civilian-supremacy chain: IIG actively reduces corruption
                 state["corruption"] = float(np.clip(
-                    state["corruption"] - (iig * 0.02), 0.0, 1.0
+                    state["corruption"] - (iig * iig_reduction), 0.0, 1.0
                 ))
             else:
-                # Military-guardianship chain: no accountability, corruption drifts up
+                # Military-guardianship chain: no accountability, corruption
+                # drifts up. NOTE, and this belongs in the paper rather than
+                # in a fix: UNCHECKED_CORRUPTION_DRIFT has no constitutional
+                # analogue in any of the three guardianship texts, and
+                # defaults to the same value for all of them. Promoting it
+                # here makes the assumption visible and GSA-perturbable; it
+                # does NOT make the near-twins separate.
                 state["corruption"] = float(np.clip(
-                    state["corruption"] + 0.01, 0.0, 1.0
+                    state["corruption"] + unchecked_drift, 0.0, 1.0
                 ))
 
         # Aggregate state corruption back into shared_data

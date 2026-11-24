@@ -1099,6 +1099,36 @@ class SimulationConfig:
     YEAR_ZERO_TRUST: float = 0.22         # World Bank Governance 2022
     YEAR_ZERO_GINI: float = 0.55          # World Bank 2017
     YEAR_ZERO_EMPLOYMENT: float = 0.58    # Myanmar Census 2014
+
+    # ── State-dynamics coefficients (THE_PLAN Phase 1, remedy 4) ─────────────
+    # These five numbers governed every state's corruption and GDP trajectory
+    # while living as bare literals inside a `chain_type` branch in
+    # model_phase3.py::_update_states. The adversarial review's kill shot K2
+    # was that the military branch read NO constitutional field at all, so the
+    # three guardianship scenarios' corruption series were parallel straight
+    # lines of slope exactly 0.0100/yr differing only by year-zero intercept —
+    # and the Sobol GSA could never see it, because `chain_type` was not a
+    # sampled parameter.
+    #
+    # Promoting them here at their EXACT previous values changes no result and
+    # is byte-identical by construction. What it changes is accountability:
+    # the branch is now named, per-constitution, disclosable in the
+    # reproducibility package, and reachable by the GSA.
+    #
+    # HONEST LIMITATION, to be stated in the paper rather than engineered
+    # away: UNCHECKED_CORRUPTION_DRIFT has no constitutional analogue in any
+    # of the three guardianship texts. It defaults to the same 0.01 for all of
+    # them because no research has produced country-differentiated drift
+    # rates. Sourcing them from each country's own V-Dem series was considered
+    # and REJECTED as circular: it fits the model to the outcome it then
+    # claims to reproduce. So promoting these does NOT make the near-twins
+    # separate, and must not be reported as if it did.
+    IIG_CORRUPTION_REDUCTION: float = 0.02   # civilian chains: oversight reduces corruption
+    UNCHECKED_CORRUPTION_DRIFT: float = 0.01 # military chains: corruption accrues unchecked
+    GDP_IIG_COEFFICIENT: float = 0.01        # oversight effectiveness -> growth
+    GDP_CORRUPTION_COEFFICIENT: float = 0.01 # corruption -> growth drag
+    GDP_FDI_COEFFICIENT: float = 0.005       # foreign investment -> growth
+
     YEAR_ZERO_ETHNIC_TENSION: float = 0.68  # V-Dem Dataset
     YEAR_ZERO_COUP_RISK: float = 0.25     # Post-2021 estimate
     YEAR_ZERO_STABILITY: float = 0.18     # World Bank Political Stability 2022
