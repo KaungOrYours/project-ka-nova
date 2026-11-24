@@ -53,6 +53,9 @@ jobs:
       - name: Prompt templates render for every scenario and role
         run: python tests/test_prompt_templates.py
 
+      - name: LLM path end to end, stand-in model
+        run: python tests/test_llm_path_e2e.py
+
       - name: Full systems diagnostic
         run: python tests/test_full_diagnostic.py
 
