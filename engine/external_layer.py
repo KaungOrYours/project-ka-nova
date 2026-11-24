@@ -14,10 +14,17 @@ requirement, .claude/memory.md section 11):
         -> updates shared_data["external"]
 
     Both the STRUCTURE (drift -> stochastic shocks -> cascade -> derived
-    signals) and the CODE PATH are identical for every scenario — this is
-    the same "engine stays agnostic, bias lives only in the parameter
-    layer" principle already applied to the constitution layer
-    (config/scenario_registry.py, bug #11). What differs per scenario is
+    signals) and the CODE PATH are identical for every scenario. Verified:
+    this module contains no chain_type branch and no scenario-code
+    behavioural literal, only a registry lookup, so it IS data-only.
+
+    The earlier wording here described that as "the same principle already
+    applied to the constitution layer". That cross-reference was wrong and
+    has been removed: the constitution layer turned out NOT to be agnostic,
+    because model_phase3.py dispatches civilian and military chains to two
+    asymmetric rule branches (see _apply_scenario_rules and _update_states).
+    This module's own agnosticism stands on its own evidence, not on that
+    claim. What differs per scenario is
     DATA ONLY: which countries/institutions exist as vectors, their
     year-zero values and drift rates, which shock types are historically
     real for that country/window, and which real vector feeds each of the

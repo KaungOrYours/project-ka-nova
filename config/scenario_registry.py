@@ -17,10 +17,22 @@ chain_type is the one axis that drives engine behaviour:
     "military" — military-guardianship chain of command (like 2008 Myanmar/C)
 The constitution module supplies every PARAMETER; chain_type only selects
 which of the two structural rule branches / elite-agent chain rosters apply.
-This keeps the engine constitutionally agnostic — bias lives only in the
-constitution layer's parameter values, never in a scenario-code literal
-scattered through engine/institutions code (see .claude/memory.md locked
-finding #7).
+This removes scenario-code literals from the engine, but it does NOT make
+the engine constitutionally agnostic, and the earlier comment here claiming
+it did was wrong. chain_type selects between two genuinely asymmetric rule
+branches, and in `model_phase3.py::_update_states` the civilian branch
+reduces corruption in proportion to oversight effectiveness while the
+military branch accrues it at a flat rate. Those two paths are not mirror
+images of one another, so part of the divergence between a civilian-chain
+and a military-chain scenario is produced by the branch rather than by the
+constitutions' encoded parameters.
+
+The coefficients on both sides are now per-constitution fields rather than
+inline literals (commit 4ab9c7c, byte-identical by construction), which
+makes the asymmetry named, disclosable and reachable by the sensitivity
+analysis. It does not remove it. The manuscript reports this as a mechanism
+finding rather than claiming agnosticism; see docs/THE_PLAN.md and the
+Mechanism Audit section. Do not restore the old wording.
 
 Fails gracefully per entry: a constitution module that does not exist yet
 (SK/TH/PK/CL/DE, pending separate follow-up encoding work) does NOT prevent

@@ -671,10 +671,17 @@ class KaNovaModelPhase3(Model):
         governance chain), read from the scenario registry rather than a
         literal scenario-code check — this is what lets SK/TH/PK/CL/DE plug
         into the same two branches as A/C once their constitution modules
-        exist, with zero new code here. Bias lives only in each
-        constitution's own parameter values (thresholds, probabilities,
-        bonuses — all read fresh via self.CONSTITUTION, never hardcoded in
-        this dispatch), per the engine-symmetry principle.
+        exist, with zero new code here.
+
+        The previous wording of this docstring claimed that bias lives only
+        in each constitution's own parameter values. That is not true and
+        should not be restored. The two branches this dispatches to are not
+        mirror images: see `_update_states`, where the civilian path reduces
+        corruption in proportion to oversight effectiveness and the military
+        path accrues it at a flat rate. The coefficients are now
+        per-constitution fields rather than inline literals (4ab9c7c), so
+        the asymmetry is named and sensitivity-testable, but it is still an
+        engine-level asymmetry and the manuscript reports it as one.
         """
         if self.chain_type == "civilian":
             self._civilian_chain_rules()
