@@ -518,3 +518,24 @@ if __name__ == "__main__":
         )
 
     runner.run()
+
+    # Exit non-zero when a campaign produced nothing. Previously this script
+    # had no sys.exit at all, so a scenario in which every single run failed
+    # exited 0 and was indistinguishable from success to anything downstream:
+    # docker/startup.sh's scenario loop, the Telegram completion alert, and
+    # any CI or wrapper reading the exit code. On a paid pod that means hours
+    # of GPU time reported as a finished campaign with an empty results
+    # directory.
+    #
+    # Deliberately scoped to TOTAL failure, not any failure. A handful of
+    # failed Monte Carlo runs out of 100 is tolerable and recoverable; zero
+    # successes means something systemic is wrong (Ollama down, a constitution
+    # that cannot build its prompts, a bad model name) and the campaign should
+    # stop rather than continue burning hours.
+    if runner.successful == 0:
+        print(
+            f"\nFATAL: scenario {runner.scenario} produced 0 successful runs "
+            f"out of {runner.runs}. Not reporting this as success.",
+            file=sys.stderr,
+        )
+        sys.exit(1)

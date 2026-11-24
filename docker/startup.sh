@@ -238,8 +238,17 @@ elif [ "$JOB" = "gsa" ]; then
         echo "=== GSA ${SCEN} COMPLETE ===" >> "logs/gsa_${SCEN}_${GSA_KPI:-corruption_index}.log"
     done
 else
+    # run_phase3.py now exits non-zero when a scenario produces zero
+    # successful runs. This script runs under `set -e`, so without the
+    # explicit `|| FAILED=...` below a single failing scenario would abort the
+    # whole loop and silently skip every scenario after it. On a multi-scenario
+    # campaign that is the difference between losing one result and losing
+    # all of them, so per-scenario failure is caught, recorded, and the loop
+    # continues; the run is then reported as failed at the end rather than
+    # exiting 0 like it used to.
+    FAILED_SCENARIOS=""
     for SCEN in "${SCENARIO_LIST[@]}"; do
-        echo "Running scenario: ${SCEN} (use_llm=${USE_LLM})"
+        echo "Running scenario: ${SCEN} (use_llm=${USE_LLM}, l2=${CVES_L2_MODE})"
         if [ "$USE_LLM" = "true" ]; then
             python3 -u run_phase3.py \
                 --scenario "${SCEN}" \
@@ -247,16 +256,31 @@ else
                 --citizens ${CITIZENS:-11000} \
                 --steps ${STEPS:-50} \
                 --model ${LLM_MODEL:-llama3.2:3b} \
-                --use-llm >> "logs/paper_${SCEN}.log" 2>&1
+                --use-llm >> "logs/paper_${SCEN}.log" 2>&1 \
+                || FAILED_SCENARIOS="${FAILED_SCENARIOS} ${SCEN}"
         else
             python3 -u run_phase3.py \
                 --scenario "${SCEN}" \
                 --runs ${RUNS:-100} \
                 --citizens ${CITIZENS:-11000} \
-                --steps ${STEPS:-50} >> "logs/paper_${SCEN}.log" 2>&1
+                --steps ${STEPS:-50} >> "logs/paper_${SCEN}.log" 2>&1 \
+                || FAILED_SCENARIOS="${FAILED_SCENARIOS} ${SCEN}"
         fi
         echo "=== SCENARIO ${SCEN} COMPLETE ===" >> "logs/paper_${SCEN}.log"
     done
+    if [ -n "${FAILED_SCENARIOS}" ]; then
+        echo ""
+        echo "============================================================"
+        echo "SCENARIOS THAT PRODUCED ZERO SUCCESSFUL RUNS:${FAILED_SCENARIOS}"
+        echo "Check logs/paper_<scenario>.log before trusting any output."
+        echo "============================================================"
+        if [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
+            curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID:-1096527379}" \
+              -d text="Ka-Nova WARNING: zero successful runs for scenario(s):${FAILED_SCENARIOS}. Do not trust the campaign output until checked." \
+              > /dev/null
+        fi
+    fi
 fi
 
 echo ""
