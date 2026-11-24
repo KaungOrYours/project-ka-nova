@@ -290,10 +290,37 @@ def parse_decision(response_text: str, agent_role: str) -> dict:
     result = ROLE_DEFAULTS.get(agent_role, ROLE_DEFAULTS["chancellor"]).copy()
     result["reason"] = "Default allocation"
 
+    # Three extraction routes, tried in order. Previously only the first
+    # existed, and the consequences were measured on the published campaign:
+    # 10.3 percent of Scenario A decisions and 38.4 percent of Scenario C's
+    # were ROLE DEFAULTS substituted here for want of angle brackets, and
+    # because ROLE_DEFAULTS is schema-valid, CVES L1 recorded them as "pass"
+    # with parse_failure False. Scenario C's Military Intel Chief was 99.5
+    # percent defaults; Scenario A's Senior General, the one role with
+    # explicit coup latitude, was 30.0 percent. The module comment above
+    # claiming the coup signal is "never injected by Python in LLM path" was
+    # therefore false for thousands of published decisions.
+    #
+    # 1. the documented <DECISION>...</DECISION> wrapper
+    # 2. a BARE "DECISION" delimiter, which the model emits often: 1,480
+    #    Scenario A rows and 205 Scenario C rows in the shipped logs
+    # 3. the last JSON object anywhere in the response
+    _payload = None
     m = re.search(r"<DECISION>(.*?)</DECISION>", response_text, re.DOTALL)
     if m:
+        _payload = m.group(1).strip()
+    else:
+        m2 = re.search(r"\bDECISION\b\s*:?\s*(\{.*\})", response_text, re.DOTALL)
+        if m2:
+            _payload = m2.group(1).strip()
+        else:
+            objs = re.findall(r"\{[^{}]*\"coup_signal\"[^{}]*\}", response_text, re.DOTALL)
+            if objs:
+                _payload = objs[-1].strip()
+
+    if _payload is not None:
         try:
-            parsed = json.loads(m.group(1).strip())
+            parsed = json.loads(_payload)
             if "budget_weight" in parsed:
                 result["budget_weight"] = float(np.clip(parsed["budget_weight"], 0.0, 1.0))
             if "ethnic_weights" in parsed:
@@ -334,13 +361,26 @@ def parse_decision(response_text: str, agent_role: str) -> dict:
         except (json.JSONDecodeError, KeyError, TypeError):
             pass
 
-    # Regex fallback
-    bw_m = re.search(r"budget[_\s]?weight[:\s]+([0-9.]+)", response_text, re.I)
+    # Regex fallback. The two patterns are now quote-tolerant: they
+    # previously required [:\s]+ immediately after the key name, so they
+    # could not match a JSON-quoted key such as "coup_signal": true. That
+    # meant a response carrying a perfectly readable decision in anything
+    # other than the exact wrapper fell through to the role default.
+    bw_m = re.search(r"[\"']?budget[_\s]?weight[\"']?\s*[:=]\s*([0-9.]+)",
+                     response_text, re.I)
     if bw_m:
         result["budget_weight"] = float(np.clip(float(bw_m.group(1)), 0.0, 1.0))
-    cs_m = re.search(r"(?:coup[_\s]?signal|stability_override)[:\s]+(true|false)", response_text, re.I)
+    cs_m = re.search(r"[\"']?(?:coup[_\s]?signal|stability_override)[\"']?\s*[:=]\s*[\"']?(true|false)",
+                     response_text, re.I)
     if cs_m:
         result["coup_signal"] = cs_m.group(1).lower() == "true"
+
+    # Tell the caller the structured decision could not be read. Without this
+    # a substituted role default is indistinguishable from a real decision,
+    # which is how 8,273 published decisions came to be logged as valid.
+    if bw_m is None and cs_m is None:
+        result["_role_default_substituted"] = True
+
     result["reason"] = response_text[:200]
     return result
 

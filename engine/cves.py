@@ -233,6 +233,36 @@ class CVES:
         for attempt in range(3):
             decision = parse_decision(attempt_text, agent_role)
 
+            # parse_decision could not read a structured decision and handed
+            # back a role default. ROLE_DEFAULTS is schema-valid, so without
+            # this check the validator below accepts it and L1 records
+            # "pass" — which is how 10.3 percent of Scenario A and 38.4
+            # percent of Scenario C published decisions came to be logged as
+            # valid model output when they were Python-supplied defaults.
+            # Treat it as a structural failure so the retry fires and, if the
+            # retries are exhausted, the row is honestly marked.
+            if decision.pop("_role_default_substituted", False):
+                if attempt < 2 and invoke_fn and self.llm:
+                    try:
+                        attempt_text = invoke_fn(
+                            system_prompt,
+                            "Your previous response contained no readable decision. "
+                            "Respond with a <DECISION>{...}</DECISION> block containing "
+                            "budget_weight, ethnic_weights, coup_signal and reason.\n\n"
+                            + user_message,
+                        )
+                        last_text = attempt_text
+                        continue
+                    except Exception:
+                        break
+                _write_score({
+                    "scenario": self.scenario,
+                    "layer": "L1", "agent": agent_role,
+                    "attempt": attempt, "status": "fail",
+                    "reason": "no readable decision, role default substituted",
+                }, self.scenario)
+                break
+
             if PYDANTIC_AVAILABLE and self._schema is not None:
                 try:
                     validated = self._schema(**decision)
