@@ -911,6 +911,33 @@ def _update_annual_history(shared_data: dict, year: int) -> None:
 
 
 # ── Main layer class ──────────────────────────────────────────────────────────
+def _canonicalise_braces(text: str) -> str:
+    """Collapse f-string brace escapes so the model sees real JSON.
+
+    The seven constitutions use two different conventions for the example
+    decision block in their system prompts, because they were authored at
+    different times against different assumptions:
+
+      A, C, Thailand, Germany   ->  {{"budget_weight": 0.40, ...}}
+      South Korea, Pakistan, Chile ->  {"budget_weight": 0.40, ...}
+
+    The doubled form was an f-string ESCAPE. It only renders as a single
+    brace while the prompt is being parsed as a LangChain template, which is
+    exactly the parsing that made the bare-brace group raise on every call
+    (see daab19c). Passing the text literally fixed that group and silently
+    broke this one: the model began seeing `{{` and copying it into its own
+    output, producing an example it could not validly imitate. Confirmed on
+    the pod — South Korea emitted `{{"budget_weight": 0.0, ...}}` verbatim.
+
+    Normalising here, at the single point where a prompt reaches the model,
+    covers every path including the CVES L1/L2 reprompts, which build their
+    own system prompt by appending to this one. The operation is idempotent:
+    `{{` collapses to `{`, and a bare `{` is left alone.
+    """
+    return text.replace("{{", "{").replace("}}", "}")
+
+
+
 class EliteAgentLayerV3:
     """
     Ka-Nova Phase 3 elite agent layer — 7 agents, chain reasoning, CVES validation.
@@ -1031,7 +1058,7 @@ class EliteAgentLayerV3:
         # reaching the model is byte-identical for the four scenarios that
         # already worked, so this changes no published prompt content.
         prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content=system_prompt),
+            SystemMessage(content=_canonicalise_braces(system_prompt)),
             HumanMessage(content=user_message),
         ])
         chain = prompt | self._llm | StrOutputParser()

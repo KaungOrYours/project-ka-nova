@@ -53,10 +53,14 @@ warnings.filterwarnings("ignore")
 # Never let an import of the engine try to reach a real LLM.
 os.environ.setdefault("WANDB_MODE", "disabled")
 
+import json  # noqa: E402
+import re  # noqa: E402
+
 from langchain_core.messages import HumanMessage, SystemMessage  # noqa: E402
 from langchain_core.prompts import ChatPromptTemplate  # noqa: E402
 
 import engine.elite_agents_v3 as ea  # noqa: E402
+from engine.elite_agents_v3 import _canonicalise_braces  # noqa: E402
 
 # A user message deliberately containing the characters that break an
 # f-string template, so the test also proves the HUMAN side is literal.
@@ -71,7 +75,7 @@ def build_prompt(system_prompt: str, user_message: str):
     meaningful while it builds the same object the engine builds.
     """
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=system_prompt),
+        SystemMessage(content=_canonicalise_braces(system_prompt)),
         HumanMessage(content=user_message),
     ])
 
@@ -104,12 +108,36 @@ def main() -> int:
             # consumed or rewrote a brace would still "work" while sending the
             # model different text than the constitution file declares, which
             # is a provenance problem as much as a crash problem.
-            if messages[0].content != text:
+            if messages[0].content != _canonicalise_braces(text):
                 failures.append(f"{code}/{role}: system prompt was altered during rendering")
                 continue
             if messages[1].content != PROBE_USER_MESSAGE:
                 failures.append(f"{code}/{role}: user message was altered during rendering")
                 continue
+            seen = messages[0].content
+
+            # The model must never be shown an f-string escape. Prompts that
+            # used {{ }} rendered correctly only while the text was parsed as
+            # a template; once passed literally the model sees {{ and copies
+            # it, producing an example decision block it cannot validly
+            # imitate. Observed on the pod: South Korea emitted
+            # {{"budget_weight": 0.0, ...}} verbatim.
+            if "{{" in seen or "}}" in seen:
+                failures.append(f"{code}/{role}: model would see an unescaped {{{{ or }}}}")
+                continue
+
+            # The example decision block must be parseable JSON, because the
+            # model is explicitly told to imitate it and CVES L1 then parses
+            # what comes back. A malformed example guarantees L1 reprompts on
+            # every single decision.
+            block = re.search(r"<DECISION>\s*(\{.*?\})\s*</DECISION>", seen, re.S)
+            if block:
+                try:
+                    json.loads(block.group(1))
+                except json.JSONDecodeError as exc:
+                    failures.append(f"{code}/{role}: example decision block is not valid JSON ({exc})")
+                    continue
+
             rendered_ok += 1
 
         status = "OK" if rendered_ok == len(prompts) else "FAIL"
