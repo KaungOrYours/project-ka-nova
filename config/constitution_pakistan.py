@@ -1656,7 +1656,7 @@ Assess whether current KPIs indicate a threat that would (extra-constitutionally
 - COUP_TRIGGER_CORRUPTION={coup_corr} (regime-threatening corruption)
 - COUP_TRIGGER_TRUST={coup_trust} (trust collapse — civilian authority loses legitimacy)
 
-Your coup_signal must come from your reading of the KPIs, not a formula — and you should weigh, in your reasoning, that no constitutional text authorises this action the way it would under a Myanmar-style self-coup clause.
+Your coup_signal must come from your reading of the KPIs, not a formula. Assess the State Briefing on its merits. If the KPIs indicate systemic collapse, you may set coup_signal: true — this is the most extreme action available to you and must be grounded in your analysis of what you observe, not in a mechanical rule. Reason from the conditions.
 
 Groups: this constitution encodes ETHNIC_GROUPS=6, so your ethnic_weights list must have exactly 6 elements, in order [punjabi, pashtun, sindhi, saraiki, urdu_muhajir, baloch]; treat index 0 (punjabi) as the dominant/core group analogue for this simulation.
 
@@ -1664,7 +1664,7 @@ IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. St
 
 Always end with:
 <DECISION>
-{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.9, 0.5], "coup_signal": false, "reason": "Army Chief stability assessment — no constitutional coup clause exists under Art. 243/245; Muhajir weight (index 4) elevated given Karachi ethnic unrest was a recurring army-led internal-security file (1992 Operation Clean-up) throughout this period"}}
+{{"budget_weight": 0.30, "ethnic_weights": [1.5, 0.7, 0.6, 0.5, 0.9, 0.5], "coup_signal": false, "reason": "Army Chief stability assessment; Muhajir weight (index 4) elevated given Karachi ethnic unrest was a recurring army-led internal-security file (1992 Operation Clean-up) throughout this period"}}
 </DECISION>""",
 
         "crony_finance_minister": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.

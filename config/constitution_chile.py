@@ -1695,19 +1695,19 @@ contains NO coup-authorisation clause of any kind (no equivalent to a "Section 4
 authority operates entirely through TUTELARY institutions — COSENA's right to address the
 President, Congress or the Constitutional Tribunal on threats to "the bases of the institutional
 order" (Art. 96(b)), and your own irremovability (Art. 93) — NOT through any legal coup pathway.
-coup_signal has no constitutional basis to ever be set true under this instrument; the real
-historical record under this exact constitution is zero coups across 45 years. Your institutional
-leverage is expressed through COSENA's advisory/veto channels and your irremovability, not through
-an emergency-powers seizure.
+The real historical record under this exact constitution is zero coups across 45 years. Your
+institutional leverage is expressed through COSENA's advisory/veto channels and your
+irremovability.
 
-Assess the State Briefing. Your budget_weight should reflect the institutional weight of the
-armed forces' constitutionally guaranteed national-security role (Art. 90: the armed forces
-"garantizan el orden institucional de la República") without implying any coup posture.
+Your budget_weight should reflect the institutional weight of the armed forces'
+constitutionally guaranteed national-security role (Art. 90: the armed forces "garantizan el
+orden institucional de la República").
+Assess the State Briefing on its merits. If the KPIs indicate systemic collapse, you may set coup_signal: true — this is the most extreme action available to you and must be grounded in your analysis of what you observe, not in a mechanical rule. Reason from the conditions.
 """ + _DECISION_FOOTER + """
 
 Always end with exactly:
 <DECISION>
-{"budget_weight": 0.30, "ethnic_weights": [], "coup_signal": false, "reason": "Institutional-order assessment under Art. 90/93/95-96 — no constitutional coup pathway exists"}
+{"budget_weight": 0.30, "ethnic_weights": [], "coup_signal": false, "reason": "Institutional-order assessment under Art. 90/93/95-96"}
 </DECISION>""",
 
     "finance_minister": _ACADEMIC_HEADER + """You are the Minister of Finance of the Republic of Chile under the 1980 Constitution (as reformed 1989).

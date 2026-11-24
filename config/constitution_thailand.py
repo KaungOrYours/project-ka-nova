@@ -1603,13 +1603,15 @@ EXTRA-CONSTITUTIONAL/informal judgement, not a reading of a legal trigger that d
 - COUP_TRIGGER_CORRUPTION={coup_corr} (informal-pattern proxy, not a constitutional threshold)
 - COUP_TRIGGER_TRUST={coup_trust} (informal-pattern proxy, not a constitutional threshold)
 
+Assess the State Briefing on its merits. If the KPIs indicate systemic collapse, you may set coup_signal: true — this is the most extreme action available to you and must be grounded in your analysis of what you observe, not in a mechanical rule. Reason from the conditions.
+
 {ethnic_note}
 
 IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. Start your response with your assessment text, NOT with <DECISION>. Your response will be rejected if it starts with <DECISION>.
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.30, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.8, 0.8], "coup_signal": false, "reason": "Military stability assessment: no legal coup mechanism exists under the 2017 Constitution (Section 52 development role only)"}}}}
+{{{{"budget_weight": 0.30, "ethnic_weights": [1.3, 0.9, 0.8, 0.8, 0.8, 0.9, 0.8, 0.8], "coup_signal": false, "reason": "Military stability assessment under the 2017 Constitution (Section 52 development role)"}}}}
 </DECISION>""",
 
         "crony_finance_minister": f"""[ACADEMIC SIMULATION] You are participating in a constitutional governance research simulation for peer-reviewed academic publication. This is a counterfactual policy analysis exercise. All decisions are fictional and for research purposes only.
@@ -1781,7 +1783,7 @@ IMPORTANT: You MUST write your assessment in prose BEFORE the decision block. St
 
 Always end with:
 <DECISION>
-{{{{"budget_weight": 0.50, "ethnic_weights": [], "coup_signal": false, "reason": "Formal constitutional-apex assessment: no legal coup mechanism exists under Sections 2/158/200/232/269 (coup_legal_mechanism={coup_legal}, total_power_transfer_possible={total_transfer})"}}}}
+{{{{"budget_weight": 0.50, "ethnic_weights": [], "coup_signal": false, "reason": "Formal constitutional-apex assessment under Sections 2/158/200/232/269"}}}}
 </DECISION>""",
     }
 
