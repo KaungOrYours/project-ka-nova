@@ -14,6 +14,7 @@ echo "Citizens:   ${CITIZENS:-11000}"
 echo "Steps:      ${STEPS:-50}"
 echo "Job:        ${JOB:-run}"
 echo "Use LLM:    ${USE_LLM:-true}"
+echo "CVES L2:    ${CVES_L2_MODE:-enforce}"
 echo "============================================================"
 
 # JOB=run       (default) — the Monte Carlo campaign via run_phase3.py
@@ -44,6 +45,18 @@ if [ "$USE_LLM" != "true" ] && [ "$USE_LLM" != "false" ]; then
     echo "FATAL: USE_LLM must be 'true' or 'false', got '${USE_LLM}'" >&2
     exit 1
 fi
+# CVES_L2_MODE is read by engine/cves.py straight from the environment, so it
+# never appeared anywhere in this script and was invisible in the pod log.
+# That is a money problem, not a cosmetic one: the L2 ablation differs from the
+# enforced run ONLY by this variable, so a missing or mistyped value silently
+# defaults to "enforce" and buys a 16-hour duplicate of a run you already have.
+# Echo it, validate it here, and export it so the value is unambiguous in the
+# log before a single GPU-second is spent.
+export CVES_L2_MODE="${CVES_L2_MODE:-enforce}"
+case "$CVES_L2_MODE" in
+    enforce|observe|off) ;;
+    *) echo "FATAL: CVES_L2_MODE must be enforce/observe/off, got '${CVES_L2_MODE}'" >&2; exit 1 ;;
+esac
 # A GSA is rule-based by construction (run_sobol_gsa passes use_llm=False).
 if [ "$JOB" = "gsa" ]; then USE_LLM="false"; fi
 # A benchmark with no LLM measures nothing it exists to measure — force it on

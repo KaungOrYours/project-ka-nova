@@ -751,6 +751,7 @@ def _log_decision(
     shared_data: dict, decision: dict, time_ms: float,
     suppression_flagged: bool = False,
     parse_failure: bool = False,
+    llm_fallback: bool = False,
 ) -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     env = shared_data.get("environment", {})
@@ -769,9 +770,28 @@ def _log_decision(
             "ethnic_tension": round(env.get("ethnic_tension", 0.60), 4),
         },
         "decision_output":  decision.get("reason", "No action taken."),
+        # ── Structured decision (THE_PLAN Phase 0.1) ──────────────────────────
+        # The L1 schema declares exactly four fields (cves.py:140-143) and all
+        # four are available on `decision` at this call site, but only `reason`
+        # was ever written — `decision_output` is a prose label, so the actual
+        # machine-readable decision survived nowhere. The published
+        # 6,009-permitted-coup-signals figure had to be recovered by regex over
+        # the free-text `reasoning_text`, which is not a defensible basis for a
+        # reviewer-facing count. These three fields make the audit trail
+        # self-sufficient: emitted signals become directly countable and
+        # reconcilable against cves_violations_<scenario>.jsonl's interceptions.
+        "decision": {
+            "coup_signal":    bool(decision.get("coup_signal", False)),
+            "budget_weight":  decision.get("budget_weight"),
+            "ethnic_weights": decision.get("ethnic_weights"),
+        },
         "time_ms":          round(time_ms, 1),
         "timestamp":        datetime.datetime.utcnow().isoformat(),
         "parse_failure":    parse_failure,
+        # True when this row came from _rule_based_decision after an LLM
+        # exception, so the rule-based contamination rate of an LLM campaign is
+        # one key lookup away instead of a substring match on reasoning_text.
+        "llm_fallback":     llm_fallback,
     }
     if suppression_flagged:
         row["suppression_flag"] = True
@@ -930,6 +950,14 @@ class EliteAgentLayerV3:
         # precisely rather than to claim seeding.
         self.llm_seed = int(seed) if seed is not None else None
 
+        # Circuit breaker for a mid-run Ollama death. Without it, the server
+        # dying at hour 3 of an 18-hour run means 15 further hours of GPU time
+        # spent writing rule-based rows that look like a completed LLM campaign.
+        # 21 consecutive fallbacks is three full years of a 7-agent chain, far
+        # beyond any plausible transient blip.
+        self._consecutive_fallbacks = 0
+        self._MAX_CONSECUTIVE_FALLBACKS = 21
+
         if self.use_llm:
             try:
                 _client_kwargs = dict(
@@ -943,11 +971,33 @@ class EliteAgentLayerV3:
                 if self.llm_seed is not None:
                     _client_kwargs["seed"] = self.llm_seed
                 self._llm = ChatOpenAI(**_client_kwargs)
+                # Constructing ChatOpenAI opens no connection, so a dead or
+                # unpulled Ollama survives init and only surfaces later as a
+                # 100-percent per-call fallback rate — i.e. a full paid campaign
+                # of rule-based rows written under an LLM filename, exit code 0.
+                # One real round-trip here converts that into an immediate,
+                # loud abort. Cost is one tiny call per model construction
+                # (about 100 calls across a 100-run campaign, a rounding error
+                # against roughly 39,000 decision calls).
+                self._llm.invoke("Reply with the single word: ready")
                 logger.info(f"EliteAgentLayerV3: LLM ready ({ELITE_LLM_MODEL})")
             except Exception as e:
-                logger.warning(f"LLM init failed ({e}) — rule-based fallback")
-                self.use_llm = False
-                self._llm = None
+                # Was a silent downgrade to rule-based, and it is the single
+                # most expensive failure mode in the whole pipeline: if Ollama
+                # is not serving or the model was never pulled, the run does
+                # not crash — it completes "successfully" having made zero LLM
+                # calls, writes a rule-based dataset under an LLM filename, and
+                # the only trace is a logger.warning nobody reads at 3am. On a
+                # paid pod that is a full campaign's GPU hours spent producing
+                # a dataset we can already generate free on a laptop.
+                # --use-llm is an explicit opt-in, so failing to honour it is
+                # fatal, never degraded.
+                raise RuntimeError(
+                    f"LLM init failed and --use-llm was explicitly requested: {e}. "
+                    f"Refusing to silently downgrade to rule-based. Check that "
+                    f"Ollama is serving at {ELITE_LLM_BASE_URL} and that model "
+                    f"{ELITE_LLM_MODEL!r} is pulled."
+                ) from e
         else:
             logger.info("EliteAgentLayerV3: Rule-based mode (no LLM)")
 
@@ -1010,6 +1060,7 @@ class EliteAgentLayerV3:
             user_msg = prior_ctx + status_report
 
             used_llm = False
+            llm_fallback = False
             if self.use_llm and self._llm is not None:
                 try:
                     raw = self._invoke_llm(prompts[agent_role], user_msg)
@@ -1030,8 +1081,26 @@ class EliteAgentLayerV3:
                     reasoning_tokens = len(resolved_text.split())
                     reasoning_text   = resolved_text
                     used_llm         = True
+                    self._consecutive_fallbacks = 0
                 except Exception as e:
-                    logger.warning(f"[{agent_display}] LLM failed ({e}) — rule-based")
+                    # Surfaced at ERROR, not WARNING, and stamped on the logged
+                    # row below via llm_fallback so the rate is countable with
+                    # one key lookup instead of a substring match on
+                    # reasoning_text. On a paid run the fallback rate is a
+                    # data-quality number that belongs in the audit trail: a
+                    # handful of network blips is tolerable, a few hundred means
+                    # the dataset is part rule-based and must not be published
+                    # as an LLM result.
+                    logger.error(f"[{agent_display}] LLM failed ({e}) — rule-based fallback")
+                    llm_fallback     = True
+                    self._consecutive_fallbacks += 1
+                    if self._consecutive_fallbacks >= self._MAX_CONSECUTIVE_FALLBACKS:
+                        raise RuntimeError(
+                            f"{self._consecutive_fallbacks} consecutive LLM failures "
+                            f"(last: {e}). Aborting rather than spending the remaining "
+                            f"GPU hours writing rule-based rows into an LLM dataset. "
+                            f"Check Ollama at {ELITE_LLM_BASE_URL}."
+                        ) from e
                     decision         = _rule_based_decision(agent_role, shared_data, scenario)
                     parse_failure    = False
                     # L2 still runs to log violations even in fallback (no reprompt)
@@ -1089,6 +1158,7 @@ class EliteAgentLayerV3:
                 shared_data, decision, elapsed_ms,
                 suppression_flagged=suppression_flagged,
                 parse_failure=parse_failure,
+                llm_fallback=llm_fallback,
             )
 
             all_decisions[agent_role] = decision
