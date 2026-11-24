@@ -205,8 +205,20 @@ class KaNovaModelPhase3(Model):
         seed: int = None,
         n_citizens: int = 11000,
         use_llm: bool = False,
+        run_id: int = 0,
     ):
         super().__init__()
+
+        # ── Monte Carlo run identity (THE_PLAN Phase 0.1) ─────────────────────
+        # Previously the runner computed run_id, used it for the seed and the
+        # per-run CSV filename, and then dropped it: the model never received
+        # it, nothing ever wrote shared_data["run_id"], and every consumer fell
+        # back to `shared_data.get("run_id", 0)`. The consequence was that all
+        # 35,383 rows of the published elite_decisions_A.jsonl carry run: 0, so
+        # the 100 Monte Carlo runs are unrecoverable from the shipped audit
+        # trail and Table 6 cannot be reconciled. Any run launched without this
+        # inherits that defect, which is why it gates the campaign.
+        self.run_id = int(run_id)
 
         # ── Seed ──────────────────────────────────────────────────────────────
         if seed is not None:
@@ -279,6 +291,10 @@ class KaNovaModelPhase3(Model):
 
         # ── Shared data ───────────────────────────────────────────────────────
         self.shared_data = self._initialize_shared_data()
+        # Published on the noticeboard so every downstream logger
+        # (engine/elite_agents_v3.py:977, engine/cves.py:536/587) stamps the
+        # real Monte Carlo run instead of its `.get("run_id", 0)` fallback.
+        self.shared_data["run_id"] = self.run_id
 
         # ── Institutions ──────────────────────────────────────────────────────
         self.chambers = ThreeChamberSystem(self)

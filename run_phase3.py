@@ -93,7 +93,19 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
         ]:
             p = RESULTS_DIR / f
             if p.exists():
-                p.unlink()
+                # Supersede by rename, never by delete. The reset itself is
+                # correct and necessary (these are append-mode writers, so a
+                # fresh campaign would otherwise append onto whatever the repo
+                # already shipped), but `unlink()` made it destructive: RunPod
+                # restarts a container on its own, startup.sh re-runs from
+                # scratch, run_id 0 fires again, and an 18-hour partial LLM
+                # campaign is gone with nothing to show for the GPU hours.
+                # Renaming preserves the anti-pollution intent while making
+                # data loss impossible. The .superseded-* files are never read
+                # by anything and can be deleted by hand once the campaign is
+                # bundled.
+                stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                p.rename(p.with_suffix(p.suffix + f".superseded-{stamp}"))
 
     seed = run_id * 100 + sum(ord(ch) for ch in scenario)
     try:
@@ -102,6 +114,7 @@ def run_single(run_id, scenario, n_citizens, n_steps, use_llm=False):
             seed=seed,
             n_citizens=n_citizens,
             use_llm=use_llm,
+            run_id=run_id,
         )
         for _ in range(n_steps):
             model.step()
