@@ -1,0 +1,136 @@
+"""
+================================================================================
+PROJECT KA-NOVA
+tests/test_prompt_templates.py
+
+Guards the failure mode that cost a pod session on 2026-11-24 and would have
+cost a paid campaign: a literal brace in a constitution's own
+ELITE_SYSTEM_PROMPTS silently turning every LLM call into an exception.
+
+WHAT HAPPENED. engine/elite_agents_v3.py::_invoke_llm used to build its
+prompt as:
+
+    ChatPromptTemplate.from_messages([("system", system_prompt), ...])
+
+A ("system", text) tuple is parsed by LangChain as an f-string TEMPLATE, so
+any literal `{token}` inside the prompt becomes a REQUIRED input variable.
+South Korea, Pakistan and Chile each ship a JSON schema example in their
+ELITE_SYSTEM_PROMPTS, so `{"budget_weight"}` was read as a variable named
+'"budget_weight"'. Every call raised before reaching the model: 7 roles x 3
+scenarios, 100 percent of invocations. Measured on the pod, South Korea and
+Chile both returned `Successful 0 / Failed 3`.
+
+WHY NO EXISTING TEST CAUGHT IT. The Mac has no Ollama, so `_invoke_llm` had
+never once executed locally in the project's history. Every gate in tests/
+runs rule-based, and the rule-based path never builds a prompt template at
+all. The defect was only visible on a GPU pod, i.e. only while paying.
+
+WHAT THIS TEST DOES. It builds the real prompt object for every role of every
+registered scenario and renders it, with NO LLM and NO network, then asserts
+the rendered text is byte-identical to the source prompt. That is enough to
+catch the whole class: any brace, any scenario, any future constitution
+encoded with a JSON example in its prompt text.
+
+Run directly:
+    python3 tests/test_prompt_templates.py
+
+Exits non-zero on failure so CI can gate on it.
+
+Author: Kaung Htet
+License: MIT
+================================================================================
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import warnings
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+warnings.filterwarnings("ignore")
+
+# Never let an import of the engine try to reach a real LLM.
+os.environ.setdefault("WANDB_MODE", "disabled")
+
+from langchain_core.messages import HumanMessage, SystemMessage  # noqa: E402
+from langchain_core.prompts import ChatPromptTemplate  # noqa: E402
+
+import engine.elite_agents_v3 as ea  # noqa: E402
+
+# A user message deliberately containing the characters that break an
+# f-string template, so the test also proves the HUMAN side is literal.
+# Real status reports carry ethnic-weight arrays and JSON-ish fragments.
+PROBE_USER_MESSAGE = 'STATUS {"corruption": 0.878, "ethnic_weights": [0.2, 0.8]}'
+
+
+def build_prompt(system_prompt: str, user_message: str):
+    """Mirror engine/elite_agents_v3.py::_invoke_llm exactly.
+
+    If that function changes, change this with it — the test is only
+    meaningful while it builds the same object the engine builds.
+    """
+    return ChatPromptTemplate.from_messages([
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_message),
+    ])
+
+
+def main() -> int:
+    print("=" * 70)
+    print("PROMPT TEMPLATE RENDER TEST — all scenarios, all roles, no LLM")
+    print("=" * 70)
+
+    scenarios = ea.SCENARIO_PROMPTS
+    if not scenarios:
+        print("FAIL: no scenario prompts registered at all")
+        return 1
+
+    total_roles = 0
+    failures: list[str] = []
+
+    for code in sorted(scenarios):
+        prompts = scenarios[code]
+        rendered_ok = 0
+        for role, text in sorted(prompts.items()):
+            total_roles += 1
+            try:
+                messages = build_prompt(text, PROBE_USER_MESSAGE).invoke({}).to_messages()
+            except Exception as exc:  # noqa: BLE001 — we want every failure named
+                failures.append(f"{code}/{role}: raised {type(exc).__name__}: {exc}")
+                continue
+
+            # Rendering must not mutate the prompt. A template that silently
+            # consumed or rewrote a brace would still "work" while sending the
+            # model different text than the constitution file declares, which
+            # is a provenance problem as much as a crash problem.
+            if messages[0].content != text:
+                failures.append(f"{code}/{role}: system prompt was altered during rendering")
+                continue
+            if messages[1].content != PROBE_USER_MESSAGE:
+                failures.append(f"{code}/{role}: user message was altered during rendering")
+                continue
+            rendered_ok += 1
+
+        status = "OK" if rendered_ok == len(prompts) else "FAIL"
+        print(f"  {code:<4} {rendered_ok}/{len(prompts)} roles render byte-identical   {status}")
+
+    print("-" * 70)
+    if failures:
+        print(f"RESULT: {len(failures)} of {total_roles} role-prompts FAILED\n")
+        for f in failures[:20]:
+            print(f"  {f}")
+        if len(failures) > 20:
+            print(f"  ... and {len(failures) - 20} more")
+        print("\nA literal brace in a system prompt is read as a template variable.")
+        print("Fix the engine's prompt construction, not the constitution text —")
+        print("escaping braces per-file breaks again on the next constitution.")
+        return 1
+
+    print(f"RESULT: {total_roles}/{total_roles} role-prompts render byte-identical")
+    print("PASS: no prompt can raise a missing-variable error at invoke time")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
