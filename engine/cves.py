@@ -398,6 +398,37 @@ class CVES:
                 from engine.elite_agents_v3 import parse_decision
                 revised_raw  = invoke_fn(system_prompt, correction_msg)
                 revised      = parse_decision(revised_raw, agent_role)
+                revised.pop("_role_default_substituted", None)
+
+                # Validate the revision the same way L1 validates a first
+                # response. This path previously returned whatever
+                # parse_decision produced, with no schema check at all.
+                # While parse_decision forced every ethnic_weights vector to
+                # Myanmar's length of 8 that was survivable; once it
+                # correctly began passing the model's own vector through
+                # (cd94e93), a revision carrying the wrong length propagated
+                # into l3_ensemble, where np.array over the seven decisions
+                # raised "inhomogeneous shape" and killed the whole run.
+                #
+                # Observed in production: Germany (ETHNIC_GROUPS=0) lost all
+                # three runs this way. The defence minister signalled, L2
+                # intercepted under Article 9.4, and the revised response
+                # came back with a one-element array against six empty ones.
+                # The failure year differed per run because it depended on
+                # when a single role happened to signal, which is why it
+                # looked stochastic.
+                if self._schema is not None:
+                    try:
+                        revised = self._schema(**{
+                            k: v for k, v in revised.items() if not k.startswith("_")
+                        }).model_dump()
+                    except Exception as exc:
+                        logger.warning(
+                            f"L2 revision failed schema validation ({exc}) — "
+                            f"applying the mechanically corrected decision instead"
+                        )
+                        return corrected
+
                 if not self._find_violations(revised, scenario, shared_data):
                     return revised
             except Exception as e:
@@ -516,6 +547,25 @@ class CVES:
         # self.n_ethnic (the active constitution's real ETHNIC_GROUPS
         # count, resolved once at CVES construction time).
         n_ethnic = self.n_ethnic
+        # Coerce every vector to the active constitution's length before
+        # building the array. A single decision of the wrong length used to
+        # raise ValueError here and terminate the entire Monte Carlo run; on
+        # a 50-year campaign that is hours of GPU lost to one bad response.
+        # The L2 reprompt path above is the root-cause fix; this is the
+        # backstop, because l3_ensemble is reached from several paths and an
+        # analysis layer should degrade rather than abort.
+        _n = self.n_ethnic
+        for _d in decisions:
+            _ew = _d.get("ethnic_weights")
+            if not isinstance(_ew, list) or len(_ew) != _n:
+                logger.warning(
+                    f"L3: coercing ethnic_weights of length "
+                    f"{len(_ew) if isinstance(_ew, list) else 'n/a'} to {_n} "
+                    f"(scenario={scenario}, year={year})"
+                )
+                _d["ethnic_weights"] = (list(_ew)[:_n] if isinstance(_ew, list) else [])
+                _d["ethnic_weights"] += [1.0] * (_n - len(_d["ethnic_weights"]))
+
         ethnic_arrays = np.array(
             [d.get("ethnic_weights", [1.0] * n_ethnic) for d in decisions],
             dtype=np.float32,
