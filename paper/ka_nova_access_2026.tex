@@ -1,0 +1,1845 @@
+%% =====================================================================
+%% Project Ka-Nova, IEEE Access resubmission
+%% Manuscript Access-2026-37966, submission UUID
+%% b9e6f9b3-ed48-4565-836d-5633d52b89d3
+%%
+%% Compile with the official IEEE Access LaTeX template class file
+%% (ieeeaccess.cls) from the IEEE Author Center. The class file is NOT
+%% vendored in this repository; download the current "IEEE Access LaTeX
+%% Template" bundle and place ieeeaccess.cls beside this file.
+%%
+%%   pdflatex ka_nova_access_2026
+%%   bibtex   ka_nova_access_2026
+%%   pdflatex ka_nova_access_2026
+%%   pdflatex ka_nova_access_2026
+%%
+%% HOUSE RULES ENFORCED IN THIS SOURCE, do not relax without asking:
+%%  1. No em dashes anywhere, in prose or in comments.
+%%  2. No emoji anywhere.
+%%  3. No standardised effect size (no Cohen's d) for any metric.
+%%  4. No number is invented or back-filled. Every quantity not yet
+%%     measured appears as \todo{PENDING CAMPAIGN: ...}.
+%%  5. Causal language stays scoped to "within the simulation".
+%% =====================================================================
+
+\documentclass{ieeeaccess}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+
+%% ---------------------------------------------------------------------
+%% PENDING marker. Every one of these must be resolved or deliberately
+%% converted to a stated limitation before the manuscript is uploaded.
+%% Set \pendingvisibletrue for the internal review copy and false only
+%% when the list is empty.
+%% ---------------------------------------------------------------------
+\newif\ifpendingvisible
+\pendingvisibletrue
+\newcommand{\todo}[1]{%
+  \ifpendingvisible\textcolor{red}{\textbf{[\MakeUppercase{#1}]}}\fi}
+
+\begin{document}
+
+\history{Resubmission of manuscript Access-2026-37966, originally
+submitted 30 July 2026, rejected with invitation to resubmit 31 August
+2026.}
+
+%% ---------------------------------------------------------------------
+%% TITLE
+%%
+%% The submitted title was "A Hybrid Generative Agent-Based Model with
+%% Runtime Constitutional Validation for Comparative Governance
+%% Simulation". It no longer describes the paper: the comparative
+%% outcomes claim is withdrawn, and the mechanism audit plus the
+%% instrument validation are now the primary content. A title change is
+%% visible to returning reviewers and is justified explicitly in the
+%% response preamble.
+%%
+%% DECISION NEEDED FROM K.H.: docs/writing_plan.md section 2 recommends
+%% "Runtime Constitutional Validation in a Generative Agent-Based Model:
+%% Article-Level Enforcement, Substrate Invariance, and a Mechanism
+%% Audit". That recommendation predates the 2026-11-24 instrument audit.
+%% "Substrate invariance" is now derived rather than discovered and is
+%% demoted in the claim set, so naming it in the title over-promises.
+%% The title below substitutes the instrument validation for it.
+%% ---------------------------------------------------------------------
+\title{Encoding Constitutions as Runtime Constraints in a Generative
+Agent-Based Model: Article-Level Enforcement, a Mechanism Audit, and an
+Instrument Validation}
+
+\author{
+\uppercase{Kaung Htet}\authorrefmark{1},
+\IEEEmembership{Graduate Student Member, IEEE},
+\uppercase{Samsul Jahith}\authorrefmark{1},
+\uppercase{Devyani Patil}\authorrefmark{1},
+\uppercase{and Md Saifullah Razali}\authorrefmark{1}}
+
+\address[1]{School of Physics, Engineering and Computer Science,
+University of Hertfordshire, Hatfield AL10 9AB, U.K. (delivered at PSB
+Academy, Singapore)}
+
+\tfootnote{\todo{PENDING: funding statement, or an explicit declaration
+that the work received no external funding.}}
+
+\markboth
+{K. Htet \headeretal: Encoding Constitutions as Runtime Constraints in a
+Generative Agent-Based Model}
+{K. Htet \headeretal: Encoding Constitutions as Runtime Constraints in a
+Generative Agent-Based Model}
+
+\corresp{Corresponding author: Kaung Htet (e-mail: kh26aab@herts.ac.uk).}
+
+%% =====================================================================
+%% ABSTRACT
+%% =====================================================================
+\begin{abstract}
+Constitutional design is normally evaluated through historical case
+study and legal-doctrinal reasoning, methods that cannot execute
+counterfactuals. This paper presents Ka-Nova, a hybrid generative
+agent-based model in which the substantive provisions of a national
+constitution are encoded as a typed, validated parameter set and
+enforced at run time by a four-layer Constitutional Validation and
+Error-Suppression (CVES) pipeline that intercepts every elite decision
+and writes an append-only, article-attributed audit record. Seven
+constitutions are encoded: a designed Meritocratic Federal Union (MFU),
+the 2008 Constitution of Myanmar, and five historically enacted texts
+(South Korea, Thailand, Pakistan, Chile and the German Basic Law). The
+paper makes three claims. First, within a controlled pair sharing
+population, shock sequence, external layer and generative substrate, an
+identical elite decision stream is differentially constrained by two
+article-level encodings: the same act, a coup signal emitted by an
+elite agent, is intercepted and annulled with article attribution under
+one encoding while no encoded provision renders it invalid under the
+other, with both counts recoverable per decision from the shipped log.
+Second, we report a mechanism audit of our own model that states, with
+file and line, which published quantities are produced by constitutional
+content and which by engine-level constants, and we report as a finding
+that the engine does not discriminate between structurally similar
+guardianship constitutions, together with the reason and with why the
+obvious remedy would be circular. Third, we report an instrument
+validation in which an adversarial audit of our own pipeline found and
+fixed a class of defects that pre-determined the model's output,
+including a parser that discarded the language model's decision for four
+of the seven encodings. We quantify the sensitivity of our own published
+enforcement counts to the counting rule, and we withdraw and replace
+quantities that the audit showed were not supported. No standardised
+effect size is reported anywhere in this paper: four previously
+headline separations are accounted for by modelling constants, and we
+name each. The generative layer is positioned as a control condition and
+as an interpretability and provenance mechanism rather than as a
+determinant of aggregate outcomes.
+\todo{PENDING CAMPAIGN: one sentence giving the headline enforcement
+counts from the re-run, and one giving the collapse-timing result, both
+to be inserted only once the campaign reports.}
+\end{abstract}
+
+\begin{keywords}
+Agent-based modelling, computational social science, constitutional
+simulation, generative agents, large language models, model validation,
+multi-agent systems, reproducibility, runtime validation, sensitivity
+analysis.
+\end{keywords}
+
+\titlepgskip=-15pt
+\maketitle
+
+%% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+%% =====================================================================
+
+\PARstart{T}{he} design of a constitution is among the highest
+consequence decisions a polity makes, yet the tools for evaluating a
+constitution before it is adopted remain overwhelmingly qualitative.
+Comparative constitutional scholarship reasons from historical precedent
+and doctrinal analysis \cite{acemoglu2012why,lijphart2012patterns,
+elkins2009endurance}. It cannot execute a constitution, cannot run the
+same country twice under two founding documents, and cannot project the
+compounding consequences of a single structural choice such as whether
+the military holds reserved legislative seats, or whether an
+anti-corruption body reports to an independent court or to a
+commander-in-chief.
+
+This paper asks whether a constitution can be treated as executable
+code, and then asks the harder question that the first version of this
+work did not: once it is executable, how much of what the model produces
+is actually attributable to the encoded text, and how would we know.
+
+The first question is answered by construction. If the substantive
+provisions of a founding document, merit thresholds for public office,
+veto chambers and their supermajority requirements, resource-allocation
+splits, the independence of the judiciary, the constitutional status of
+a coup, can be encoded as machine-readable parameters, then a
+scenario-neutral engine can run them. We present Ka-Nova, a hybrid
+generative agent-based model in which an 11,000-agent rule-based citizen
+population, a chain-reasoned large-language-model elite layer and a
+stochastic external world execute fifty simulated years under a given
+encoding, and in which every elite decision passes through a four-layer
+Constitutional Validation and Error-Suppression (CVES) pipeline before
+it can influence the simulation.
+
+The second question is the substance of this revision. Between the
+initial submission and this version we conducted an adversarial audit of
+our own instrument. That audit established three things that change what
+this paper can claim, and we report all three rather than only the
+favourable one.
+
+\begin{enumerate}
+\item \textbf{A single mechanism, visible in two lines of the engine,
+produces the separation we previously attributed to constitutional
+content.} The corruption trajectory of a guardianship scenario is
+produced by a chain-type branch in which the military arm reads no
+constitutional field at all. We have promoted the relevant coefficients
+to per-constitution fields so that the branch is named, disclosable and
+reachable by sensitivity analysis, and we state plainly that this does
+not make structurally similar constitutions separate, and why sourcing a
+per-country drift rate from each country's own observed corruption
+series would be circular.
+\item \textbf{Our previously published enforcement counts were derived
+by regular expression over free-text reasoning, because the structured
+decision was never logged.} Three defensible counting rules give three
+materially different answers from the same shipped file. We publish the
+sensitivity table, the strict reconciliation, and the mechanical cause
+of the residual, and we withdraw the claim that interception was
+complete.
+\item \textbf{A hardcoded literal in the decision parser silently
+discarded the language model's answer for four of the seven encodings.}
+Any prior statement about what those four constitutions emit is
+therefore not evidence, including statements made in our own internal
+record. We report the defect, the mechanism by which it escaped every
+test, and the regression coverage that now prevents its recurrence.
+\end{enumerate}
+
+Reported in isolation, the first two items read as corrections. Reported
+together with the method that found them, they are the contribution.
+A modelling instrument whose own output is partly pre-determined by its
+implementation is a general hazard in generative agent-based social
+simulation \cite{ziems2024can,sagallm2025}, and it is a hazard that is
+structurally hard to detect, because the symptom, a clean and strongly
+separated result, is indistinguishable from success. We therefore
+present the audit as a methodological contribution rather than as an
+erratum, while being explicit that an audit is not a validation: it
+establishes what the model does not warrant, not that the remainder is
+correct.
+
+\subsection{Contributions}
+In order of emphasis:
+
+\begin{enumerate}
+\item \textbf{The CVES pipeline}, a four-layer runtime validation
+mechanism (structural, constitutional, consensus and theory,
+statistical) that makes free-form generative elite output usable as
+scientific data and produces an auditable, article-attributed
+enforcement record keyed to the active constitution's own provisions.
+\item \textbf{A mechanism audit of our own model} (Section
+\ref{sec:mechanism}) reporting, with file and line, which published
+quantities are driven by constitutional content, which by chain-type and
+feedback-layer constants, and which are pinned at a variable boundary.
+This section also contains the negative result that the engine does not
+separate structurally similar guardianship encodings.
+\item \textbf{An instrument validation} (Section \ref{sec:instrument}),
+a defect audit of the generative path with per-defect statements of what
+each defect would have corrupted, and the regression suite that now
+covers the path in continuous integration without requiring a GPU.
+\item \textbf{Seven machine-readable, article-level constitutional
+encodings} released with per-field provenance and explicit
+\texttt{CONFIDENT} and \texttt{GUESS} labels, together with a documented
+account of which encoded provisions are mechanically reachable in the
+present engine and which are encoded but inert.
+\item \textbf{A differential-constraint result on a controlled pair},
+in which the same elite act is intercepted with article attribution
+under one encoding and propagates uncontested under the other, both
+recoverable per decision from the shipped audit trail.
+\end{enumerate}
+
+We frame Ka-Nova strictly as a methodological and architectural
+contribution. The constitutional scenarios are input configurations for
+demonstrating and stress-testing the framework, not normative claims
+about any polity. Section \ref{sec:threats} states this scope
+explicitly and in the strongest terms, since one of the seven encodings
+was authored by the first author.
+
+Section \ref{sec:related} situates the work; Section \ref{sec:method}
+details the methodology; Section \ref{sec:setup} the experimental
+design; Section \ref{sec:mechanism} the mechanism audit; Section
+\ref{sec:instrument} the instrument validation; Section
+\ref{sec:results} the results; Section \ref{sec:discussion} the
+discussion, threats to validity and limitations; Section
+\ref{sec:repro} reproducibility; Section \ref{sec:aiuse} the
+disclosure of generative-AI use; Section \ref{sec:conclusion}
+concludes.
+
+%% =====================================================================
+\section{Related Work}
+\label{sec:related}
+%% =====================================================================
+
+\subsection{Agent-Based Modelling of Social and Political Systems}
+Agent-based modelling generates macro-level social phenomena from micro
+behavioural rules. Schelling's segregation model \cite{schelling1971dynamic}
+showed stark aggregate patterns emerging from mild individual
+preferences, and Epstein and Axtell's Sugarscape
+\cite{epstein1996growing} established the growing artificial societies
+programme in which distributions, migration and conflict arise bottom
+up. Methodological syntheses \cite{bonabeau2002agent,axelrod1997complexity,
+farmer2009economy,macal2010tutorial,gilbert2005simulation,tesfatsion2006agent}
+argue for agent-based modelling wherever heterogeneity, adaptation and
+out-of-equilibrium dynamics matter, conditions that characterise
+governance under stress. Ka-Nova's citizen layer follows this tradition
+and is implemented in Mesa \cite{kazil2020mesa}. What agent-based
+modelling has historically lacked is a principled representation of the
+deliberative behaviour of a small number of powerful actors whose
+choices are not well captured by fixed rules; this is the gap the
+generative layer fills.
+
+\subsection{Generative Agents and LLM-Driven Social Simulation}
+Large language models as agents in social simulation is a recent,
+fast-moving area. Park et al. \cite{park2023generative,park2022social}
+demonstrated believable memory-conditioned individual and collective
+behaviour. A parallel line probes whether such models can stand in for
+human respondents and economic actors \cite{argyle2023out,horton2023large,
+aher2023using}, with broader assessments for computational social
+science \cite{ziems2024can} and surveys of LLM-empowered agent-based
+modelling \cite{gao2024large,xi2023rise,wang2024survey}. Studies of LLM
+societies report emergent cooperation and collapse dynamics
+\cite{piatti2024cooperate,li2023camel,chen2024agentverse}. This
+literature converges on two cautions that motivate our design: generative
+agents can be sycophantic or evasive under adversarial prompting, and
+their outputs require structured validation to be usable as data.
+Chain-of-thought and agentic reasoning methods \cite{yao2023react,
+wei2022chain,shinn2023reflexion} inform our conditioned elite chain.
+
+A caution this literature states less often, and which this paper
+documents concretely in Section \ref{sec:instrument}, is that the
+engineering surface between a language model and a simulation, prompt
+construction, response parsing, schema validation and fallback
+behaviour, is itself a place where a result can be manufactured without
+anyone intending it. Our strongest instrument defect was a single
+hardcoded list length in a parser.
+
+\subsection{Multi-Agent LLM Orchestration and Validation}
+Multi-agent LLM frameworks coordinate role-specialised agents for
+complex tasks \cite{hong2024metagpt,wu2023autogen,guo2024large}. Most
+relevant to this work, SagaLLM \cite{sagallm2025} introduces validation
+and transaction guarantees for multi-agent LLM planning, reflecting a
+growing recognition that generative agents need runtime constraint
+enforcement. CVES differs in being keyed to a specific legal document:
+its constitutional layer validates each decision against the active
+constitution's provisions rather than against task-generic correctness
+criteria. Section \ref{sec:mechanism} reports the coverage limits of
+that keying honestly, including the two layer-2 rules that are not
+reachable under the present decision schema.
+
+\subsection{Over-Refusal in Small Aligned Language Models}
+A concern specific to running small, safety-aligned models as elite
+agents is over-refusal: the model declines benign, in-simulation prompts
+that superficially resemble harmful requests. OR-Bench
+\cite{cui2025orbench} establishes that Llama-family models exhibit high
+over-refusal rates on safe prompts as a side effect of conservative
+safety alignment. Mechanistic analyses further show that over-refusal is
+task-dependent and geometrically distinct from harmful-refusal, so that
+global refusal-direction ablation in alignment tuning does not cleanly
+remove it \cite{maskey2026overrefusal}, and that refusal is mediated by
+multi-dimensional polyhedral concept cones rather than a single
+direction \cite{wollschlager2025geometry}, which helps explain why a
+model may fail to distinguish an in-simulation coup decision from a real
+policy violation. This frames our own observation, that Llama 3.2 3B
+occasionally refuses governance prompts such as military-supremacy
+directives, as a documented alignment limitation rather than a
+simulation defect, and it motivates the CVES L1 detector that separates
+genuine refusal from a parse failure (Section \ref{sec:cves}).
+
+\subsection{Policy, Institutional and Constitutional Analysis}
+Policy-oriented agent-based models simulate markets and endogenous
+agent policy \cite{furtado2022policyspace2,dawid2018agent,
+geanakoplos2012getting} and, increasingly, generative-agent policy
+laboratories \cite{piao2025gplab}. Two political-theory frameworks
+anchor Ka-Nova's evaluation layer. Acemoglu and Robinson
+\cite{acemoglu2012why,acemoglu2006economic} distinguish inclusive from
+extractive institutions; we operationalise an inclusiveness score inside
+CVES. Lijphart \cite{lijphart2012patterns,lijphart1977democracy}
+characterises consensus versus majoritarian democracy; we operationalise
+a consensus score. Institutional economics \cite{north1990institutions,
+ostrom1990governing} and constitutional-endurance scholarship
+\cite{elkins2009endurance}, together with large constitutional corpora
+and governance indices \cite{ccp2023constitute,coppedge2026vdem16,
+marshall2020polity5,law2013sham}, inform the encoding.
+
+Ka-Nova's departure is procedural: rather than coding constitutions for
+statistical correlation with observed outcomes, it executes them forward
+under identical conditions. That procedural stance carries an obligation
+that Section \ref{sec:mechanism} discharges: if a quantity is produced
+by the engine rather than by the encoding, the method's own logic
+requires us to say so. Table \ref{tab:positioning} positions Ka-Nova
+against representative systems on four capabilities; the inclusion
+criteria are given in Section \ref{sec:conclusion}.
+
+\begin{table}[!t]
+\caption{Positioning of Ka-Nova against representative simulation
+systems.}
+\label{tab:positioning}
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+System / work & Popn. ABM & LLM agents & Const. encoded & Runtime const. valid. \\
+\midrule
+Sugarscape \cite{epstein1996growing}      & Yes     & No  & No  & No \\
+Generative Agents \cite{park2023generative} & Yes   & Yes & No  & No \\
+PolicySpace2 \cite{furtado2022policyspace2} & Yes   & No  & No  & No \\
+Generative policy lab \cite{piao2025gplab}  & Partial & Yes & No & No \\
+GovSim \cite{piatti2024cooperate}           & No    & Yes & No  & No \\
+SagaLLM \cite{sagallm2025}                  & No    & Yes & No  & Task-level only \\
+Ka-Nova (this work)                         & Yes   & Yes & Yes & Yes (article-level) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Case Selection and the Myanmar Context}
+Myanmar provides a sharp test case. Its 2008 Constitution entrenches
+military prerogatives, a guaranteed bloc of unelected legislative seats,
+a military-appointed share of key ministries, and provisions permitting
+suspension of fundamental rights under a state of emergency
+\cite{myanmar2008constitution,crouch2019myanmar}, and its post-2021
+trajectory offers a real-world reference for phenomena the model
+reproduces, including the self-defeating dynamics of internet
+suppression as citizens migrate to circumvention tools
+\cite{accessnow2023keepiton}.
+
+The five additional encodings were selected to vary structure rather
+than to maximise outcome spread. South Korea 1987 and the German Basic
+Law are civilian-supremacy texts with, respectively, a recent transition
+from military rule and an explicit militant-democracy design. Thailand
+2017, Pakistan under the Eighth Amendment, and Chile under the 1980
+text as operative in its elected-Congress period are guardianship
+designs in which an unelected or partly unelected organ retains a
+constitutional veto over elected politics. Three of these were chosen
+precisely because they are structurally similar to one another, which is
+the condition Reviewer 2 identified as the discriminating test of the
+approach. Section \ref{sec:nearwins} reports the result of that test,
+and it is negative.
+
+%% =====================================================================
+\section{Methodology}
+\label{sec:method}
+%% =====================================================================
+
+\subsection{Overview and Design Principle}
+Ka-Nova is a discrete-time simulation advancing in one-year steps over a
+50-year horizon. Its governing design principle is that the population,
+the external world and the dynamical loops are shared across scenarios,
+and that a scenario is defined by which constitution object the elite
+layer and institutions read at initialisation.
+
+The submitted version of this paper described the engine as
+scenario-neutral without qualification. That description was too strong,
+and Section \ref{sec:mechanism} replaces it with a precise one. The
+engine is parameterised by the active constitution on most paths, and it
+additionally branches on a single structural axis, \texttt{chain\_type},
+with values \texttt{civilian} and \texttt{military}, which selects
+between two rule branches and two elite-agent rosters. Several
+coefficients inside those branches were, at submission, bare literals
+rather than constitutional fields. They have been promoted to
+per-constitution fields at identical values, which makes them visible,
+disclosable and reachable by sensitivity analysis, and which is verified
+byte-identical. The branch itself remains and is reported rather than
+removed.
+
+Each simulated year executes an ordered nine-step sequence: (1) the
+external layer evolves and may fire shocks; (2) the social-media channel
+resolves information openness; (3) the elite agents deliberate in a
+chain and each decision is validated by CVES; (4) validated decisions
+are broadcast to the shared environment; (5) all citizen agents step;
+(6) twelve feedback loops update political, economic and social state;
+(7) chain-type rules apply; (8) institutions run their annual sessions;
+and (9) state is aggregated into key performance indicators. The model
+is documented following the ODD protocol \cite{grimm2006standard,
+grimm2010odd,grimm2020odd} to support replication.
+
+\subsection{Constitutional Encoding and the Seven-Constitution Design}
+\label{sec:encoding}
+The core methodological claim is that a constitution's substantive
+provisions can be represented as typed, validated parameters. Each
+constitution is a hierarchy of frozen dataclasses mapping to chapters
+and articles, each with a \texttt{validate()} method enforcing internal
+consistency, for example that merit weights and the resource split each
+sum to one, and, since this revision, that the tax schedule is a
+contiguous, strictly ascending set of three-tuples with an unbounded top
+band. The last of these was added after we established that
+\texttt{validate()} did not inspect tax schedules at all, so a malformed
+schedule passed validation and then miscomputed silently at run time.
+
+Seven constitutions are encoded (Table \ref{tab:scenarios}). Each
+carries per-field provenance comments naming the instrument, the
+citation, the year and a confidence tag. Between 35 and 50 percent of
+the implemented fields in each of the five new encodings are
+self-labelled \texttt{GUESS}, and we report that ratio rather than
+suppress it, because it is evidence for one of this paper's findings
+(Section \ref{sec:schemafit}).
+
+\begin{table}[!t]
+\caption{The seven encoded constitutions. \texttt{chain\_type} is the
+single structural axis on which the engine branches; every other
+difference between scenarios is a parameter value read from the active
+constitution. Year-zero corruption is the V-Dem \texttt{v2x\_corr}
+observation for that polity at its own year zero
+\cite{coppedge2026vdem16}. The scenario label names the instrument while
+the observation is taken at the year the instrument entered force, and
+these differ for two encodings: the Korean value is the 1988
+observation, because the 1987 constitution entered force on 25 February
+1988, and the Chilean value is the 1990 observation for the
+elected-Congress period rather than a Junta-era value.}
+\label{tab:scenarios}
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Code & Encoding & \texttt{chain\_type} & Year-zero corr. \\
+\midrule
+A  & MFU (designed)                      & civilian & 0.878 \\
+C  & Myanmar 2008                        & military & 0.878 \\
+SK & South Korea 1987                    & civilian & 0.458 \\
+TH & Thailand 2017                       & military & 0.683 \\
+PK & Pakistan, Eighth Amendment 1985     & military & 0.637 \\
+CL & Chile 1980, elected-Congress period & civilian & 0.067 \\
+DE & German Basic Law through 1968       & civilian & 0.020 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two encoding decisions are worth stating because they were made against
+our own interest. First, Myanmar's year-zero corruption was corrected
+from 0.72 to 0.878. The 0.72 figure was present at the repository's
+initial commit labelled as a V-Dem baseline; it is not a V-Dem value for
+any year, and it is in fact the inverted Transparency International
+Corruption Perceptions Index score of 28 of 100
+\cite{ti2024cpi}. The real V-Dem \texttt{v2x\_corr} value for Myanmar in
+2008 is 0.878 \cite{coppedge2026vdem16}. Both members of the controlled
+pair were moved together, which preserves the pair, and the correction
+makes the designed constitution's simulated corruption outcome
+substantially worse than previously published. Second, Scenario A's and
+Scenario C's year-zero coup risk is 0.25, which is four to five times
+Myanmar's historical base rate computed on the same convention used for
+every other scenario (4 successful coups in 78 years, 0.051, from
+\cite{powell2011global}). We did not quietly change it. We disclose it,
+publish the historical rate beside it, and put \texttt{coup\_risk} into
+the sensitivity analysis so that its contribution can be measured rather
+than asserted (Section \ref{sec:gsa}).
+
+The scenarios divide into two deliberately labelled experiment classes.
+\emph{Class (i)}, the controlled pair A versus C, shares Myanmar's
+population, geography, external layer, shock sequence and year-zero
+conditions; constitutional text is the only manipulated variable, and
+this is verified, with zero mismatches across all eleven external-layer
+output keys over a full 50-year same-seed comparison. \emph{Class
+(ii)}, the five historically enacted encodings, is a realism-maximised
+comparative study in which each country runs with its own real
+administrative geography, its own real population distribution and its
+own real neighbours and external shock catalogue. Class (ii) is
+therefore \emph{not} a controlled experiment, by design, and no claim in
+this paper treats a class (ii) difference as caused by constitutional
+text alone.
+
+\subsection{Layer 1: Rule-Based Citizen Agents}
+The population comprises 11,000 Mesa agents, distributed across each
+scenario's own real administrative units using that country's own
+population weights, and assigned to census-proportional ethnic groups
+and seven behavioural archetypes (civic champion, pragmatic survivor,
+regime loyalist, ambitious meritocrat, disillusioned youth, rural
+traditionalist, trauma carrier). Each citizen runs a five-stage cycle
+each year, perceive, decide, act, learn, life-course, with
+recency-weighted memory, and decides on tax compliance, protest,
+emigration, bribery and corruption reporting. Four further tiers
+complete the institutional structure: tier 2 officials (ministers,
+ethnic leaders, analysis council, congress); tier 3 oversight
+(anti-corruption inspectorate, constitutional and arbitration judges);
+tier 4 foreign actors; and tier 5 institutional agents (central bank,
+development fund, tax system). Citizen identity and scheduling use Mesa
+while state updates are NumPy-vectorised \cite{harris2020array}.
+
+The population count is uniform at 11,000 for every scenario rather than
+scaled to each country's real population. Scaling at a fixed ratio would
+have produced a 7.3-fold difference in agent count between the largest
+and smallest polity, which would introduce unequal statistical power
+across scenarios for reasons unrelated to constitutional structure. Real
+population shares are used only to distribute the 11,000 agents across
+each country's own geographic units.
+
+One limitation of this layer reaches a published metric and is stated
+here rather than in the limitations section, because it governs how the
+tax encoding should be read. The income generator produces a hard
+ceiling of 5.46 times the poverty line. Real personal-income exemption
+thresholds for three of the encoded countries sit above the reachable
+range, Pakistan's at 16.1 times, so those schedules are
+\emph{encoded and inert} rather than used. We encoded the real statutory
+schedules and disclosed the inertness rather than rescaling the brackets
+to fit the engine, which would have reintroduced invented content.
+
+\subsection{Layer 2: Generative LLM Elite Agents}
+The elite layer models the small set of actors whose behaviour is
+deliberative rather than rule-bound. Seven LLM agents per scenario
+reason in a fixed chain, each conditioned on a status report and on
+prior advisors' natural-language summaries. Under a civilian-supremacy
+chain the chain operates under civilian supremacy; under a
+military-guardianship chain it follows a military chain of command with
+objectives derived from the active constitution. Each agent emits a
+structured decision, a budget weight in $[0,1]$, an ethnic-weighting
+vector whose length is that constitution's own ethnic-group count, a
+boolean coup signal, and a free-text rationale, inside a delimited
+block. Agents are served by a locally hosted Llama 3.2 3B model
+\cite{dubey2024llama3,touvron2023llama} via Ollama \cite{ollama2023},
+orchestrated with LangChain \cite{chase2022langchain}.
+
+The aggregate contribution of the elite layer to citizen trust is
+bounded by
+\begin{equation}
+b = \min(\overline{w}\cdot 0.15,\ b_{\max}),
+\qquad \overline{w} = \mathrm{mean}_i(w_i)
+\label{eq:coupling}
+\end{equation}
+where $w_i$ are per-agent budget weights, and the ethnic-weight vector
+is normalised to mean one before consumption, so that only its relative
+dispersion survives. We draw attention to \eqref{eq:coupling} in the
+methodology rather than leaving it to the results, because it is the
+reason the substrate-invariance result in Section \ref{sec:llmrole}
+holds, and that is better stated in advance than discovered.
+
+A deterministic rule-based decision path provides an equivalent
+fallback, which enables the LLM-versus-rule-based comparison.
+
+\subsubsection{Prompt Symmetry}
+At submission, the elite prompts for the five historically enacted
+constitutions contained instructions telling the model that a coup
+signal had no constitutional basis and should not be set. The two
+original scenarios contained no such instruction. This is a circular
+construction: it tells the model that a coup is impossible under
+constitution $X$, observes no coup, and would report that $X$ prevents
+coups. It also disables the measurement, because CVES can only intercept
+a signal that is emitted. Those instructions have been removed. Every
+factual description of what each constitution says is retained,
+including every real article reference and the plain statement that the
+text contains no coup mechanism; what was removed is every instruction
+directed at what the agent should output. Four example decision blocks
+whose rationale strings pre-argued the answer were neutralised. After
+the change, no scenario carries an output-fixing directive in any of its
+seven role prompts, and every military role carries the same latitude
+the designed constitution's military role always had. Whether a given
+constitution's elites then decline to signal is a measurement, not an
+instruction.
+
+\subsection{Layer 3: External World and Information Environment}
+The external layer evolves a per-scenario set of real geopolitical
+influence vectors, each with a calibrated annual drift, and fires
+stochastic shock types. For the controlled pair, the same seeded shock
+sequence hits both scenarios, removing external stochasticity as a
+confound. For class (ii) each country runs against its own real
+neighbours and its own shock catalogue, which is a deliberate shift
+toward realism and away from engine symmetry, and which is one reason
+class (ii) is not presented as a controlled comparison.
+
+The social-media channel models information openness as an outcome of
+elite choice: when the regime attempts suppression, a VPN-floor mechanic
+raises a lower bound on effective openness, so effective openness is
+\begin{equation}
+O_{\mathrm{eff}} = \max(O_{\mathrm{regime}},\ \mathrm{VPN}_{\mathrm{floor}}),
+\qquad \mathrm{VPN}_{\mathrm{floor}} \uparrow \text{ per shutdown}
+\label{eq:vpn}
+\end{equation}
+making suppression self-defeating over time, calibrated to Myanmar's
+post-2021 experience \cite{accessnow2023keepiton}.
+
+\subsection{CVES: The Constitutional Validation and Error-Suppression Pipeline}
+\label{sec:cves}
+Every elite decision passes through the four-layer pipeline before
+influencing the simulation; all violations and layer scores are logged
+to append-only JSONL for audit.
+
+\emph{L1, structural integrity.} Raw output is parsed and validated
+against a typed schema: budget weight clamped to $[0,1]$; an
+ethnic-weight vector whose required length is the active constitution's
+own \texttt{ETHNIC\_GROUPS} count, with element values clamped to
+$[0.3,3.0]$; a boolean coup signal; a rationale. On failure the agent is
+re-prompted up to three times, after which a role default is substituted
+and the failure flagged, so a parse failure is never miscounted as a
+behavioural refusal. Section \ref{sec:instrument} reports a defect in
+which this layer's own schema was correct but the upstream parser was
+not.
+
+\emph{L2, constitutional constraint.} The decision is checked against
+the active constitution. The layer currently implements three
+article-level rules, and we state their reachability precisely rather
+than their count. (a) A coup signal emitted on a civilian-supremacy
+chain is a violation; this rule is live for every civilian-chain
+encoding, keyed on \texttt{chain\_type} and on the active constitution's
+own coup fields, and it is the rule that produces the enforcement record
+in this paper. (b) A rights violation under a constitution whose rights
+are non-suspendable is a violation; across the seven encodings only the
+designed constitution and the German Basic Law encode non-suspendable
+rights, and the rule is additionally unreachable at present because no
+prompt, schema or parser produces a \texttt{rights\_violation} field.
+(c) A budget weight outside $[0,1]$ is a violation; this rule is
+structurally redundant, because the parser clips the value upstream, and
+we label it as such rather than engineer it to fire. The article labels
+attached to these rules are the designed constitution's own numbering.
+We therefore do not claim per-article attribution over historically
+enacted constitutions; we claim article-attributed enforcement for the
+encoding whose article numbering the label belongs to, and we report the
+labelling limitation as an open item in Section \ref{sec:limitations}.
+
+\emph{L3, consensus and theory alignment.} Across the seven decisions,
+budget weights are clamped toward the ensemble (structured negotiation),
+and two theory scores are logged, an inclusiveness score
+\cite{acemoglu2012why} and a consensus score \cite{lijphart2012patterns}:
+\begin{equation}
+I = \frac{\mathrm{mean}(w_{\mathrm{minority}})}{\mathrm{mean}(w_{\mathrm{majority}})},
+\qquad
+K = 1 - \mathrm{var}(w_{\mathrm{ethnic}})
+\label{eq:theory}
+\end{equation}
+These components are skipped when the active constitution encodes fewer
+than two ethnic groups, which is the case for four of the seven
+encodings. That is a coverage limit of L3 and is stated as one.
+
+\emph{L4, statistical plausibility.} The combined budget impact is
+$z$-tested against a rolling baseline; an outlier is flagged when
+\begin{equation}
+\frac{|x - \mu_{\mathrm{hist}}|}{\sigma_{\mathrm{hist}}} > 3
+\label{eq:l4}
+\end{equation}
+The pipeline runs in flag mode, logging and retaining the decision, for
+every result reported in this paper and in the submitted version. A
+strip mode exists and has never been used in any reported result. This
+is specified in the project's integration specification, which states
+that outliers beyond three standard deviations are to be flagged and
+not rejected.
+
+A separate detector distinguishes a true refusal by the language model
+from a valid terse decision and from a parse failure.
+
+\subsection{Outcome Metrics}
+\label{sec:metrics}
+Primary indicators are the corruption index, public-trust index, coup
+probability, anti-corruption body effectiveness, ethnic harmony,
+stability index and Gini coefficient, each computed annually. Scenario
+differentiation is assessed with the Mann-Whitney $U$ test
+\cite{mann1947test}, with Shapiro-Wilk \cite{shapiro1965analysis} used
+to check normality.
+
+\textbf{No standardised effect size is reported anywhere in this paper.}
+The submitted version reported four, and Section \ref{sec:effectsize}
+explains why each is withdrawn. Where a separation between scenarios is
+complete, we report it as complete and name the constant that makes it
+so, rather than converting a constant into a statistic.
+
+A composite north-star progress score is also computed as a weighted sum
+of seven terms. Following the audit, the composite is reported
+\emph{decomposed term by term for every scenario} and never as a single
+headline number, so that a reader can see which terms are
+constitution-driven and which are structural. The weights were inherited
+from an earlier phase of the project and were never chosen for a
+seven-constitution comparison; we neither re-weight them, because any
+weights we chose would reintroduce the self-design problem, nor retire
+them, because the composite is one of the metrics a reviewer asked us to
+resolve rather than remove.
+
+Global sensitivity analysis follows established practice for agent-based
+models \cite{tenbroeke2016sensitivity,lorscheid2012opening} and
+systematic experimental design, implemented per Saltelli et al.
+\cite{saltelli2008global} via SALib \cite{herman2017salib}. Its scope is
+stated in Section \ref{sec:gsa} and it is narrower than the submitted
+version implied.
+
+%% =====================================================================
+\section{Experimental Setup}
+\label{sec:setup}
+%% =====================================================================
+
+The experiment has two classes, as defined in Section
+\ref{sec:encoding}. Table \ref{tab:config} summarises the configuration.
+
+\begin{table}[!t]
+\caption{Experimental configuration.}
+\label{tab:config}
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Parameter & Value \\
+\midrule
+Class (i), controlled pair      & A (MFU) vs C (Myanmar 2008) \\
+Class (ii), enacted encodings   & SK, TH, PK, CL, DE \\
+Runs per scenario, rule-based   & 100 \\
+Runs per scenario, LLM          & \todo{pending campaign: final LLM roster and $N$ per scenario} \\
+Horizon                         & 50 simulated years \\
+Citizen agents                  & 11,000 (all scenarios) \\
+LLM elite agents                & 7 per scenario \\
+Model / serving                 & Llama 3.2 3B / Ollama \\
+Hardware                        & \todo{pending campaign: GPU model and driver of the campaign pod} \\
+Integrity controls              & \texttt{use\_llm} verified in run log; per-call \\
+                                & fallback counter; connectivity probe; \\
+                                & consecutive-fallback circuit breaker \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The verification and validation protocol follows established guidance
+for simulation models \cite{sargent2013verification} and for the
+empirical validation of agent-based models \cite{windrum2007empirical}.
+Before the full run, a pre-flight suite verifies syntactic integrity,
+model initialisation under every encoding, the direction of indicator
+differentiation over the horizon, the elite-to-citizen feedback path,
+and the external and social-media layers. An adversarial debiasing suite
+(blind-scenario, condition-injection and suppression-audit modules) and
+a red-team check on suppressed emergence guard against artificially tame
+output.
+
+Two integrity controls are new in this revision and are reported because
+their absence would have invalidated a paid campaign. First, language
+model initialisation now performs a real round-trip at start-up and
+aborts the run on failure, because constructing the client opens no
+connection and the realistic failure mode, a model that was never
+pulled, previously survived initialisation and surfaced only as a 100
+percent per-call fallback rate under an LLM filename. Second, a circuit
+breaker aborts after 21 consecutive fallbacks, which is three full years
+of a seven-agent chain, so that a mid-run server death cannot produce
+hours of rule-based rows inside an LLM dataset. Per-call fallbacks are
+stamped on the logged row, so the rule-based contamination rate of any
+campaign is a single key lookup.
+
+%% =====================================================================
+\section{Mechanism Audit}
+\label{sec:mechanism}
+%% =====================================================================
+
+This section reports what the engine does and does not discriminate. It
+requires no campaign data: every statement in it is verifiable against
+the published source at the commit cited in Section \ref{sec:repro}, and
+most were produced by reading our own code adversarially rather than by
+running it.
+
+\subsection{What the Engine Branches On}
+\label{sec:branch}
+The engine branches on exactly one structural axis,
+\texttt{chain\_type}, resolved from a scenario registry at
+initialisation. Every other inter-scenario difference is a parameter
+value read from the active constitution. This is a weaker statement than
+the submitted manuscript's, and the difference matters: a branch is not
+a parameter, and a sensitivity analysis over parameters cannot see it.
+
+The most consequential instance is the state-level corruption update in
+\texttt{model\_phase3.py}, method \texttt{\_update\_states}. Under a
+civilian chain, state corruption is reduced in proportion to
+anti-corruption effectiveness; under a military chain, it accumulates at
+a fixed drift:
+\begin{equation}
+c_{t+1} =
+\begin{cases}
+\mathrm{clip}\big(c_t - \iota_t \cdot \kappa,\ 0,\ 1\big) & \text{civilian chain}\\[2pt]
+\mathrm{clip}\big(c_t + \delta,\ 0,\ 1\big) & \text{military chain}
+\end{cases}
+\label{eq:corruption}
+\end{equation}
+where $\iota_t$ is anti-corruption effectiveness, $\kappa$ is the
+reduction coefficient and $\delta$ is the unchecked drift. At submission
+both $\kappa=0.02$ and $\delta=0.01$ were bare literals inside the
+branch, and \textbf{the military arm read no constitutional field at
+all}. The consequence, which we measured rather than inferred, is that
+the three guardianship scenarios produce corruption series that are
+parallel straight lines of slope exactly 0.0100 per year, differing only
+in their year-zero intercept.
+
+All five coefficients in that method, $\kappa$, $\delta$, and the three
+coefficients of the growth update, are now per-constitution fields read
+via a lookup with the historical literal as fallback. The promotion was
+verified byte-identical across all seven scenarios at matched seeds,
+21 of 21 per-run outputs hash-identical. We stress that \textbf{this
+does not make the near-twins separate}, for the reason given in Section
+\ref{sec:nearwins}. What it does is make the branch named, inspectable,
+disclosable and reachable by sensitivity analysis, which is a
+precondition for honest reporting and not a result.
+
+A second instance is the anti-corruption effectiveness floor for
+civilian chains, which is still a bare literal of the form
+$\min(0.30 + \text{year bonus},\ 0.40)$ and which appears at two
+separate sites in the engine. We report it here as an open item rather
+than promote it silently.
+
+\subsection{The Ordering Defect in the Effectiveness Floor}
+That floor was also, at submission, applied in the wrong order. It was
+enforced at the end of the state-update method, after the per-state loop
+had already consumed the effectiveness value. The institutional
+sub-model overwrites that value earlier in the year with its real
+computed figure, which is zero before any investigation resolves. Every
+constitution except the designed one encodes its own effectiveness
+floor, which props the value back up; the designed constitution encodes
+none. The result, measured at a fixed seed before the fix, is that
+Scenario A read an effectiveness of exactly zero for its first five
+years and applied no corruption reduction at all, so its corruption
+index was frozen at 0.8976 for precisely those five years. The published
+effectiveness column and the number the corruption mechanism consumed
+were different quantities.
+
+This is a real behavioural fix and is not byte-identical for Scenario A,
+which is why it is committed separately from the coefficient promotion.
+It moves the designed constitution's outcome in the favourable
+direction, and we therefore flag it explicitly as a change that benefits
+the self-designed scenario, so that a reader can weigh it accordingly.
+\todo{PENDING CAMPAIGN: the recomputed Scenario A corruption trajectory
+under the corrected ordering at the publication $N$. The provisional
+single-seed figure measured during the fix is a 24 percent reduction in
+year-50 corruption, which is not a publication quantity.}
+
+\subsection{Separation by Construction: The Four Governing Constants}
+\label{sec:effectsize}
+The submitted manuscript reported four standardised effect sizes for the
+A-versus-C comparison and described them as very large. Reviewer 1 asked
+whether such separations are mechanically induced by thresholds,
+parameter bounds or deterministic relationships embedded in the model.
+We investigated all four, and the answer is that each is accounted for
+by a modelling constant. We therefore report no standardised effect size
+anywhere in this paper.
+
+\begin{table*}[!t]
+\caption{The four previously published separations and the constant that
+accounts for each. ``S1'' and ``ST'' are first-order and total-order
+Sobol indices from the sensitivity analysis described in Section
+\ref{sec:gsa}. No standardised effect size is reported in this paper.}
+\label{tab:fourconstants}
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Metric & Governing constant & Evidence \\
+\midrule
+Public trust
+  & \texttt{rights.FEAR\_COMPLIANCE\_TRUST\_FLOOR} $=0.10$
+  & Sobol ST $=1.00$ on Scenario C; the reported value is the clamp, and \\
+  & & its variance across runs is exactly zero. \\
+Coup probability
+  & civilian-chain coup-signal damping, $0.05$ per signal
+  & Sobol indices undefined: the output has zero variance across all 960 \\
+  & & samples of the full parameter space. Constant by construction. \\
+Stability
+  & \texttt{rights.STABILITY\_RIGHTS\_BONUS} $=0.20$
+  & Sobol S1 $=0.9908$; the other twelve parameters all sit at ST $\le 0.008$. \\
+Corruption
+  & the \texttt{chain\_type} branch of \eqref{eq:corruption}
+  & The military arm reads no constitutional field; the three guardianship \\
+  & & series are parallel lines of slope exactly $0.0100$/yr. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table \ref{tab:fourconstants} gives the account. Three of the four were
+established by global sensitivity analysis; the fourth, corruption, was
+established by reading the source, and it could not have been
+established by sensitivity analysis, because \texttt{chain\_type} is a
+branch rather than a sampled parameter. The corruption case also
+contradicts the mechanism narrative given in the submitted manuscript's
+discussion, which attributed accumulating corruption under the 2008
+encoding to regime-protective oversight capping anti-corruption
+effectiveness. The military branch does not read anti-corruption
+effectiveness. We withdraw that narrative.
+
+Two consequences follow for how differences between scenarios are
+reported in this paper.
+
+First, where a separation is complete and produced by a constant, we
+report it as complete, name the constant, and treat it as a check that
+the model behaves as specified rather than as a discovery. A clamp that
+holds trust at exactly its floor with zero variance across runs is
+evidence that the clamp is implemented; it is not evidence about
+constitutions.
+
+Second, horizon-matched comparison is mandatory. The submitted
+manuscript compared corruption at the end of the horizon for a scenario
+that completes the horizon against a scenario that terminates in its
+second decade. We report the horizon-matched comparison at the year
+nearest the terminating scenario's mean final year, and we additionally
+report that the terminating scenario reaches the variable's upper clip
+before its own mean termination year, so that the comparison is
+compressed from above by a bound rather than by a mechanism.
+\todo{PENDING CAMPAIGN: horizon-matched corruption comparison at the
+campaign $N$, with the clip year stated for each scenario.}
+
+\subsection{Boundary-Pinned Metrics}
+Corruption is pinned at a boundary for three of the seven encodings.
+Germany reaches exactly zero, Chile reaches exactly zero, and the 2008
+Myanmar encoding reaches the upper clip of one, in each case before the
+end of the period over which it is observed. Any figure plotting
+corruption across all seven scenarios therefore contains flat lines at
+both bounds, and those flat segments carry no information about the
+encodings. Every corruption figure in this paper marks the year at which
+each series reaches a bound.
+\todo{PENDING CAMPAIGN: the bound-arrival year for each of the seven
+series at the campaign $N$.}
+
+\subsection{The North-Star Composite, Decomposed}
+The composite progress score is a weighted sum of seven terms with
+weights summing to one: corruption 0.20, trust 0.15, coup 0.15,
+anti-corruption effectiveness 0.15, growth 0.15, ethnic harmony 0.10 and
+inequality 0.10. Measured at full publication scale, \textbf{three of
+those seven terms land at an identical maximal value for all four
+civilian-chain scenarios regardless of which real constitution is
+active}. Those three are the coup term, the effectiveness term and the
+growth term, which together carry 45 percent of total composite weight.
+Two of the three are civilian-chain hardcodes; the third is a ceiling
+effect in which the composite's own growth clip meets uncapped
+compounding growth. Nearly half of the composite success score is
+therefore decided before any constitution is read.
+
+This is the single most important reason the composite is reported
+decomposed and never as a headline number, and it is also the clearest
+available illustration of what this paper means by a mechanism audit.
+\todo{PENDING CAMPAIGN: the seven-term decomposition table for all seven
+scenarios at the campaign $N$.}
+
+\subsection{Global Sensitivity Analysis and Its Scope}
+\label{sec:gsa}
+Four Sobol analyses have been completed, each at 960 model runs,
+$n_{\mathrm{sample}}=64$, over a 13-parameter space at full citizen
+scale on the rule-based path. Their results are the evidence column of
+Table \ref{tab:fourconstants}. Three cautions must accompany any
+quotation of them.
+
+\begin{enumerate}
+\item \textbf{The analysis is scoped to the designed constitution.}
+The sampling bounds were authored around that constitution's own
+parameter values. Checked programmatically against every scenario's live
+values, those bounds fail to bracket the real configuration for a
+majority of parameters on several of the other encodings, and a spot
+check found that 61 percent of non-designed-constitution defaults fall
+outside the sampled region. A cross-scenario sensitivity table under one
+shared bound set would therefore sample regions that do not contain the
+scenarios' actual configurations. The engine now enforces this scope at
+run time rather than relying on a documentation note.
+\item \textbf{Precision at this sample size is marginal.} The confidence
+interval on the dominant stability index is wide relative to the
+estimate. The qualitative signal, twelve of thirteen parameters at total
+order at or below 0.008, is nonetheless unambiguous. Negative
+first-order estimates are estimator noise and are reported as not
+distinguishable from zero, never as negative sensitivity.
+\item \textbf{A zero-variance output is a finding, not a failure.}
+Scenario A's coup probability has zero variance across the whole
+parameter space, which makes Sobol indices undefined. We report the
+metric as constant by construction.
+\end{enumerate}
+
+\todo{PENDING: the two remaining sensitivity runs, a restricted-parameter
+run on the Myanmar encoding for trust, and a \texttt{coup\_risk} run,
+both of which are free to execute and are required before the
+\texttt{coup\_risk} disclosure in Section \ref{sec:encoding} can be
+quantified.}
+
+\subsection{Schema Fit, and Why the Comparator Magnitudes Cannot Drive Outcomes}
+\label{sec:schemafit}
+The parameter schema into which all seven constitutions are encoded was
+derived from the designed constitution. That is a measurement problem,
+and it is measurable. The designed constitution's schema is 1.6 to 1.8
+times larger than any real constitution's encoding, and between 35 and
+50 percent of each new country's implemented fields are self-labelled
+\texttt{GUESS}.
+
+The anti-corruption institution makes the problem concrete. It is the
+designed constitution's own invention. The three real analogues are not
+the same kind of institution: Thailand's National Anti-Corruption
+Commission investigates and prosecutes after the fact; Chile's
+Contraloría exercises an ex ante veto, preventing the act before it
+occurs; Pakistan under the encoded instrument has no such body at all.
+They differ in mechanism, not in magnitude. Collapsing them into a
+single effectiveness scalar discards exactly what distinguishes the
+constitutions, and the scalar then has to be filled from somewhere.
+Inspecting our own provenance comments, we find that two of the three
+comparator magnitudes were calibrated against \emph{outcome} measures,
+a control-of-corruption governance index and a corruption perceptions
+score, and only one was derived from constitutional text.
+
+The consequence is a constraint on the method, not a defect in the
+implementation: a magnitude calibrated from observed corruption cannot
+be used to drive a simulated corruption trajectory without circularity.
+
+\subsection{The Structurally Similar Constitutions Do Not Separate}
+\label{sec:nearwins}
+Reviewer 2 asked how well the approach would work for more similar
+constitutions. We built that test, with three independently sourced
+guardianship encodings, and we report the result, which is negative.
+
+Inside the engine, the three guardianship encodings differ in their
+year-zero intercepts and in their encoded effectiveness floors, and
+their corruption trajectories are parallel lines of identical slope,
+because the drift coefficient $\delta$ in \eqref{eq:corruption} has no
+constitutional analogue in any of the three texts and defaults to the
+same value for all three. Promoting it to a constitutional field, which
+we did, makes this visible; it does not make the encodings separate.
+
+There is an obvious remedy and we rejected it. One could source a
+per-country drift rate from each country's own observed corruption
+series. That would make the encodings separate, and it would do so by
+fitting the model to the outcome the model then claims to reproduce. A
+non-circular version would derive drift from encoded constitutional
+features, which is new modelling research rather than a revision fix.
+
+One genuine positive counter-example survives and we report it as the
+one place the encoding work demonstrably functions: on the military
+side, the anti-corruption effectiveness term tracks Thailand's real
+encoded floor at roughly nine to ten times the value produced for
+Myanmar and Pakistan. The same mechanism behaves correctly when it is
+not sitting beside a competing chain-type hardcode.
+
+The honest summary is that the approach as implemented discriminates
+between structurally opposite constitutions and does not discriminate
+between structurally similar ones, that we can say precisely which line
+of code is responsible, and that we can say what it would take to change
+that. We report this as a property of the modelling approach rather than
+as an implementation shortcoming, because the deeper cause is the
+schema-fit problem of Section \ref{sec:schemafit}: real constitutions
+are partly characterised by the absence of the designed constitution's
+inventions, and where an analogue exists it differs in mechanism rather
+than magnitude.
+
+%% =====================================================================
+\section{Instrument Validation}
+\label{sec:instrument}
+%% =====================================================================
+
+A simulation that embeds a language model has an engineering surface
+between the two that is not usually treated as a scientific object. This
+section treats it as one. We report the defects our own audit found in
+that surface, how each was found, and what each would have corrupted had
+it not been found. We state up front that this is an audit and not a
+validation: it establishes what the instrument did not warrant, not that
+the remainder is correct.
+
+\subsection{Why These Defects Survived Every Test}
+One structural fact explains the cluster. Development and all automated
+testing run on hardware without a local model server; the language model
+path executes only on a rented GPU pod. Every gate in the test suite
+therefore exercised the deterministic rule-based path, and the
+rule-based path never constructs a prompt and never parses a model
+response. Three of the defects below live in code that, before this
+revision, \textbf{had never executed once outside a paid run}.
+
+Compounding this, the continuous integration pipeline contained no test
+steps at all. It built and published the container image that the
+compute pods pull at boot, with no check of any kind, so code that did
+not compile would still ship. Builds had passed consistently for exactly
+that reason: there was nothing they could fail.
+
+\subsection{The Defects}
+Table \ref{tab:defects} lists them. Each row names what the defect was,
+how it was found, and what it would have corrupted.
+
+\begin{table*}[!t]
+\caption{Defects found by the instrument audit, in the order they were
+fixed. Commit identifiers refer to the public repository
+\cite{kanova2026repo}. ``Would have corrupted'' states the specific
+reviewer-facing quantity at risk, not a generic severity.}
+\label{tab:defects}
+\centering
+\small
+\begin{tabular}{@{}p{0.6cm}p{4.2cm}p{4.6cm}p{6.0cm}@{}}
+\toprule
+ID & Defect & How found & Would have corrupted \\
+\midrule
+D1 & The run identifier was never written. No writer existed anywhere
+     for the field, so every logged row recorded run zero.
+   & Attempting to partition the published audit trail by Monte Carlo run.
+   & The 100 runs per scenario are not separable in the shipped logs, so
+     no per-run statistic can be recomputed from them. Directly implicated
+     in the reconciliation failure of Section \ref{sec:table6}. \\
+D2 & The structured decision was never logged. The logger received the
+     full decision object and wrote only its prose rationale.
+   & Attempting to count emitted coup signals from a structured field.
+   & Every enforcement count in the submitted manuscript had to be
+     recovered by regular expression over free text. See Section
+     \ref{sec:table6}. \\
+D3 & Language-model initialisation failure silently disabled the model
+     and continued; constructing the client opens no connection, so a
+     server that was never started survived initialisation.
+   & Testing against a deliberately dead endpoint.
+   & A paid campaign would have exited successfully having written a
+     100 percent rule-based dataset under a language-model filename. \\
+D4 & Three encodings failed 100 percent of model calls. Their system
+     prompts contain a literal JSON example, and the prompt was passed as
+     a template, so a literal brace was parsed as a required variable.
+   & A circuit breaker added the same day aborted after 21 consecutive
+     failures instead of degrading silently.
+   & Any campaign including those three encodings would have produced no
+     model output at all, reported as success. \\
+D5 & Fixing D4 by passing prompt text literally broke the other four
+     encodings, which use the escaped brace convention: the model began
+     seeing and copying a literal doubled brace.
+   & Reading the model's raw output on the pod after the D4 fix.
+   & Malformed decision blocks in 28 of 49 role prompts, with downstream
+     parse failures. \\
+D6 & Continuous integration had no test steps.
+   & Reading the workflow definition after D4.
+   & Every green build in the project's history was uninformative about
+     code quality. \\
+D7 & Prompt pre-suppression. The five enacted encodings instructed the
+     model that a coup signal had no constitutional basis; the two
+     original encodings did not.
+   & A systematic read of all 49 role prompts prompted by the principal
+     author's instruction that every constitution be treated on the same
+     terms.
+   & The central measurement. Telling a model that an act is impossible
+     under an encoding and then reporting that the encoding prevents the
+     act is circular, and it disables the validator, which can only
+     intercept a signal that is emitted. \\
+D8 & The anti-corruption effectiveness floor was applied after its
+     consumer rather than before.
+   & Tracing the corruption term's input live.
+   & The designed constitution's corruption trajectory, frozen for five
+     simulated years. See Section \ref{sec:branch}. \\
+D9 & \textbf{The decision parser accepted an ethnic-weight vector only
+     if its length was exactly eight, a hardcoded value from one country's
+     census.}
+   & One encoding running at roughly ten times the expected latency with
+     every decision flagged as a parse failure, while its raw model output
+     was valid.
+   & \textbf{A guaranteed parse failure on every decision for four of the
+     seven encodings, with the model's answer discarded and a role default
+     substituted, including the coup signal. No prior statement about what
+     those four encodings emit is evidence.} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{D9 in Detail, and What It Invalidates}
+D9 is the one with consequences for claims rather than for operations,
+so we state it precisely. An earlier fix had generalised the CVES L1
+\emph{schema} to read each constitution's own ethnic-group count, but
+the upstream \emph{parser} retained a literal length check. For any
+encoding whose count is not eight, the model's correctly formed answer
+was discarded, the role default was retained, and the schema then
+correctly rejected the default for having the wrong length. On
+persistent L1 failure the pipeline substitutes role defaults, so the
+model's coup signal was discarded along with the rest and replaced by
+the default value of false. Four of the seven encodings have an ethnic
+group count other than eight; only the two Myanmar-based encodings ever
+worked.
+
+The consequence is that observations of zero coup signals from those
+four encodings, which we had attributed to prompt pre-suppression (D7),
+were not a test of that hypothesis. D7 was real and the fix was correct,
+but D9 is a sufficient explanation on its own, and the two were never
+separated experimentally. We therefore treat all pre-fix measurements on
+those encodings as void rather than as evidence, including measurements
+recorded in our own internal notes.
+
+\subsection{Regression Coverage}
+The gap that allowed D4, D5 and D9 is now covered by a test that
+requires no GPU and no network. It renders the real prompt object for
+all 49 role prompts across all seven encodings and asserts that the
+rendered text is byte-identical to the source, that the model is never
+shown a literal doubled brace, that every example decision block parses
+as valid JSON, and that the exact decision block each encoding instructs
+its model to emit survives \emph{that encoding's own} L1 parse with its
+fields intact. Verified in both directions: it passes on the current
+engine and fails on 21 of 49 prompts against the pre-fix construction,
+so it would have caught D4 before a pod was rented. Writing it
+immediately surfaced a further defect, one role in one encoding
+declaring an eight-element ethnic vector against its own encoded count
+of zero. Continuous integration now runs this test, the compile sweep,
+all seven encodings' validation, the systems diagnostic, the suppression
+boundary, the composite decomposition and all seven scenarios end to
+end, and the image build depends on that job passing.
+
+\subsection{How This Should and Should Not Be Read}
+It should be read as follows: an instrument that can pre-determine its
+own output is a general hazard in this class of work, the hazard is hard
+to see because its symptom resembles success, and we found ours by
+auditing our own code adversarially against our own published claims.
+Four of the nine defects were found only because a fail-loud control
+added earlier the same day converted a silent degradation into a visible
+abort, which is itself a transferable design lesson.
+
+It should not be read as a claim that the instrument is now validated.
+Nine defects found is evidence about a search, not about a residual. The
+specific items we know remain open are listed in Section
+\ref{sec:limitations}.
+
+%% =====================================================================
+\section{Results}
+\label{sec:results}
+%% =====================================================================
+
+\todo{SECTION STATUS: the reconciliation subsection below is complete
+and final. Every other subsection is a skeleton whose numbers come from
+the campaign. The campaign roster is itself pending: the decision to
+exclude the designed constitution from the paid runs and the pre-flight
+finding that it is currently the only encoding observed to produce an
+enforcement record are in tension, and that tension is unresolved
+because the observation predates the D9 fix and is therefore void. Do
+not populate any number below from the superseded dataset.}
+
+\subsection{Reconciling the Published Enforcement Record}
+\label{sec:table6}
+The submitted manuscript reported that CVES intercepted 4,176
+constitutionally prohibited coup signals under Scenario A, described
+that interception as complete with zero uncorrected signals, and
+reported 6,006 permitted coup signals under Scenario C. \textbf{The
+completeness claim was not supported and we withdraw it.} This
+subsection reports what the shipped audit trail actually supports, and
+why the original figures were unreliable in a way that is itself a
+methods result.
+
+Because of defect D2, the structured decision was never logged, and the
+published counts were recovered by regular expression over free-text
+reasoning. A regular expression over prose counts whatever it matches,
+and three defensible patterns give three materially different answers
+from the same file (Table \ref{tab:counting}).
+
+\begin{table}[!t]
+\caption{Counting-rule sensitivity on the shipped audit trail of the
+original submission. The same file yields three different answers
+depending on the pattern. The published Scenario A figure of 4,570 sits
+between the loose and strict counts; the published Scenario C figure of
+6,009 is within one percent of the loose count, indicating that the
+original analysis counted mentions rather than decisions.}
+\label{tab:counting}
+\centering
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Counting rule & Scenario A & Scenario C \\
+\midrule
+Mentions ``coup'' anywhere in the reasoning   & 23,383 & 10,378 \\
+A positive coup signal appears anywhere       &  4,866 &  6,069 \\
+The delimited decision block itself is positive & \textbf{4,192} & \textbf{4,197} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Counted strictly, against the decision actually emitted, the
+reconciliation is given in Table \ref{tab:reconciliation}: 4,192 emitted
+against 4,176 intercepted, a gap of 16 signals or 0.38 percent, and an
+interception rate of 99.62 percent. The gap is therefore an order of
+magnitude smaller than the 8.6 percent a loose count implies, but it is
+not zero, and the completeness claim remains unsupported.
+
+\begin{table}[!t]
+\caption{Strict reconciliation of emitted against intercepted coup
+signals, Scenario A, shipped audit trail of the original submission.
+Role identifiers are normalised across the two logs, which use display
+names in one and role identifiers in the other.}
+\label{tab:reconciliation}
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Role & Emitted & Intercepted & Gap \\
+\midrule
+Chief Justice          & 3,732 & 3,690 & $+42$ \\
+President              &   269 &   265 & $+4$ \\
+Senior General         &   133 &   163 & $-30$ \\
+Anti-corruption Director & 57 &    57 & $0$ \\
+Central Bank Governor  &     1 &     1 & $0$ \\
+\midrule
+Total                  & \textbf{4,192} & \textbf{4,176} & \textbf{$+16$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The residual has a mechanical cause rather than being noise, and the
+evidence for that is the sign pattern: two roles show more emissions
+than interceptions while one shows 30 more interceptions than emissions,
+which no under-logging story can produce. When CVES L2 intercepts a
+violation it logs the violation and re-prompts the agent, and the
+decision finally written to the decision log is the post-correction one.
+Where the re-prompt replaced the text, the violation is recorded with no
+matching emission. That is precisely the signature observed on the one
+role whose prompt grants explicit latitude to signal.
+
+Exact reconciliation on this dataset is impossible, and that is now a
+stated limitation rather than an open defect: the coup signal was never
+logged as a field (D2) and the run identifier was never written (D1).
+Both are fixed. On the re-run, reconciliation becomes a join on run,
+year and agent rather than a regular expression, and the residual either
+closes or becomes individually attributable.
+\todo{PENDING CAMPAIGN: the structured-join reconciliation at the
+campaign $N$, replacing Tables \ref{tab:counting} and
+\ref{tab:reconciliation} as the primary enforcement record while those
+tables are retained as the account of the superseded dataset.}
+
+Two corrections follow for figures carried over from the submitted
+manuscript. The Scenario C figure of 6,009 permitted signals must not be
+reused; it is a loose count, and the strict figure for the same dataset
+is 4,197. And the near-equality of the two strict emission totals, 4,192
+and 4,197, is itself the point of the controlled comparison: the same
+behaviour, at very different rates per decision, is annulled with
+article attribution under one encoding while no encoded provision
+renders it invalid under the other.
+
+\subsection{Differential Constraint on the Controlled Pair}
+\todo{PENDING CAMPAIGN: the headline enforcement result at the campaign
+$N$ with structured logging. Required quantities: emitted and
+intercepted coup signals per scenario and per role, the interception
+rate with its residual, the per-decision emission rate for each arm, and
+the count of enforcement records produced by each encoding in the final
+roster. State the article label attached to each interception and whose
+article numbering it is.}
+
+\subsection{Scenario Trajectories and Termination}
+\todo{PENDING CAMPAIGN: trajectories for the seven indicators across
+the final roster at the campaign $N$, with the bound-arrival year marked
+on every series that reaches a bound.}
+
+The submitted manuscript reported that the 2008 Myanmar encoding
+terminates in coup collapse at a mean simulated year of 16.6 with a
+standard deviation of 0.96, in 100 percent of runs. That figure is
+superseded by the accumulated fixes and must be recomputed; a free
+rule-based survey at full citizen scale and reduced $N$, taken before
+several of the fixes in Section \ref{sec:instrument} landed, gives a
+provisional mean near 15.3, which moves toward rather than away from the
+real-world anchor.
+\todo{PENDING CAMPAIGN: the mean final year and standard deviation for
+every terminating scenario at the campaign $N$. Until then no collapse
+year is stated as final anywhere in this paper. Note for the drafting
+team: the mean count of internet shutdowns before collapse is a
+different quantity from the collapse year and has been conflated with it
+repeatedly; it must never be printed as a year.}
+
+We retain the submitted manuscript's own characterisation of the
+historical comparison. The 2008 Constitution was promulgated in 2008 and
+the elected government it produced was overthrown by coup in 2021,
+approximately 12.7 years later. We report the correspondence between
+that interval and the simulated termination interval only as a weak
+plausibility check on the encoding, not as validation. The simulated and
+historical timelines are not commensurable, because the model abstracts
+away the specific triggers, actors and contingencies of the actual
+transition. Establishing genuine external validity requires backtesting
+against a constitution with a documented post-adoption trajectory, and
+the next subsection reports our attempt at that and its outcome.
+\todo{PENDING DECISION: the Myanmar anchoring convention is unresolved.
+Promulgation to coup is 12.68 years; the operative instrument from 2011
+to 2021 is 10.01 years. Whichever is chosen must be applied identically
+to Pakistan, where the corresponding intervals are 14.61 and 13.92
+years.}
+
+\subsection{Historical Backtesting on a Restricted Subset of Outputs}
+Reviewer 1 observed that historical backtesting, even for a restricted
+subset of model outputs, would strengthen the evidence. We read that as
+licensing fewer \emph{metrics}, not fewer \emph{cases}, and we therefore
+report the chosen output set for all five enacted encodings including
+where it fails.
+\todo{PENDING CAMPAIGN: the backtest table. Rows: all five enacted
+encodings. Columns: simulated value, real-world observation, source, and
+an explicit verdict including failures. The provisional free-run survey
+at reduced $N$ indicates that one case matches its real duration
+closely, one survives the full horizon as it did historically, one makes
+an out-of-sample prediction beyond its real observation window, and one
+over-survives its real duration by roughly 60 percent. None of those
+four statements may be printed until the campaign confirms them at the
+publication $N$.}
+
+No survival prediction is claimed for any polity. The collapse mechanism
+is deliberately symmetric across scenarios, with an identical threshold
+and an identical success roll, which preserves the experimental control
+and simultaneously limits what the mechanism can represent. We report
+that as a scope limit of the mechanism rather than as a result.
+
+\subsection{Information Suppression Dynamics}
+\todo{PENDING CAMPAIGN: suppression counts and the terminal VPN floor
+for every scenario in the final roster, at the campaign $N$.}
+The qualitative mechanism is \eqref{eq:vpn}: within the simulation,
+repeated suppression raises the floor on effective openness, so
+suppression becomes self-defeating over time, which is consistent with
+observed circumvention behaviour \cite{accessnow2023keepiton}.
+
+\subsection{Substrate Comparison}
+\todo{PENDING CAMPAIGN: the final-year indicator table under the
+language-model elite layer against the deterministic rule-based layer,
+for every scenario in the final roster, with the Mann-Whitney result for
+each indicator. The submitted manuscript reported a maximum difference
+below 0.003 across all indicators; that comparison must be re-executed
+because every component of the pipeline downstream of the elite layer
+has changed.}
+
+\subsection{The L2 Ablation}
+\todo{PENDING CAMPAIGN: the enforce-versus-observe ablation of the
+constitutional layer on a civilian-chain scenario. Pre-committed
+reporting position, decided before the run and recorded here so that it
+cannot be chosen after the result is seen: if the ablation shows that
+the suppression of coup probability under the designed constitution is
+produced by the validator rather than by the constitutional provision,
+that is the finding and it will be reported as such, and the mechanism
+narrative in the submitted manuscript's discussion is withdrawn
+accordingly. The ablation must run on a civilian chain, because on a
+military chain the measured difference is structurally zero: that
+encoding reaches no live L2 rule.}
+
+%% =====================================================================
+\section{Discussion}
+\label{sec:discussion}
+%% =====================================================================
+
+\subsection{The Role of the LLM Layer: A Control Condition and a Provenance Mechanism}
+\label{sec:llmrole}
+Both reviewers independently asked what the generative component
+contributes, one framing it as a disjunction between materially
+contributing to outcomes and primarily serving as a decision-provenance
+and runtime-validation mechanism, the other observing that the layer is
+only weakly connected to the main results and asking that its role be
+demonstrated more clearly. We take the second horn of the disjunction
+and we evidence it, while noting that the reviewer posed a question
+rather than endorsing an answer.
+
+\subsubsection{We accept the premise, and we derive it rather than report it}
+Within the reported dynamics the generative layer does not determine
+aggregate outcomes, and we do not claim it does. More than that: the
+invariance is entailed by the coupling design and we state the
+derivation rather than presenting the invariance as a discovery. The
+layer's total influence on the simulation is three quantities. The first
+is a single scalar bounded to $[0, 0.15]$ by \eqref{eq:coupling} and
+consumed as a multiplicative term on a transfer that is itself a
+fraction of income. The second is an ethnic-weight vector explicitly
+normalised to mean one before consumption, so its mean is destroyed by
+construction and only relative dispersion survives. The third is a
+boolean that a civilian chain suppresses, with a second lock at the
+aggregation stage in addition to CVES L2. A bounded scalar, a
+mean-normalised vector and a boolean suppressed on four of seven
+encodings cannot move aggregate indicators far, and the magnitude of the
+observed invariance is the arithmetic consequence of that coupling.
+
+Reporting this as a negative result about generative agents in
+governance simulation generally would be an over-claim, and the
+submitted manuscript came closer to that than it should have. It is a
+property of \emph{this model's} coupling. We report it as such, and we
+credit the derivation to our own audit.
+
+\subsubsection{What the layer does contribute}
+Three things, in descending order of defensibility.
+
+First, \textbf{it is the only substrate that generates the phenomenon
+CVES governs}. A deterministic rule-based elite cannot emit a coup
+signal under a civilian-supremacy encoding, because the rule path does
+not produce one; the generative elite does, which is what the validator
+detects, attributes to an article and annuls, producing an enforcement
+record that fixed rules cannot generate. The enforcement record is the
+object of study, and it has no rule-based counterpart. This is the
+sense, and the only sense, in which the generative layer is necessary to
+this paper's central claim.
+
+Second, \textbf{it supplies interpretable decision provenance}. Each
+decision carries a natural-language rationale of roughly 260 reasoning
+tokens, and the shipped audit trail records, per decision, the
+conditions at decision time, the structured decision itself since the
+fix for D2, the validation outcome at each of the four layers, and, on
+interception, the article cited and the re-prompt that followed. The
+layer is a runtime-validation harness with an audit trail.
+
+Third, \textbf{it is a control condition}. Because the rule-based path
+produces materially identical aggregate outcomes, a difference between
+scenarios cannot be attributed to language-model idiosyncrasy. Within
+the simulation it must be attributed to the configuration, and Section
+\ref{sec:mechanism} then establishes how much of that configuration is
+constitutional content and how much is engine constant. A
+single-substrate design could not support the first inference at all.
+
+\subsubsection{The honest cost of this position}
+Taking the provenance horn invites a sharper follow-up question: if the
+generative component does not determine outcomes, why is it a
+contribution at all? Our answer is that the enforcement record is the
+contribution and the generative layer is its necessary substrate, and
+that a validator with nothing to validate is not a validator. We also
+state the limitation plainly: the elite-to-citizen coupling is weak by
+construction, so the layer's influence on indicators is small by design,
+and strengthening that pathway is the priority for the next iteration of
+the engine. That is a design choice we are disclosing, not a result we
+are defending.
+
+Finally, D7 in Section \ref{sec:instrument} is directly relevant here
+and we place it rather than bury it. Before this revision, the prompts
+for five of the seven encodings instructed the model not to emit the
+very signal the validator exists to intercept. Any earlier statement
+about what the generative layer contributes under those five encodings
+was partly a statement about our prompts. That is now fixed, and what
+those encodings emit under symmetric prompts is a measurement reported
+in Section \ref{sec:results}.
+
+\subsection{Threats to Validity and Scope of Claims}
+\label{sec:threats}
+
+\emph{Self-design bias.} Scenario A is an authored constitution. As the
+author of the MFU constitution, an inherent self-design bias exists.
+Results should be interpreted as demonstrating constitutional parameter
+sensitivity rather than normative superiority of any governance
+framework. We make no claim that the MFU is optimal or superior; the
+paper's claims are methodological and architectural. The MFU serves as
+one pole of a deliberately extreme pair chosen to stress-test whether
+the pipeline can discriminate constitutions, and the 2008 encoding is a
+faithful, real-document anchor. Two further points reinforce this scope
+rather than soften it. First, Section \ref{sec:schemafit} reports that
+the parameter schema is itself the designed constitution's own
+vocabulary, so a real constitution is partly scored on the absence of
+that constitution's inventions, which is a measurement artifact and not
+a finding. Second, Section \ref{sec:branch} reports a defect whose
+correction moved the designed scenario's outcome in its own favour, and
+we flag that direction explicitly. The addition of externally sourced
+constitutions to the roster is a test of the instrument's coverage and
+must not be read as evidence for the designed constitution's merits.
+
+\emph{Confounders: culture, geopolitics, history, economics.} Encoding a
+constitution abstracts away the context in which real constitutions
+operate. We do not claim that any real country's trajectory is explained
+by its constitution alone, and \textbf{none of the causal language in
+this paper should be read as extending beyond the simulation}. Within
+the controlled pair, the external layer and the population are held
+identical, so these factors are controlled for rather than ignored, and
+the constitution is the only manipulated variable by design. For the
+five enacted encodings this is explicitly not the case: each runs with
+its own real geography and its own external context, which is a
+deliberate realism choice that forecloses the controlled reading.
+
+\emph{Article labelling.} The article labels written into the
+enforcement record are the designed constitution's numbering. An
+interception under another encoding therefore carries a label that
+belongs to a different document. Reading those labels from the active
+constitution requires machine-readable article-number fields that the
+encodings do not yet carry, and is identified as required future work.
+Until it lands, we do not claim per-article attribution over
+historically enacted constitutions.
+
+\emph{Single-model dependence.} Outcomes are conditioned on a single
+3B-parameter model; behaviour under larger or different models is a
+separate question, and one with a known risk attached, since the
+pipeline's re-prompt rate and statistical band are implicitly calibrated
+to this model's output variance.
+
+\subsection{Limitations}
+\label{sec:limitations}
+Beyond the threats above, the following are open and are stated as
+limitations rather than resolved.
+
+\begin{enumerate}
+\item \textbf{The approach does not separate structurally similar
+constitutions} (Section \ref{sec:nearwins}). The route that would make
+them separate is circular and was rejected.
+\item \textbf{Two of three constitutional-layer rules are unreachable}
+under the present decision schema, one because no component produces the
+field it tests, one because an upstream clip makes it structurally
+redundant (Section \ref{sec:cves}).
+\item \textbf{The theory-alignment components are skipped} for the four
+encodings with fewer than two encoded ethnic groups.
+\item \textbf{Corruption is pinned at a boundary for three of seven
+encodings.}
+\item \textbf{The real tax schedules are encoded and inert}, not used,
+for at least three encodings, because the income generator's ceiling
+sits below their real exemption thresholds. We disclose this rather than
+rescale the schedules to fit the engine.
+\item \textbf{The ethnicity-to-archetype assignment matrix is still
+drawn from one country's census for all seven encodings}, so no
+cross-country claim involving ethnic harmony is made anywhere in this
+paper.
+\item \textbf{A rights-violation drop in trust is encoded, differentiated
+across constitutions, and structurally unreachable} on civilian chains,
+because the chain rules set the triggering flag to false
+unconditionally. Real encoding work with no mechanical effect, reported
+rather than removed.
+\item \textbf{Several year-zero calibration fields remain anchors rather
+than observations.} Where a defensible real observation existed we moved
+to it and said so; where none did, the field is labelled an explicit
+calibration anchor with its rationale. We specifically did not retrofit
+a coincidental numerical match as a citation: a brute-force search over
+roughly two thousand candidate transformations of a governance panel
+hits any two-decimal target by chance, and hitting it is not provenance.
+\item \textbf{The container image does not install from the pinned
+dependency file}, so the image's installed versions can drift from the
+pinned set. This is a known reproducibility defect, deliberately not
+changed immediately before a paid campaign, and scheduled for
+remediation before the reproducibility package is archived.
+\todo{PENDING: confirm this is closed before submission, or keep it as a
+stated limitation.}
+\end{enumerate}
+
+%% =====================================================================
+\section{Reproducibility}
+\label{sec:repro}
+%% =====================================================================
+
+Reviewer 1 asked specifically for constitutional encodings, parameter
+values, random seeds, LLM configuration, prompts, CVES rules and
+statistical procedures. Each is addressed below, including where the
+answer is a limitation.
+
+\emph{Code and encodings.} The simulation is implemented in Python with
+Mesa \cite{kazil2020mesa}, LangChain \cite{chase2022langchain}, NumPy
+\cite{harris2020array}, pandas \cite{mckinney2010data}, SciPy
+\cite{virtanen2020scipy} and SALib \cite{herman2017salib}; figures use
+Matplotlib \cite{hunter2007matplotlib}. All seven constitutional
+encodings are released as readable source modules with per-field
+provenance comments and explicit confidence tags
+\cite{kanova2026repo}.
+
+\emph{Parameter values and provenance.} A provenance table covers every
+year-zero field for all seven encodings, naming the instrument, the
+observation, the year and the entity, and flagging every field for which
+no retrievable observation exists. Governance index point estimates are
+re-estimated at each release of their source, so the reproducibility
+package ships the frozen data extract rather than a download
+instruction.
+
+\emph{Random seeds.} Each Monte Carlo run is seeded from its run
+identifier, and the run identifier is now written into every logged row.
+It was not, at the time of the original submission, which is defect D1:
+the shipped logs of that submission carry a constant run identifier and
+cannot be partitioned by run. \textbf{We correct the submitted
+manuscript's statement that all runs are seeded}, which was true of the
+simulation and false of the audit trail, and we report both facts. In
+addition, determinism under the language-model path is bounded rather
+than guaranteed: we deliberately do not enable parallel decoding,
+because batched decode changes floating-point reduction order and would
+put per-seed reproducibility at risk, and we report the model server's
+observed seed behaviour explicitly.
+\todo{PENDING: the determinism check result, one run identifier executed
+twice with the decision logs diffed ignoring timestamps.}
+
+\emph{LLM configuration.} The model, the serving stack, the context
+length, the per-call parameters and the exact model digest are recorded
+in the run log of every campaign and are reported in the package.
+\todo{PENDING CAMPAIGN: model digest, server version, context length and
+measured per-call latency of the campaign pod.}
+
+\emph{Prompts.} All 49 role prompts across the seven encodings are
+released verbatim. The prompt-symmetry change described in Section
+\ref{sec:method} is published as a diff, so that a reader can see
+exactly which instructions were removed and verify that every factual
+constitutional description was retained.
+
+\emph{CVES rules.} The four layers, the three constitutional rules, the
+schema, the clamping ranges and the re-prompt policy are released as
+source, and the reachability of each rule is documented in Section
+\ref{sec:cves} rather than left to inspection.
+
+\emph{Statistical procedures.} Tests, sample sizes and the sensitivity
+analysis configuration are given in Sections \ref{sec:metrics} and
+\ref{sec:gsa}, with the scope restriction on the sensitivity analysis
+stated explicitly.
+
+\emph{Audit trails.} CVES writes append-only JSONL logs of violations
+and layer scores, and the elite decision log records the structured
+decision, the conditions at decision time and the run identifier.
+Reconstructing the enforcement record from these files is a join rather
+than a text search, and the exact reproduction procedure for the
+superseded dataset's reconciliation is published alongside it.
+
+\emph{Continuous integration.} The test suite described in Section
+\ref{sec:instrument} runs on every commit and gates the container image
+build.
+
+%% =====================================================================
+\section{Disclosure of Generative-AI Use}
+\label{sec:aiuse}
+%% =====================================================================
+
+\todo{PENDING FACTUAL DETERMINATION BY THE AUTHORS. The paragraph below
+is a template with the correct structure and scope. Every factual claim
+in it must be confirmed by the author who produced each artifact before
+submission, and any statement that is not confirmed must be removed
+rather than softened. In particular the figure provenance question,
+whether any of the schematic figures were produced or substantially
+modified with a generative tool, has not yet been answered by anyone and
+the reviewer asked about it explicitly.}
+
+Generative AI is used inside the object of study: the elite agent layer
+is a locally hosted Llama 3.2 3B model, and its role, configuration and
+outputs are described in Sections \ref{sec:method} and
+\ref{sec:instrument} and released in full. Separately, and as required
+by IEEE Access policy, we disclose the use of generative-AI tools in
+preparing this manuscript and its artifacts.
+\todo{PENDING: state, per artifact class, whether a generative tool was
+used: (a) the schematic figures, (b) the data figures, (c) manuscript
+prose, (d) source code. For each, name the tool and the extent, and
+state that the authors reviewed and take full responsibility for the
+content. Data figures are regenerated directly from model output by
+scripts released with the package.}
+
+%% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%% =====================================================================
+
+Ka-Nova demonstrates that a national constitution can be encoded as a
+typed, validated, computable parameter set and executed as a multi-decade
+controlled experiment, governed at run time by CVES, a four-layer
+validation pipeline that makes free-form generative elite decisions
+usable as data and produces an auditable, article-attributed enforcement
+record. On a controlled pair sharing population, shocks, external layer
+and generative substrate, the same elite act is annulled with article
+attribution under one encoding and propagates uncontested under the
+other, recoverable per decision from the shipped log.
+
+The second half of the contribution is the audit of that instrument by
+its own authors. We report, with file and line, which of our published
+quantities are produced by constitutional content and which by
+engine-level constants; we report that the approach does not separate
+structurally similar guardianship encodings and why the obvious remedy
+is circular; we quantify the sensitivity of our own enforcement counts to
+the counting rule and withdraw the completeness claim that rested on
+them; and we report a defect that silently discarded the language
+model's decision for four of seven encodings, together with the
+regression coverage that now prevents its recurrence. We report no
+standardised effect size anywhere, because all four previously published
+separations are accounted for by modelling constants that we name.
+
+The systems in Table \ref{tab:positioning} were selected to span the
+design space along four capabilities relevant to Ka-Nova: a
+population-scale agent layer; LLM-based deliberative agents; encoding of
+a constitution as executable parameters; and runtime validation of agent
+decisions against those parameters. Candidate systems were drawn from
+the agent-based-modelling, generative-agent and computational-policy
+literatures surveyed in Section \ref{sec:related}, and a system was
+included when it was a peer-reviewed or archival framework that
+instantiated at least one of the four capabilities, so that the
+comparison exercises each column.
+
+\subsection{Future Work}
+Four items are prerequisites rather than extensions. Reading article
+labels from the active constitution, which requires machine-readable
+article-number fields in each encoding and which is the condition on any
+per-article attribution claim over enacted constitutions. Making a
+second constitutional rule reachable by wiring a rights-violation field
+through schema, parser and prompts, which would make that rule live for
+the two encodings with non-suspendable rights. Strengthening the
+elite-to-citizen coupling, which is weak by construction and is the
+reason the substrate comparison is uninformative about the generative
+layer's value. And deriving per-country institutional drift from encoded
+constitutional features rather than from observed outcomes, which is the
+only non-circular route by which structurally similar constitutions
+could separate, and which is new modelling research rather than an
+engineering fix.
+
+%% =====================================================================
+\section*{Author Contributions}
+%% =====================================================================
+
+K.H. conceived and designed the CVES framework. S.J. implemented the
+L1-L4 pipeline and conducted agent validation. D.P. encoded the 2008
+Myanmar constitutional parameter set and contributed the systematic
+literature review underpinning Section \ref{sec:related}. M.S.R.
+supervised the work and reviewed the methodology and the claim scope.
+
+%% =====================================================================
+\section*{Acknowledgment}
+%% =====================================================================
+
+The authors gratefully acknowledge the University of Hertfordshire and
+PSB Academy for supporting this research.
+\todo{PENDING: confirm with the supervising author whether the Stage-8
+acknowledgment revisions constitute a byline change requiring the IEEE
+Request for Byline Change form. Do not alter the Author Contributions
+statement above in either direction without that determination.}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\EOD
+
+\end{document}
