@@ -33,6 +33,7 @@ logger = logging.getLogger("ka_nova.elite_v3")
 try:
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
+    from langchain_core.messages import SystemMessage, HumanMessage
     from langchain_openai import ChatOpenAI
     LANGCHAIN_AVAILABLE = True
 except ImportError:
@@ -1011,12 +1012,30 @@ class EliteAgentLayerV3:
         )
 
     def _invoke_llm(self, system_prompt: str, user_message: str) -> str:
+        # Both messages are passed as literal Message objects rather than as
+        # ("system", text) tuples. A tuple is parsed by LangChain as an
+        # f-string TEMPLATE, so any literal brace in the prompt becomes a
+        # required variable and every call raises before reaching the model.
+        # Three constitutions ship a JSON schema example in their own
+        # ELITE_SYSTEM_PROMPTS (South Korea, Pakistan, Chile), so {"budget_
+        # weight"} was read as a variable named '"budget_weight"' and all 7
+        # roles failed on all 3 scenarios, 100 percent of calls. Measured on
+        # the pod: South Korea and Chile produced zero successful LLM calls.
+        # A, C, Thailand and Germany happened to carry no literal braces,
+        # which is why the defect stayed hidden through every rule-based test
+        # (the Mac has no Ollama, so this path never executed locally).
+        #
+        # Escaping the braces in those three files would fix today and break
+        # again the next time a constitution is encoded with a JSON example.
+        # Literal messages remove the failure mode entirely, and the text
+        # reaching the model is byte-identical for the four scenarios that
+        # already worked, so this changes no published prompt content.
         prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "{user_message}"),
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_message),
         ])
         chain = prompt | self._llm | StrOutputParser()
-        return chain.invoke({"user_message": user_message})
+        return chain.invoke({})
 
     def step(self, shared_data: dict, year: int, scenario: str) -> None:
         """
