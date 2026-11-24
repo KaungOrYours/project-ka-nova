@@ -798,7 +798,35 @@ class KaNovaModelPhase3(Model):
         They now come from the active constitution at identical values, so
         this is byte-identical by construction. The branch itself remains,
         and remains real — it is disclosed in the paper rather than hidden.
+
+        The IIG floor below is enforced HERE, before the corruption term
+        reads iig_effectiveness. It used to sit at the end of this method,
+        after the per-state loop had already consumed the value, so the
+        floor was applied to a number nothing would read again until the
+        following year.
+
+        It mattered for exactly one scenario and it mattered a lot. Step 7
+        of the year (iig_system.annual_operations) overwrites
+        iig_effectiveness with the real computed value, which is 0.0 before
+        any investigation resolves. Every other constitution encodes an
+        iig.EFFECTIVENESS_FLOOR that props it back up (Germany 0.70, South
+        Korea 0.30). MFU encodes none, so Scenario A — the constitution
+        whose entire anti-corruption claim rests on an effective IIG — read
+        0.0 here for its first five years and applied no corruption
+        reduction at all.
+
+        Measured before this fix, Scenario A at seed 42: iig as read was
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.025, ...] and corruption_index was
+        frozen at 0.8976 for exactly those five years. This is a real
+        behavioural fix and is NOT byte-identical for Scenario A, which is
+        why it is committed separately from the coefficient promotion.
         """
+        if self.chain_type == "civilian":
+            year_bonus = 0.01 * (self.current_year / max(1, self.max_years))
+            floor = min(0.30 + year_bonus, 0.40)
+            if self.shared_data.get("iig_effectiveness", 0.30) < floor:
+                self.shared_data["iig_effectiveness"] = floor
+
         sim = self.CONSTITUTION.simulation
         # getattr with the historical literal as fallback: a constitution that
         # predates these fields still runs, and still runs the same.
@@ -842,13 +870,6 @@ class KaNovaModelPhase3(Model):
             avg_corruption = sum(s["corruption"] for s in self.states.values()) / len(self.states)
             self.shared_data["corruption_index"] = round(float(avg_corruption), 4)
 
-        # IIG effectiveness floor — enforce after all other writes
-        if self.chain_type == "civilian":
-            year_bonus = 0.01 * (self.current_year / max(1, self.max_years))
-            floor = min(0.30 + year_bonus, 0.40)
-            current = self.shared_data.get("iig_effectiveness", 0.30)
-            if current < floor:
-                self.shared_data["iig_effectiveness"] = floor
 
     def _update_north_star_progress(self):
         """
