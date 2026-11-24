@@ -1705,7 +1705,7 @@ You are appointed by the President on the advice of the Prime Minister (Art. 92)
 Key economic parameters under this instrument:
 - CRONY_CAPITAL_SHARE={crony_share} — patronage-connected interests capture a real share of budget allocation
 - RESOURCE_FEDERAL_DEV_SHARE={fed_dev_share} — the federal government controls {int(fed_dev_share*100)}% of resource revenue (Art. 160-161 National Finance Commission)
-- RESOURCE_STATE_SHARE={state_share} — provinces receive {int(state_share*100)}% (a REAL, constitutionally-anchored share, unlike Myanmar's near-zero provincial share — Art. 161's well-head-royalty-to-producing-province rule is a genuine federal revenue-sharing mechanism)
+- RESOURCE_STATE_SHARE={state_share} — provinces receive {int(state_share*100)}% (a REAL, constitutionally-anchored share — Art. 161's well-head-royalty-to-producing-province rule is a genuine federal revenue-sharing mechanism)
 - GINI_THRESHOLD={gini_threshold} — the Art. 29-40 Principles of Policy promoting social/economic well-being are explicitly NON-JUSTICIABLE (Art. 30(2)), so redistribution is a political choice, not a legal obligation
 
 You have seen the Army Chief's assessment. Weigh provincial NFC-award obligations against patronage and crony pressures when setting budget_weight.
@@ -1744,7 +1744,7 @@ Note precisely: the Eighth Amendment, s.18, OMITTED Art. 152-A (the constitution
 Institutional reality (nearest constitutional integrity organ, for contrast):
 - REPORTS_TO="{reports_to}" is the Auditor-General's constitutional reporting line (Art. 168-171) — NOT yours; you sit outside that structure entirely
 - ANTI_CORRUPTION_OBJECTIVE={anti_corr} describes the Auditor-General's real (if narrow) audit mandate — your own mandate is intelligence and security, not anti-corruption
-- REGIME_PROTECTION_OBJECTIVE={regime_protect} — unlike Myanmar's constitutionally-embedded military-intelligence regime-protection framing, no such objective is textually assigned to any body here; your priorities are a matter of institutional practice, not constitutional design
+- REGIME_PROTECTION_OBJECTIVE={regime_protect} — no such objective is textually assigned to any body here; your priorities are a matter of institutional practice, not constitutional design
 
 You have seen all prior assessments. Assess whether current protest, provincial unrest, or external pressure warrants escalation.
 
@@ -1784,7 +1784,7 @@ Real historical pattern you are reasoning within: four governments were dismisse
 Parameters:
 - PRESIDENT_EXECUTIVE_POWER={pres_exec_power} — the President holds real, not ceremonial, executive authority alongside you
 - PRESIDENT_MAX_TERMS={pres_max_terms} — a constraint on the President, not on you (no PM term-limit is documented)
-- MILITARY_SEAT_PERCENTAGE={mil_seat_pct} — unlike Myanmar, there is no reserved military bloc in the Assembly whose confidence you must separately manage
+- MILITARY_SEAT_PERCENTAGE={mil_seat_pct} — there is no reserved military bloc in the Assembly whose confidence you must separately manage
 
 You have seen all five prior assessments. Assess whether your government's current standing (budget posture, provincial relations, NA confidence) is secure against Art. 91(5)/58(2)(b) dismissal risk this year.
 
@@ -1805,7 +1805,7 @@ Your constitutional powers are real and extensive, but textually distinct from a
 - Art. 41(6): the validity of your own election cannot be questioned by any court.
 - Art. 270A: all martial-law-era acts (1977-1985, including the instrument that put you in office) are retrospectively immunised and deemed good faith.
 
-Note precisely: the Eighth Amendment, s.18, DELETED Article 152-A (the National Security Council) — you have no constitutional NSC-equivalent body to consult or to answer to; your discretion under Art. 48(2)/58(2)(b) is personally exercised. MILITARY_SEAT_PERCENTAGE={mil_seat_pct} — unlike Myanmar, you have no reserved legislative bloc; your leverage is entirely in the dissolution/non-justiciability package above, not in parliamentary seats.
+Note precisely: the Eighth Amendment, s.18, DELETED Article 152-A (the National Security Council) — you have no constitutional NSC-equivalent body to consult or to answer to; your discretion under Art. 48(2)/58(2)(b) is personally exercised. MILITARY_SEAT_PERCENTAGE={mil_seat_pct} — you have no reserved legislative bloc; your leverage is entirely in the dissolution/non-justiciability package above, not in parliamentary seats.
 
 Review all six prior assessments. If the Prime Minister's government is losing NA confidence, or KPIs otherwise suggest "the Government of the Federation cannot be carried on," Art. 58(2)(b) gives you a real, non-justiciable dissolution option this year. Your coup_signal must reflect your own strategic reading of these conditions — remember that NO constitutional clause authorises a self-coup here, so any reasoning toward total extra-constitutional control should be marked as going beyond what Art. 48/58(2)(b)/243 actually grant you.
 

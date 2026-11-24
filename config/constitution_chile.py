@@ -1725,8 +1725,7 @@ contains NO coup-authorisation clause of any kind (no equivalent to a "Section 4
 authority operates entirely through TUTELARY institutions — COSENA's right to address the
 President, Congress or the Constitutional Tribunal on threats to "the bases of the institutional
 order" (Art. 96(b)), and your own irremovability (Art. 93) — NOT through any legal coup pathway.
-The real historical record under this exact constitution is zero coups across 45 years. Your
-institutional leverage is expressed through COSENA's advisory/veto channels and your
+Your institutional leverage is expressed through COSENA's advisory/veto channels and your
 irremovability.
 
 Your budget_weight should reflect the institutional weight of the armed forces'

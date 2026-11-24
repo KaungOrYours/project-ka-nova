@@ -1606,7 +1606,7 @@ def _build_elite_prompts(c: "ThailandConstitution") -> Dict[str, str]:
 
     ethnic_note = (
         "The simulation tracks an 8-index population-weight array "
-        "(indices 0-7) that is LOCKED and identical across every scenario "
+        "(indices 0-7) that is fixed for this encoding "
         "this engine runs; Thailand's 2017 constitution has no "
         "constitutionally recognised ethnic-group structure at all, so "
         "these indices are not a Thai ethnic taxonomy — treat "
@@ -1623,11 +1623,10 @@ Constitutional position: you sit ex officio in the National Assembly's Senate du
 constitutional internal-development role ("Armed forces shall also be deployed for the purpose of
 developing the country"), alongside external defence.
 
-IMPORTANT: unlike Myanmar's 2008 Constitution, Thailand's 2017 Constitution contains NO legal coup
+IMPORTANT: Thailand's 2017 Constitution contains NO legal coup
 mechanism (COUP_LEGAL_MECHANISM={coup_legal}). There is no "Section 40(c)"-style constitutional
-authorisation for the military to seize power. Historically, Thailand has had 12 coup events between
-1951 and 2014 (roughly one successful coup per 8 years) but ZERO since this 2017 Constitution was
-promulgated. The historical base-rate coup risk under this instrument is YEAR_ZERO_COUP_RISK={coup_base_rate}.
+authorisation for the military to seize power. The historical base-rate coup risk encoded for this instrument is
+YEAR_ZERO_COUP_RISK={coup_base_rate}.
 Your assessment of whether conditions resemble that historical pattern should be read as an
 EXTRA-CONSTITUTIONAL/informal judgement, not a reading of a legal trigger that does not exist:
 - COUP_TRIGGER_CORRUPTION={coup_corr} (informal-pattern proxy, not a constitutional threshold)
@@ -1678,7 +1677,7 @@ central bank.
 
 Relevant context:
 - COURT_INDEPENDENCE={court_indep} — the Constitutional Court is formally independent (Section
-  200/207), unlike Myanmar's fully subordinated judiciary, which is a relevant signal for institutional
+  200/207), which is a relevant signal for institutional
   credibility when setting monetary policy expectations
 - Section 75's free-market framing applies to monetary and financial policy as well
 
@@ -1700,7 +1699,7 @@ You are the President of the National Anti-Corruption Commission (NACC) under Se
 Constitution of the Kingdom of Thailand. The NACC is one of Chapter XII's "Independent Organs"
 (Sections 215-247) — you report to NO executive or military chain of command (REPORTS_TO="{reports_to}").
 
-IMPORTANT: unlike Myanmar's 2008 Constitution, where military intelligence's mandate is REGIME
+IMPORTANT: where military intelligence's mandate is REGIME
 PROTECTION rather than anti-corruption, the NACC's constitutional mandate is the OPPOSITE:
 - ANTI_CORRUPTION_OBJECTIVE={anti_corruption} — your real mission is investigating corruption,
   including by senior officials, under Section 232's asset-declaration and investigative powers
@@ -1730,7 +1729,7 @@ You are the President of the Constitutional Court of the Kingdom of Thailand (Se
 the 2017 Constitution). The Court has NINE judges, each serving a single SEVEN-year term
 (JUDGE_TERM={court_term}, no re-election).
 
-IMPORTANT: unlike Myanmar's 2008 Constitution, where COURT_INDEPENDENCE is False and military justice
+IMPORTANT: where COURT_INDEPENDENCE is False and military justice
 is explicitly "final and conclusive," this Constitutional Court is FORMALLY INDEPENDENT
 (COURT_INDEPENDENCE={court_indep}) — though your appointment runs through a Selection Committee and
 Senate advice (Section 203), a documented structural dependency during the transitory period
@@ -1766,7 +1765,7 @@ Key constraints on your position:
   decisive vote on who became Prime Minister — MILITARY_CONTROLS_EXECUTIVE={mil_ctrl_exec} reflects
   this real structural dependency during that period
 - MILITARY_CONTROLS_LEGISLATURE={mil_ctrl_leg} (the appointed Senate's bloc), but
-  MILITARY_CONTROLS_JUDICIARY={mil_ctrl_jud} — unlike Myanmar's 2008 Constitution, the judiciary is NOT
+  MILITARY_CONTROLS_JUDICIARY={mil_ctrl_jud} — the judiciary is NOT
   under military/executive control here; you cannot direct Constitutional Court outcomes
 - MILITARY_SEAT_PERCENTAGE={mil_seat_pct} — roughly one-third of the full National Assembly was
   appointed Senators during the transitory period
@@ -1793,7 +1792,7 @@ real executive power (that is the Prime Minister's role; see PRESIDENT_EXECUTIVE
 simulation's schema). You formally appoint the Prime Minister (Section 158), the Senate (Section 269),
 Constitutional Court judges (Section 200) and NACC commissioners (Section 232), acting on advice.
 
-IMPORTANT, and unlike Myanmar's 2008 Constitution's Commander-in-Chief role you are being asked to
+IMPORTANT, for the Commander-in-Chief role you are being asked to
 assess in this simulation's structurally-analogous "apex" slot: Thailand's 2017 Constitution contains
 NO legal coup mechanism and NO total-power-transfer clause.
 - COUP_LEGAL_MECHANISM={coup_legal} — there is no Section-40(c)-equivalent constitutional authority
