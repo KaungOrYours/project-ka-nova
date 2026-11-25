@@ -1622,6 +1622,21 @@ class SimulationConfig:
     # exists — the same L4 data-coverage limitation noted throughout this file.
     YEAR_ZERO_STABILITY: float = 0.75
 
+    # FROZEN (2026-11-25), freeze-and-disclose decision for year-zero
+    # calibration: the paper is a methodology and instrument-audit paper, not
+    # an outcome paper. These four set initial conditions for outcome
+    # trajectories; they do not affect whether CVES intercepts a decision
+    # under an encoded article. Carried forward from the original submission
+    # at their exact previous literal values, not sourced, identical across
+    # all seven constitutions, and not to be reported as differentiating them.
+    # Promoted from bare literals in model_phase3.py::_initialize_shared_data
+    # so they are disclosable in the reproducibility package and reachable by
+    # the Sobol GSA instead of invisible to it.
+    YEAR_ZERO_GRIEVANCE: float = 0.60
+    YEAR_ZERO_ETHNIC_HARMONY: float = 0.35
+    YEAR_ZERO_IIG_EFFECTIVENESS: float = 0.30
+    YEAR_ZERO_BRAIN_DRAIN: float = 0.35
+
     # CONFIDENT — the structural opposite of Myanmar's SimulationConfig.
     MILITARY_CONTROLS_LEGISLATURE: bool = False
     MILITARY_CONTROLS_EXECUTIVE: bool = False

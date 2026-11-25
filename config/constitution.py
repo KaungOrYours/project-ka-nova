@@ -1386,6 +1386,35 @@ class SimulationConfig:
 
     YEAR_ZERO_ETHNIC_TENSION: float = 0.68
 
+    # FROZEN (2026-11-25). This constitution had neither field; model_phase3.py
+    # silently fell back to the generic engine defaults (0.25 coup risk, 0.18
+    # stability) via getattr whenever this file was the active constitution. A
+    # silent fallback in a reproducibility-critical path is exactly the hazard
+    # this pass exists to remove, so both are promoted here at the EXACT value
+    # the fallback already produced — zero behavioural change, Scenario A was
+    # already running on these numbers. Not sourced to MFU-specific research;
+    # not to be read as a deliberate calibration choice, only as the same
+    # generic literal made explicit instead of silent. The other six
+    # constitutions each carry their own real, cited YEAR_ZERO_COUP_RISK /
+    # YEAR_ZERO_STABILITY values and were never relying on this fallback.
+    YEAR_ZERO_COUP_RISK: float = 0.25
+    YEAR_ZERO_STABILITY: float = 0.18
+
+    # FROZEN (2026-11-25), freeze-and-disclose decision for year-zero
+    # calibration: the paper is a methodology and instrument-audit paper, not
+    # an outcome paper. These four set initial conditions for outcome
+    # trajectories; they do not affect whether CVES intercepts a decision
+    # under an encoded article. Carried forward from the original submission
+    # at their exact previous literal values, not sourced, identical across
+    # all seven constitutions, and not to be reported as differentiating them.
+    # Promoted from bare literals in model_phase3.py::_initialize_shared_data
+    # so they are disclosable in the reproducibility package and reachable by
+    # the Sobol GSA instead of invisible to it.
+    YEAR_ZERO_GRIEVANCE: float = 0.60
+    YEAR_ZERO_ETHNIC_HARMONY: float = 0.35
+    YEAR_ZERO_IIG_EFFECTIVENESS: float = 0.30
+    YEAR_ZERO_BRAIN_DRAIN: float = 0.35
+
     # States — 14 states matching model_phase3.py runtime
     SIMULATION_STATES: Tuple[str, ...] = (
         "sagaing", "mandalay", "magway", "bago",

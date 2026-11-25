@@ -408,19 +408,29 @@ class KaNovaModelPhase3(Model):
         """
         Year Zero shared state (bug #16) — read from the active
         constitution's SimulationConfig.YEAR_ZERO_* fields instead of
-        hardcoded Myanmar literals for every scenario. MFU's own
-        SimulationConfig predates YEAR_ZERO_COUP_RISK/YEAR_ZERO_STABILITY
-        (only 2008 Myanmar and the 5 new constitutions define them), so
-        those two fall back to the original literals (0.25/0.18) via
-        getattr when absent — a no-op for Scenario A specifically.
+        hardcoded Myanmar literals for every scenario. constitution.py
+        (MFU) now defines YEAR_ZERO_COUP_RISK/YEAR_ZERO_STABILITY itself
+        (added 2026-11-25 as part of the freeze-and-disclose pass below);
+        the getattr fallback (0.25/0.18) remains only so a constitution
+        predating those two fields still runs identically.
 
-        Fields with NO YEAR_ZERO_* counterpart in any constitution module
-        (grievance_index, employment_rate, iig_effectiveness,
-        brain_drain_rate, military_loyalty, policy_quality, ethnic_harmony
-        — the last confirmed a dead/never-written key independently, see
-        .claude/memory.md bug #3's side note) are left as the same
-        literals as before; there is no encoded value to read instead, and
-        inventing one would be guessing, not fixing.
+        FREEZE AND DISCLOSE (2026-11-25). grievance_index, ethnic_harmony,
+        iig_effectiveness and brain_drain_rate have NO per-constitution
+        YEAR_ZERO_* counterpart and never did; Kaung's decision is to
+        freeze them at their current literal values rather than research
+        country-specific ones, because the paper is a methodology and
+        instrument-audit paper, not an outcome paper, and these four set
+        initial conditions for outcome trajectories, not whether CVES
+        intercepts a decision under an encoded article. They are now read
+        via getattr from SimulationConfig.YEAR_ZERO_GRIEVANCE/
+        YEAR_ZERO_ETHNIC_HARMONY/YEAR_ZERO_IIG_EFFECTIVENESS/
+        YEAR_ZERO_BRAIN_DRAIN, defined identically on all seven
+        constitutions, so disclosure and GSA-reachability improve while
+        behaviour does not change. See each constitution's SimulationConfig
+        for the FROZEN provenance label and docs/calibration_provenance.md
+        for the reproducibility-package table entry. military_loyalty and
+        policy_quality are NOT in this freeze (out of the task's scope) and
+        remain the same bare literals as before.
         """
         sim = self.CONSTITUTION.simulation
         n_ethnic = _get_ethnic_group_count(self.CONSTITUTION)
@@ -443,14 +453,14 @@ class KaNovaModelPhase3(Model):
         return {
             "corruption_index":     sim.YEAR_ZERO_CORRUPTION,
             "trust_index":          sim.YEAR_ZERO_TRUST,
-            "grievance_index":      0.60,
+            "grievance_index":      getattr(sim, "YEAR_ZERO_GRIEVANCE", 0.60),
             "gini_coefficient":     sim.YEAR_ZERO_GINI,
             "employment_rate":      sim.YEAR_ZERO_EMPLOYMENT,
-            "ethnic_harmony":       0.35,
-            "iig_effectiveness":    0.30,
+            "ethnic_harmony":       getattr(sim, "YEAR_ZERO_ETHNIC_HARMONY", 0.35),
+            "iig_effectiveness":    getattr(sim, "YEAR_ZERO_IIG_EFFECTIVENESS", 0.30),
             "coup_risk":            getattr(sim, "YEAR_ZERO_COUP_RISK", 0.25),
             "stability_index":      getattr(sim, "YEAR_ZERO_STABILITY", 0.18),
-            "brain_drain_rate":     0.35,
+            "brain_drain_rate":     getattr(sim, "YEAR_ZERO_BRAIN_DRAIN", 0.35),
             "north_star_progress":  0.0,
             "protest_rate":         0.0,
             "shame_register_size":  0,

@@ -7,10 +7,23 @@ This file is the single place where every `YEAR_ZERO_*` field on every constitut
 dataset, a version, a variable, an entity name, a year, a raw value, a transformation and an access
 route.
 
-Scope: one row per scenario per field. Seven scenarios times seven fields gives **49 rows**. Two of
-those rows, Scenario A's coup risk and stability, document a field that the MFU constitution does not
-define and that the engine fills in from Myanmar's literals; they are kept in the table rather than
-omitted, because the inheritance is itself the finding (see note N1).
+Scope: one row per scenario per field. Seven scenarios times seven fields gave the original
+**49 rows**. Two of those rows, Scenario A's coup risk and stability, documented a field that the MFU
+constitution did not define and that the engine filled in from Myanmar's literals; they are kept in
+the table rather than omitted, because the inheritance was itself the finding (see note N1).
+
+**Updated 2026-11-25.** `config/constitution.py` now defines its own `YEAR_ZERO_COUP_RISK` and
+`YEAR_ZERO_STABILITY` (see N1's update), closing the silent-fallback hazard N1 identified, at the
+exact values the fallback already produced, so this is a disclosure change, not a value change. The
+same pass also promoted four more year-zero literals that previously had no `YEAR_ZERO_*` field at
+all on any constitution (`grievance_index`, `ethnic_harmony`, `iig_effectiveness`,
+`brain_drain_rate`) to `SimulationConfig` fields, frozen at their existing literal values on all seven
+constitutions per Kaung's freeze-and-disclose decision: the paper is a methodology and
+instrument-audit paper, not an outcome paper, and these set initial conditions for outcome
+trajectories rather than whether CVES intercepts a decision under an encoded article, so they are
+disclosed as frozen and unsourced rather than researched. This adds **28 new rows** (4 fields times 7
+scenarios), all verdict **FROZEN, NOT SOURCED**, bringing the table to **77 rows**. See note N14 and
+section 2a.
 
 **Nothing in this file changes any encoded value.** It records what each value is traceable to and
 what it is not. Where a value cannot be reproduced from the source its own code comment names, that
@@ -33,6 +46,7 @@ per-country encoding packages at `config/constitution_<name>_encoding/README.md`
 | **NOT REPRODUCIBLE** | The code comment names a source, and the value cannot be obtained from that source for that entity and year under any documented transformation used elsewhere in this project. This is the corruption-field defect pattern repeating |
 | **UNSOURCED PLACEHOLDER** | The code comment itself says the value is a guess and names no dataset. Honest, but must not appear in a manuscript table as sourced |
 | **FIELD ABSENT, INHERITED** | The constitution module does not define the field; the engine silently substitutes another scenario's value. See note N1 |
+| **FROZEN, NOT SOURCED** | Added 2026-11-25. Kaung's freeze-and-disclose decision for year-zero calibration: the paper is a methodology and instrument-audit paper, not an outcome paper, so this value is deliberately NOT researched. It is carried forward unchanged from the original submission, identical across all seven constitutions by construction, and must not be reported as differentiating them. See note N14 |
 
 ---
 
@@ -73,11 +87,13 @@ candidate numbers will always hit a two-decimal target; hitting it is not eviden
 
 ## 2. Master provenance table
 
-Encoded values read directly from source on 2026-10-29. File and line references:
-`config/constitution.py:1314-1318` (A), `config/constitution_2008.py:1071-1077` (C),
-`config/constitution_southkorea.py:1479-1516` (SK), `config/constitution_thailand.py:1317-1349`
-(TH), `config/constitution_pakistan.py:1340-1368` (PK), `config/constitution_chile.py:1388-1440`
-(CL), `config/constitution_germany.py:1480-1521` (DE).
+Encoded values read directly from source on 2026-10-29. File and line references (re-verified
+2026-11-25 after the FROZEN field additions moved every line number below the original seven-field
+block; ranges now cover all eleven `YEAR_ZERO_*` fields):
+`config/constitution.py:1353-1416` (A), `config/constitution_2008.py:1129-1180` (C),
+`config/constitution_southkorea.py:1539-1621` (SK), `config/constitution_thailand.py:1364-1441`
+(TH), `config/constitution_pakistan.py:1395-1468` (PK), `config/constitution_chile.py:1440-1537`
+(CL), `config/constitution_germany.py:1552-1638` (DE).
 
 | Scenario | Field | Encoded | Dataset | Version | Variable | Entity (dataset spelling) | Year | Raw value | Transformation | Access route | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -116,48 +132,86 @@ Encoded values read directly from source on 2026-10-29. File and line references
 | PK | `YEAR_ZERO_ETHNIC_TENSION` | 0.45 | none | n/a | none | Pakistan | 1985 | not retrieved | none | n/a | **UNSOURCED PLACEHOLDER**, self-labelled GUESS, package limitation L8 |
 | CL | `YEAR_ZERO_ETHNIC_TENSION` | 0.20 | none | n/a | none | Chile | 1990 | not retrieved | none | n/a | **UNSOURCED PLACEHOLDER**, self-labelled GUESS, package limitation L8 |
 | DE | `YEAR_ZERO_ETHNIC_TENSION` | 0.05 | none | n/a | none | West Germany | 1949 | not retrieved | none | n/a | **UNSOURCED PLACEHOLDER**, self-labelled GUESS/inert |
-| A | `YEAR_ZERO_COUP_RISK` | **0.25 (not its own)** | none; the field does not exist on the MFU constitution | n/a | n/a | n/a | n/a | n/a | `getattr(sim, "YEAR_ZERO_COUP_RISK", 0.25)` at `model_phase3.py:399` substitutes Myanmar's literal | `model_phase3.py:399` | **FIELD ABSENT, INHERITED**, see N1 |
+| A | `YEAR_ZERO_COUP_RISK` | 0.25 | none; added 2026-11-25 as its own explicit field, same value the `getattr` fallback already produced | n/a | n/a | n/a | n/a | n/a | none; disclosed as the generic engine fallback made explicit, not a new sourced value | `config/constitution.py:1400` | **FROZEN, NOT SOURCED** (was FIELD ABSENT, INHERITED until 2026-11-25; see N1 update and N14) |
 | C | `YEAR_ZERO_COUP_RISK` | 0.25 | cited as "Post-2021 estimate", naming no dataset, no year and no method | V2026.08.29 was checked | `coup` outcome code | Myanmar | 1948 to 2026 | **4 successful coups (1958, 1962, 1988, 2021) plus 1 failed (1976)** | any base-rate convention over these events gives 0.05 to 0.07, not 0.25 | `https://jonathanmpowell.com/wp-content/uploads/2026/08/pt_20260829.csv` | **NOT REPRODUCIBLE**, see N11 and section 3 |
 | SK | `YEAR_ZERO_COUP_RISK` | 0.02 | Powell and Thyne, Coups d'etat 1950-present | V2026.08.29 | `coup` outcome code | South Korea | 1950 to 2026 | **1 successful coup, 1961-05; zero events since** | package's recommended range 0.00 to 0.02, upper bound deliberately used to avoid the withdrawn "zero coups" framing | `https://jonathanmpowell.com/wp-content/uploads/2026/08/pt_20260829.csv` | **DOCUMENTED CHOICE** within a sourced range |
 | TH | `YEAR_ZERO_COUP_RISK` | 0.12 | Powell and Thyne, Coups d'etat 1950-present | V2026.08.29 | `coup` outcome code | Thailand | 1951 to 2014 | **8 successful, 4 failed, 12 events total** | `8 / 64 years = 0.125`, rounded to 0.12 | `https://jonathanmpowell.com/wp-content/uploads/2026/08/pt_20260829.csv` | **DERIVED, REPRODUCIBLE**, recomputed from the dataset and matches |
 | PK | `YEAR_ZERO_COUP_RISK` | 0.086 | Powell and Thyne, Coups d'etat 1950-present | V2026.08.29 | `coup` outcome code | Pakistan | 1950 to 1985 | **3 successful by 1985 (1958, 1971, 1977); 4 total in the full series, 0 failed** | `3 / 35 years = 0.0857`, rounded to 0.086 | `https://jonathanmpowell.com/wp-content/uploads/2026/08/pt_20260829.csv` | **DERIVED, REPRODUCIBLE**, recomputed from the dataset and matches |
 | CL | `YEAR_ZERO_COUP_RISK` | 0.05 | Powell and Thyne, Coups d'etat 1950-present | V2026.08.29 | `coup` outcome code | Chile | 1950 to 1990 | **1 successful (1973-09) and 1 failed (1973-06), both predating the 1980 Constitution** | code's own stated computation is 0.025 to 0.032; the encoded value is 0.05 | `https://jonathanmpowell.com/wp-content/uploads/2026/08/pt_20260829.csv` | **DERIVED, DISCREPANT**, see N12 |
 | DE | `YEAR_ZERO_COUP_RISK` | 0.00 | Powell and Thyne, Coups d'etat 1950-present | V2026.08.29 | `coup` outcome code | **Germany does not appear in the dataset** | 1950 to 2026 | no coded events | zero | `https://jonathanmpowell.com/wp-content/uploads/2026/08/pt_20260829.csv` | **DERIVED, REPRODUCIBLE** with a wording correction, see N4 |
-| A | `YEAR_ZERO_STABILITY` | **0.18 (not its own)** | none; the field does not exist on the MFU constitution | n/a | n/a | n/a | n/a | n/a | `getattr(sim, "YEAR_ZERO_STABILITY", 0.18)` at `model_phase3.py:400` substitutes Myanmar's literal | `model_phase3.py:400` | **FIELD ABSENT, INHERITED**, see N1 |
+| A | `YEAR_ZERO_STABILITY` | 0.18 | none; added 2026-11-25 as its own explicit field, same value the `getattr` fallback already produced | n/a | n/a | n/a | n/a | n/a | none; disclosed as the generic engine fallback made explicit, not a new sourced value | `config/constitution.py:1401` | **FROZEN, NOT SOURCED** (was FIELD ABSENT, INHERITED until 2026-11-25; see N1 update and N14) |
 | C | `YEAR_ZERO_STABILITY` | 0.18 | cited as "World Bank Political Stability 2022" | WGI 2023 Update (`wgidataset.xlsx`) and current release both checked | Political Stability and Absence of Violence, point estimate | Myanmar | 2022 | **-2.2320** (current release); percentile rank about 2.8 | `(-2.2320 + 2.5) / 5 = 0.054`; score/100 gives 0.265; percentile rank/100 gives 0.028 | www.govindicators.org; current release also at World Bank API `source=3`, indicator `GOV_WGI_PV.EST` | **NOT REPRODUCIBLE**, see N13 and section 3 |
 | SK | `YEAR_ZERO_STABILITY` | 0.61 | WGI 2023 Update (`wgidataset.xlsx`) | 2023 Update | Political Stability, point estimate | Korea, Rep. | 1996 (8 years after year zero; WGI does not cover 1988) | 0.57 | `(0.57 + 2.5) / 5 = 0.614`, rounded to 0.61 (C1) | www.govindicators.org; current release also at World Bank API `source=3`, indicator `GOV_WGI_PV.EST` | **VERIFIED, RELEASE-SENSITIVE**, see N2: current release gives 0.6700, which rescales to 0.63 |
 | TH | `YEAR_ZERO_STABILITY` | 0.35 | WGI 2023 Update (`wgidataset.xlsx`) | 2023 Update | Political Stability, point estimate | Thailand | 2017 | -0.75 | `(-0.75 + 2.5) / 5 = 0.35` (C1) | www.govindicators.org; current release also at World Bank API `source=3`, indicator `GOV_WGI_PV.EST` | **VERIFIED, RELEASE-SENSITIVE**, see N2: current release gives -0.9841, which rescales to 0.30 |
 | PK | `YEAR_ZERO_STABILITY` | 0.20 | WGI 2023 Update (`wgidataset.xlsx`) named but not applied | 2023 Update | Political Stability, point estimate | Pakistan | 1996 (11 years after year zero) | -1.13 as quoted in code; current release gives -1.4335 | `(-1.13 + 2.5) / 5 = 0.274`, which is **not** 0.20 | www.govindicators.org; current release also at World Bank API `source=3`, indicator `GOV_WGI_PV.EST` | **UNSOURCED PLACEHOLDER**, self-labelled GUESS DERIVED NOT OBSERVED; the rescale of the current release (0.21) is a numerical coincidence, see C5 |
 | CL | `YEAR_ZERO_STABILITY` | 0.40 | WGI 2023 Update (`wgidataset.xlsx`) named but explicitly not applied | 2023 Update | Political Stability, point estimate | Chile | 1996 (6 years after year zero) | 0.68 as quoted in code; current release gives 0.6857 | `(0.68 + 2.5) / 5 = 0.636`, which is **not** 0.40; the code says so and declines to substitute | www.govindicators.org; current release also at World Bank API `source=3`, indicator `GOV_WGI_PV.EST` | **UNSOURCED PLACEHOLDER**, self-labelled GUESS, package flag L7, honestly declared |
 | DE | `YEAR_ZERO_STABILITY` | 0.75 | WGI 2023 Update (`wgidataset.xlsx`) | 2023 Update | Political Stability, point estimate | Germany | 1996 (47 years after year zero) | 1.29 | `(1.29 + 2.5) / 5 = 0.758`, rounded to 0.75 (C1) | www.govindicators.org; current release also at World Bank API `source=3`, indicator `GOV_WGI_PV.EST` | **VERIFIED, RELEASE-SENSITIVE**, see N2: current release gives 1.3035, which rescales to 0.76 |
+| A | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution.py:1413` | **FROZEN, NOT SOURCED**, see N14 |
+| C | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_2008.py:1177` | **FROZEN, NOT SOURCED**, see N14 |
+| SK | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_southkorea.py:1618` | **FROZEN, NOT SOURCED**, see N14 |
+| TH | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_thailand.py:1438` | **FROZEN, NOT SOURCED**, see N14 |
+| PK | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_pakistan.py:1465` | **FROZEN, NOT SOURCED**, see N14 |
+| CL | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_chile.py:1534` | **FROZEN, NOT SOURCED**, see N14 |
+| DE | `YEAR_ZERO_GRIEVANCE` | 0.60 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_germany.py:1635` | **FROZEN, NOT SOURCED**, see N14 |
+| A | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution.py:1414` | **FROZEN, NOT SOURCED**, see N14 |
+| C | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_2008.py:1178` | **FROZEN, NOT SOURCED**, see N14 |
+| SK | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_southkorea.py:1619` | **FROZEN, NOT SOURCED**, see N14 |
+| TH | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_thailand.py:1439` | **FROZEN, NOT SOURCED**, see N14 |
+| PK | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_pakistan.py:1466` | **FROZEN, NOT SOURCED**, see N14 |
+| CL | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_chile.py:1535` | **FROZEN, NOT SOURCED**, see N14 |
+| DE | `YEAR_ZERO_ETHNIC_HARMONY` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_germany.py:1636` | **FROZEN, NOT SOURCED**, see N14 |
+| A | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution.py:1415` | **FROZEN, NOT SOURCED**, see N14 |
+| C | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_2008.py:1179` | **FROZEN, NOT SOURCED**, see N14 |
+| SK | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_southkorea.py:1620` | **FROZEN, NOT SOURCED**, see N14 |
+| TH | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_thailand.py:1440` | **FROZEN, NOT SOURCED**, see N14 |
+| PK | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_pakistan.py:1467` | **FROZEN, NOT SOURCED**, see N14 |
+| CL | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_chile.py:1536` | **FROZEN, NOT SOURCED**, see N14 |
+| DE | `YEAR_ZERO_IIG_EFFECTIVENESS` | 0.30 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_germany.py:1637` | **FROZEN, NOT SOURCED**, see N14 |
+| A | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution.py:1416` | **FROZEN, NOT SOURCED**, see N14 |
+| C | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_2008.py:1180` | **FROZEN, NOT SOURCED**, see N14 |
+| SK | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_southkorea.py:1621` | **FROZEN, NOT SOURCED**, see N14 |
+| TH | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_thailand.py:1441` | **FROZEN, NOT SOURCED**, see N14 |
+| PK | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_pakistan.py:1468` | **FROZEN, NOT SOURCED**, see N14 |
+| CL | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_chile.py:1537` | **FROZEN, NOT SOURCED**, see N14 |
+| DE | `YEAR_ZERO_BRAIN_DRAIN` | 0.35 | none; frozen 2026-11-25 from the bare literal `model_phase3.py` used for every scenario | n/a | n/a | n/a | n/a | n/a | none, by decision | `config/constitution_germany.py:1638` | **FROZEN, NOT SOURCED**, see N14 |
 
-Row count check: 49 rows, 7 scenarios times 7 fields, of which 2 (Scenario A's coup risk and
-stability) record an absent-and-inherited field rather than an encoded value.
+Row count check: **77 rows**, 7 scenarios times 11 fields (the original 7, plus the 4 added
+2026-11-25). Of these, 28 rows (4 fields times 7 scenarios) are new as of 2026-11-25, verdict
+**FROZEN, NOT SOURCED** throughout, and 2 rows (Scenario A's coup risk and stability) changed verdict
+from FIELD ABSENT, INHERITED to FROZEN, NOT SOURCED on the same date, at unchanged values, because the
+field now exists explicitly on `config/constitution.py` instead of being silently substituted by
+`model_phase3.py`'s `getattr` fallback.
 
 ---
 
 ## 3. Notes
 
-**N1, the MFU constitution is missing two of the seven fields, and silently inherits Myanmar's.**
-`config/constitution.py`'s `SimulationConfig` defines only five `YEAR_ZERO_*` fields: CORRUPTION,
-TRUST, GINI, EMPLOYMENT and ETHNIC_TENSION. It has no `YEAR_ZERO_COUP_RISK` and no
-`YEAR_ZERO_STABILITY`. All six other constitutions define all seven.
-`model_phase3.py:399-400` resolves the gap with
-`getattr(sim, "YEAR_ZERO_COUP_RISK", 0.25)` and `getattr(sim, "YEAR_ZERO_STABILITY", 0.18)`, and
-those two literals are **Myanmar's own numbers**, lifted from `constitution_2008.py:1076-1077`. The
-code's own docstring describes this as "a no-op for Scenario A specifically", which is true of the
-numeric result but misleading about its provenance: it means **Scenario A and Scenario C start from
-identical year-zero coup risk and identical year-zero stability, and neither value is an MFU value.**
+**N1, the MFU constitution was missing two of the seven fields, and silently inherited Myanmar's.**
+`config/constitution.py`'s `SimulationConfig` used to define only five `YEAR_ZERO_*` fields:
+CORRUPTION, TRUST, GINI, EMPLOYMENT and ETHNIC_TENSION. It had no `YEAR_ZERO_COUP_RISK` and no
+`YEAR_ZERO_STABILITY`. All six other constitutions defined all seven.
+`model_phase3.py`'s `getattr(sim, "YEAR_ZERO_COUP_RISK", 0.25)` and
+`getattr(sim, "YEAR_ZERO_STABILITY", 0.18)` resolved the gap, and those two literals were
+**Myanmar's own numbers**, lifted from `constitution_2008.py`. The code's own docstring described
+this as "a no-op for Scenario A specifically", which was true of the numeric result but misleading
+about its provenance: it meant **Scenario A and Scenario C started from identical year-zero coup risk
+and identical year-zero stability, and neither value was an MFU value, and the sharing was silent.**
 For a paper whose central question is whether divergence is structural or parameter-driven, two of
 the seven year-zero conditions being shared by construction is a disclosable fact.
 Also note: `.claude/memory.md` section 19 records the pre-deployment sweep as finding "zero gaps
-across all 7 on ... `YEAR_ZERO_*`". That is true at the level of "the engine reads a value for every
-scenario" and false at the level of "every scenario defines its own value". The memory wording should
-be tightened.
-Recommended fix, for `senior-simulation-engineer` and Kaung, not applied here: give
-`config/constitution.py` its own two fields with MFU-specific documented values, and change the two
-`getattr` calls to plain attribute reads so a future missing field fails loudly instead of
-inheriting Myanmar's.
+across all 7 on ... `YEAR_ZERO_*`". That was true at the level of "the engine reads a value for every
+scenario" and false at the level of "every scenario defines its own value".
+
+**FIXED 2026-11-25, disclosure only, zero behavioural change.** `config/constitution.py` now defines
+`YEAR_ZERO_COUP_RISK: float = 0.25` and `YEAR_ZERO_STABILITY: float = 0.18` explicitly, at the exact
+values the `getattr` fallback already produced. The `getattr` calls in `model_phase3.py` are kept
+(not changed to plain attribute reads) so a constitution module predating these fields still runs,
+rather than failing loudly as this note previously recommended; that stricter option was considered
+and not taken, since the task at hand is disclosure of the current state, not a defensive-coding
+change, and the existing getattr-with-historical-fallback pattern is what every other field in this
+project already uses. **This closes the silent-fallback hazard, not the provenance one**: the value
+0.25/0.18 is still not sourced to any MFU-specific research, it is the generic engine literal made
+explicit. See the new verdict FROZEN, NOT SOURCED and note N14.
 
 **N2, WGI point estimates are re-estimated with every release, so the release must be pinned.**
 The WGI programme re-runs its unobserved-components model over the whole panel at each update, so the
@@ -271,6 +325,26 @@ successful-coup rate is `1 / 41 = 0.024`. The code is honest that the magnitude 
 error: either encode 0.024 and call it derived, or keep 0.05 and call it a modelling floor, but do not
 present 0.05 as the Powell and Thyne rate.
 
+**N14, the four FROZEN fields and the two re-labelled Scenario A fields, added 2026-11-25.** Kaung's
+decision for year-zero calibration is FREEZE AND DISCLOSE, not research: the paper is a methodology
+and instrument-audit paper, not an outcome paper. `grievance_index`, `ethnic_harmony`,
+`iig_effectiveness` and `brain_drain_rate` set initial conditions for outcome trajectories; they do
+not affect whether CVES intercepts a decision under an encoded article, which is the instrument this
+paper actually audits. So, unlike every other field in this table, no attempt was made to source
+them, and none should be made under this decision. They are promoted from bare literals in
+`model_phase3.py::_initialize_shared_data` to `SimulationConfig.YEAR_ZERO_GRIEVANCE` (0.60),
+`YEAR_ZERO_ETHNIC_HARMONY` (0.35), `YEAR_ZERO_IIG_EFFECTIVENESS` (0.30) and `YEAR_ZERO_BRAIN_DRAIN`
+(0.35), read via `getattr` with the historical literal as fallback, identical across all seven
+constitutions by construction. **They must never be reported as differentiating the scenarios**: the
+identity across all seven is by construction, not a finding about any country's real conditions.
+Scenario A's `YEAR_ZERO_COUP_RISK` and `YEAR_ZERO_STABILITY` (N1) receive the same FROZEN, NOT SOURCED
+verdict for the same reason, though their history is different (inherited from Myanmar's own literal
+via a silent fallback, now an explicit field at the same value) and is kept distinct in N1. Two
+literals seeded elsewhere in `_initialize_shared_data`, `military_loyalty` (0.55) and `policy_quality`
+(0.50), were explicitly out of scope for this freeze and remain bare literals; they are not in this
+table for the same reason section 6 excludes `gdp_growth`/`resource_revenue`: no constitutional field
+reads them, frozen or otherwise, and adding one was not asked for here.
+
 ---
 
 ## 4. The two Scenario C fields that do not reconcile
@@ -382,8 +456,10 @@ parameter-driven" has a clean target here.
 It is also load-bearing in a way the stability field is not. `shared_data["coup_risk"]` is read at
 `model_phase3.py:103, 539-544, 598, 724, 815` and at `feedback/loops.py:188`; it drives the coup
 check in `_military_chain_rules`, and Scenario C's 100 percent failure rate at mean year
-16.6 plus or minus 0.96 is the paper's headline finding. **And Scenario A inherits the same 0.25 via
-the `getattr` default described in N1**, so the value is not even specific to Scenario C.
+16.6 plus or minus 0.96 is the paper's headline finding. **And Scenario A carries the same 0.25**,
+so the value is not even specific to Scenario C; until 2026-11-25 this was a silent `getattr`
+fallback (N1), and is now an explicit FROZEN, NOT SOURCED field on `config/constitution.py` at the
+same value (N14), which changes the disclosure, not the number.
 
 **Honest wording for the code, proposed and not applied:**
 
@@ -428,8 +504,10 @@ for "the result is parameter-driven" in the whole model.
    64. (N8)
 7. `YEAR_ZERO_ETHNIC_TENSION = 0.68` (A and C) cites "V-Dem Dataset" with no variable, year or
    entity, so it is uncheckable in principle. (N10)
-8. MFU defines only five of the seven fields and silently inherits Myanmar's coup risk and
-   stability, so A and C share two year-zero conditions by construction. (N1)
+8. MFU used to define only five of the seven fields and silently inherit Myanmar's coup risk and
+   stability, so A and C share two year-zero conditions by construction. **FIXED 2026-11-25**: the
+   field is now explicit on `config/constitution.py` at the same value, disclosure only, A and C
+   still share the same two values by construction. (N1, N14)
 9. Pakistan's employment value is Myanmar's value, carried by hand. (N9)
 10. Chile's coup-risk value is about twice its own stated derivation. (N12)
 
@@ -447,11 +525,13 @@ for "the result is parameter-driven" in the whole model.
 
 ## 6. What this document does not cover
 
-- **Fields with no `YEAR_ZERO_*` counterpart anywhere.** `model_phase3.py:390-404` seeds
-  `grievance_index` 0.60, `ethnic_harmony` 0.35, `iig_effectiveness` 0.30, `brain_drain_rate` 0.35,
-  `north_star_progress` 0.0 and others from bare literals for every scenario, with no constitutional
-  field to read. Those are outside this table's scope by its own definition, but they are the same
-  class of problem and `ethnic_harmony` in particular is a live published column.
+- **Fields with no `YEAR_ZERO_*` counterpart anywhere, as of 2026-11-25.** `grievance_index`,
+  `ethnic_harmony`, `iig_effectiveness` and `brain_drain_rate` were in this category until
+  2026-11-25; they are now `SimulationConfig.YEAR_ZERO_*` fields, FROZEN and NOT SOURCED per
+  Kaung's decision (N14), and appear in section 2's table. `north_star_progress` (0.0),
+  `military_loyalty` (0.55) and `policy_quality` (0.50) remain bare literals in
+  `model_phase3.py::_initialize_shared_data` with no constitutional field, out of scope for the
+  2026-11-25 freeze and still outside this table's scope.
 - **`gdp_growth` and `resource_revenue` per-state ranges**, which `_initialize_states()` leaves as
   literals because no encoded value exists.
 - **The economic parameters**, including `TAX_BRACKETS`, which are covered in section 7 of each
