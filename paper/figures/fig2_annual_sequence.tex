@@ -1,0 +1,63 @@
+% ---------------------------------------------------------------------------
+% Figure 2. The annual simulation sequence.
+%
+% VERIFIED AGAINST LIVE SOURCE, 2026-11-25: model_phase3.py, KaNovaModelPhase3
+% .step(), lines 542-643. The numbered comment banners in that method are the
+% authority for both the count and the order, and each step below cites the
+% call it depicts.
+%
+% CORRECTION CARRIED BY THIS FIGURE: the submitted manuscript's caption called
+% this a "nine-step" sequence. The live method runs TEN substantive steps,
+% numbered 0 through 9, followed by the year increment at step 10, which is
+% drawn here as the loop edge rather than as a step. Step 7 additionally gained
+% the constitutional-court call that the submitted version did not execute at
+% all (the bug #12 fix at model_phase3.py:628); the judicial layer was dead
+% code when the manuscript was submitted, so that sub-item is new behaviour and
+% not merely a redrawn label.
+% ---------------------------------------------------------------------------
+\documentclass[border=5pt]{standalone}
+\input{kanova-figstyle}
+\begin{document}
+\begin{tikzpicture}[node distance=0pt]
+
+\def\colw{50mm}
+\tikzset{seq/.style={knbox, text width=\colw, align=left, inner xsep=4pt}}
+
+% ----- left column, steps 0-4 ---------------------------------------------
+\node[seq] (s0) {\knlabel{External layer advances}\\[-1pt]\knsmall{9--17 country vectors, 10 shock types}};
+\node[seq, below=5.2mm of s0] (s1) {\knlabel{Social-media channel}\\[-1pt]\knsmall{suppression and VPN floor}};
+\node[seq, below=5.2mm of s1, fill=knfillC] (s2) {\knlabel{Elite decision chain}\\[-1pt]\knsmall{7 roles; CVES L1--L4 inline (Fig.~4)}\\[-1pt]\knsmall{coup signal nudges coup risk}};
+\node[seq, below=5.2mm of s2] (s3) {\knlabel{Broadcast environment}\\[-1pt]\knsmall{one shared state dictionary}};
+\node[seq, below=5.2mm of s3] (s4) {\knlabel{All Mesa agents step}\\[-1pt]\knsmall{citizens, officials, oversight,}\\[-1pt]\knsmall{foreign, institutional}};
+
+% ----- right column, steps 5-9 --------------------------------------------
+\node[seq, right=24mm of s0] (s5) {\knlabel{Twelve feedback loops}\\[-1pt]\knsmall{4 political, 4 economic, 4 social}};
+\node[seq, below=5.2mm of s5] (s6) {\knlabel{Scenario constitutional rules}\\[-1pt]\knsmall{chain-type asymmetric provisions}};
+\node[seq, below=5.2mm of s6] (s7) {\knlabel{Institutions}\\[-1pt]\knsmall{chambers, IIG, constitutional court}};
+\node[seq, below=5.2mm of s7] (s8) {\knlabel{State environment update}\\[-1pt]\knsmall{per-state corruption and growth}};
+\node[seq, below=5.2mm of s8] (s9) {\knlabel{Data collection}\\[-1pt]\knsmall{per-year trajectory record}};
+
+% ----- step markers --------------------------------------------------------
+\foreach \n/\t in {s0/0,s1/1,s2/2,s3/3,s4/4}
+  {\node[knstep] at ($(\n.north west)+(0mm,0mm)$) {\t};}
+\foreach \n/\t in {s5/5,s6/6,s7/7,s8/8,s9/9}
+  {\node[knstep] at ($(\n.north west)+(0mm,0mm)$) {\t};}
+
+% ----- vertical flow -------------------------------------------------------
+\foreach \a/\b in {s0/s1,s1/s2,s2/s3,s3/s4} {\draw[knflow] (\a) -- (\b);}
+\foreach \a/\b in {s5/s6,s6/s7,s7/s8,s8/s9} {\draw[knflow] (\a) -- (\b);}
+
+% ----- column handover, left bottom to right top ---------------------------
+\draw[knflow] (s4.east) -- ++(6mm,0) |- (s5.west);
+
+
+% ----- year loop -----------------------------------------------------------
+\draw[knflowbold] (s9.east) -- ++(10mm,0) |- ($(s0.north)+(0,11mm)$) -- (s0.north);
+\node[knnote, anchor=south, text=knink] at ($(s0.north)+(0,11.4mm)$)
+  {\knsmall{\textbf{10.}~year $+{=}1$}};
+
+\node[knnote, anchor=north west, text=knink] at ($(s0.north west)+(0mm,18mm)$)
+  {\knsmall{Repeated for 50 simulated years, or until a scenario terminates early.}};
+
+\end{tikzpicture}
+\end{document}

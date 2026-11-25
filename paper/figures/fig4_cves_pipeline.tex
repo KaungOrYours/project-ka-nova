@@ -1,0 +1,121 @@
+% ---------------------------------------------------------------------------
+% Figure 4. The CVES four-layer runtime validation pipeline.
+%
+% VERIFIED AGAINST LIVE SOURCE, 2026-11-25:
+%   * layer entry points .. engine/cves.py: l1_parse (208), l2_constitutional
+%                           (318), l3_ensemble (502), l4_statistical (630).
+%   * call sites .......... engine/elite_agents_v3.py: L1 at 1179, L2 at 1187
+%                           (generative, with reprompt), 1218 and 1228
+%                           (fallback and rule-based, logging only, NO
+%                           reprompt), L3 at 1283 and L4 at 1286, both once
+%                           per year over the completed set of seven.
+%   * cadence ............. L1 and L2 run PER DECISION inside the seven-role
+%                           loop; L3 and L4 run ONCE PER YEAR across all seven.
+%                           The submitted figure drew four layers in a single
+%                           flat sequence, which misstated this.
+%   * L4 behaviour ........ engine/cves.py:60, L4_MODE = "flag", log the
+%                           outlier and KEEP the decision. "strip" exists but
+%                           is not enabled and requires an author decision.
+%   * artefacts ........... per-scenario filenames (bug #18 split). The
+%                           submitted manuscript named the pre-split files.
+%
+% NEW SINCE SUBMISSION, and drawn here because it is load bearing: the L2
+% reprompt path is now schema-validated, and a malformed revision falls back
+% loudly to the mechanically corrected decision (commit 6150118). Before that
+% fix one malformed revision aborted an entire 50-year run.
+% ---------------------------------------------------------------------------
+\documentclass[border=10pt]{standalone}
+\input{kanova-figstyle}
+\begin{document}
+\begin{tikzpicture}[x=1mm, y=1mm]
+
+\tikzset{
+  L/.style={knlayer, align=left, minimum width=0pt, anchor=north west},
+  art/.style={knfile, align=left, anchor=north west},
+  B/.style={knbox, align=left, anchor=north west},
+}
+
+% ===== BAND A, per decision ===============================================
+\node[B, text width=28mm] (resp) at (0,0)
+  {\knlabel{Elite role response}\\[-1pt]\knsmall{free-form generative text}};
+
+\node[L, text width=36mm] (l1) at (42,0)
+  {\knhead{L1\ \ structural}\\[-1pt]\knsmall{schema and type integrity;
+   ethnic-weight vector length taken from the active constitution}};
+
+\node[L, text width=42mm] (l2) at (90,0)
+  {\knhead{L2\ \ constitutional}\\[-1pt]\knsmall{maps the decision onto the live
+   constitution's own provisions and attributes any violation to an article}};
+
+\node[B, text width=26mm] (sim) at (137,0)
+  {\knlabel{Validated decision}\\[-1pt]\knsmall{to the simulation state}};
+
+\draw[knflow] (resp.east) -- (l1.west);
+\draw[knflow] (l1.east)   -- (l2.west);
+\draw[knflow] (l2.east)   -- (sim.west);
+
+% reprompt arcs, stacked so they never cross
+\draw[knread] (l1.north) |- ($(resp.north)+(-3,7)$)
+   node[knnote, pos=0.62, anchor=south, yshift=0.4] {reprompt on schema failure}
+   -- ($(resp.north)+(-3,0)$);
+\draw[knread, draw=knaccent] (l2.north) |- ($(resp.north)+(3,14)$)
+   node[knnote, pos=0.60, anchor=south, yshift=0.4, text=knaccent]
+   {reprompt on violation, and the revision is itself schema-checked}
+   -- ($(resp.north)+(3,0)$);
+
+\node[knnote, anchor=north west, text width=52mm, text=knink] (fbnote) at (90,-17)
+  {\knsmall{A revision that fails that check falls back, loudly, to the
+   mechanically corrected decision, so one malformed response can no longer
+   abort a fifty-year run.}};
+
+\begin{scope}[on background layer]
+  \node[kngroup, fit=(resp)(l1)(l2)(fbnote), inner sep=6pt] (perdec) {};
+\end{scope}
+\node[knpanelhead, anchor=south west] at ($(perdec.north west)+(1,0.8)$)
+  {\knsmall{Per decision, repeated for each of the seven roles}};
+
+% ===== BAND B, once per year ==============================================
+\node[L, text width=42mm] (l3) at (0,-48)
+  {\knhead{L3\ \ consensus and theory}\\[-1pt]\knsmall{outlier clamp across the
+   seven decisions, then theory-alignment scoring against Acemoglu and Robinson
+   and against Lijphart}};
+
+\node[L, text width=42mm] (l4) at (54,-48)
+  {\knhead{L4\ \ statistical}\\[-1pt]\knsmall{three-sigma check against a rolling
+   twenty-year history. Mode is \texttt{flag}: the outlier is logged and the
+   decision is kept}};
+
+\draw[knflow] (l3.east) -- (l4.west);
+
+\begin{scope}[on background layer]
+  \node[kngroup, fit=(l3)(l4), inner sep=6pt] (peryear) {};
+\end{scope}
+\node[knpanelhead, anchor=south west] at ($(peryear.north west)+(1,0.8)$)
+  {\knsmall{Once per simulated year, over the completed set of seven}};
+
+% handover between the bands
+\draw[knflowbold] ($(perdec.south west)+(104,0)$) -- ++(0,-6)
+  node[knnote, anchor=west, xshift=2, yshift=-1.5] {all seven decisions complete}
+  -- ($(peryear.north west)+(104,0)$);
+
+% ===== artefacts ==========================================================
+\node[art, text width=46mm] (viol) at (108,-50)
+  {\kncode{cves\_violations\_<scenario>.jsonl}\\[-1pt]\knsmall{every L2 violation, article attributed}};
+\node[art, text width=46mm] (scor) at (108,-64)
+  {\kncode{cves\_scores\_<scenario>.jsonl}\\[-1pt]\knsmall{per-decision L1--L4 scores}};
+
+\draw[knflow] (l4.east) -- ++(4,0) |- (viol.west);
+\draw[knflow] (l4.east) -- ++(4,0) |- (scor.west);
+% L2 writes the violation log directly during the per-decision stage; stated
+% as a note rather than drawn, because the edge had to cross the whole figure.
+\node[knnote, anchor=north west, text width=46mm] at (108,-57.5)
+  {written by L2 during the per-decision stage};
+
+% ===== rule-based caveat ==================================================
+\node[knnote, anchor=north west, text width=100mm, text=knink] at (0,-76)
+  {\knsmall{Under the rule-based control condition L2 still runs and still logs
+   violations, but does not reprompt, so both conditions yield comparable audit
+   trails.}};
+
+\end{tikzpicture}
+\end{document}

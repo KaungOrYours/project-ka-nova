@@ -1,0 +1,101 @@
+% ---------------------------------------------------------------------------
+% kanova-figstyle.tex
+% Single source of truth for the visual style of every Ka-Nova figure.
+%
+% Reviewer 1, concern 6 asked that "fonts, labels, symbols, line weights, and
+% overall graphical style" be made consistent across figures. Every schematic
+% inputs this file and defines no local colours, line widths or fonts, so the
+% consistency is structural rather than something maintained by eye.
+%
+% Design constraints, all deliberate:
+%   * Vector output only. No raster element appears in any figure.
+%   * Greyscale safe. IEEE Access prints in colour but is read in greyscale.
+%     Civilian and military elements are separated by fill LIGHTNESS and by
+%     border dash pattern, never by hue alone, so the distinction survives a
+%     monochrome printer.
+%   * Sans-serif labels at 8 pt, per the IEEE Author Center guidance for
+%     figure text, applied identically in all four figures.
+%   * Three line weights only, listed below. No figure introduces a fourth.
+% ---------------------------------------------------------------------------
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,%
+                decorations.pathreplacing,shapes.symbols,shapes.multipart}
+\usepackage[scaled=0.92]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Palette. Lightness values chosen to stay distinguishable in greyscale. --
+\definecolor{knink}{RGB}{26,26,26}        % all text and borders
+\definecolor{knrule}{RGB}{120,120,120}    % secondary rules, annotations
+\definecolor{knfillA}{RGB}{244,244,244}   % lightest  structural / container
+\definecolor{knfillB}{RGB}{232,236,241}   % light     engine / mechanism
+\definecolor{knfillC}{RGB}{214,222,232}   % mid       constitutional layer
+\definecolor{knciv}{RGB}{226,235,228}     % civilian  chain  (lighter)
+\definecolor{knmil}{RGB}{206,206,206}     % military  chain  (darker)
+\definecolor{knaccent}{RGB}{140,30,30}    % CVES interception, used sparingly
+\definecolor{knstore}{RGB}{250,246,235}   % persisted artefact
+
+% --- The only three line weights used anywhere. ----------------------------
+\newcommand{\knthin}{0.4pt}
+\newcommand{\knnorm}{0.7pt}
+\newcommand{\knbold}{1.1pt}
+
+% --- Typography inside figures. -------------------------------------------
+\newcommand{\knlabel}[1]{{\fontsize{8}{9.6}\selectfont #1}}
+\newcommand{\knsmall}[1]{{\fontsize{7}{8.4}\selectfont #1}}
+\newcommand{\kntiny}[1]{{\fontsize{6}{7.2}\selectfont #1}}
+\newcommand{\knhead}[1]{{\fontsize{8}{9.6}\selectfont\bfseries #1}}
+\newcommand{\kncode}[1]{{\fontsize{7}{8.4}\selectfont\ttfamily #1}}
+
+\tikzset{
+  every node/.style     = {font=\fontsize{8}{9.6}\selectfont, text=knink,
+                           align=center, inner sep=3pt},
+  % process / component box
+  knbox/.style          = {draw=knink, line width=\knnorm, fill=knfillB,
+                           rounded corners=1.5pt, minimum height=7mm,
+                           inner xsep=4pt, inner ysep=3pt},
+  % constitutional layer box
+  knconst/.style        = {knbox, fill=knfillC},
+  % passive container / grouping
+  kngroup/.style        = {draw=knrule, line width=\knthin, fill=knfillA,
+                           rounded corners=2.5pt, dash pattern=on 2pt off 1.5pt,
+                           inner sep=6pt},
+  % persisted artefact on disk
+  knfile/.style         = {draw=knink, line width=\knnorm, fill=knstore,
+                           rounded corners=0pt, minimum height=6.5mm,
+                           inner xsep=4pt},
+  % civilian elite role: lighter fill, solid border
+  knrolec/.style        = {draw=knink, line width=\knnorm, fill=knciv,
+                           rounded corners=1.5pt, minimum height=6mm,
+                           minimum width=42mm, inner xsep=3pt, inner ysep=2pt},
+  % military elite role: darker fill, dashed border. Two cues, not one.
+  knrolem/.style        = {draw=knink, line width=\knnorm, fill=knmil,
+                           rounded corners=1.5pt, dash pattern=on 3pt off 1.5pt,
+                           minimum height=6mm, minimum width=42mm,
+                           inner xsep=3pt, inner ysep=2pt},
+  % CVES validation layer
+  knlayer/.style        = {draw=knink, line width=\knnorm, fill=knfillB,
+                           rounded corners=1.5pt, minimum height=8mm,
+                           minimum width=30mm},
+  % decision point
+  kndec/.style          = {draw=knink, line width=\knnorm, fill=knfillA,
+                           diamond, aspect=2.4, inner sep=1.5pt},
+  % numbered step marker
+  knstep/.style         = {draw=knink, line width=\knnorm, fill=white,
+                           circle, inner sep=0pt, minimum size=4.6mm,
+                           font=\fontsize{7}{7}\selectfont\bfseries},
+  % --- edges. One arrow tip shape in the whole figure set. ----------------
+  knflow/.style         = {draw=knink, line width=\knnorm,
+                           -{Stealth[length=1.9mm, width=1.4mm]}},
+  knflowbold/.style     = {knflow, line width=\knbold},
+  knread/.style         = {draw=knrule, line width=\knthin,
+                           dash pattern=on 1.5pt off 1.5pt,
+                           -{Stealth[length=1.6mm, width=1.2mm]}},
+  knblock/.style        = {draw=knaccent, line width=\knbold,
+                           -{Bar[width=2.2mm]}},
+  knnote/.style         = {font=\fontsize{6}{7.2}\selectfont, text=knrule,
+                           align=left, inner sep=1.5pt},
+  % panel / section heading, bold at body size
+  knpanelhead/.style    = {font=\fontsize{8}{9.6}\selectfont\bfseries,
+                           text=knink, align=center, inner sep=2pt},
+}

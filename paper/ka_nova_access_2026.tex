@@ -28,6 +28,7 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
+\graphicspath{{figures/}}
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{booktabs}
@@ -451,16 +452,52 @@ disclosable and reachable by sensitivity analysis, and which is verified
 byte-identical. The branch itself remains and is reported rather than
 removed.
 
-Each simulated year executes an ordered nine-step sequence: (1) the
-external layer evolves and may fire shocks; (2) the social-media channel
-resolves information openness; (3) the elite agents deliberate in a
-chain and each decision is validated by CVES; (4) validated decisions
-are broadcast to the shared environment; (5) all citizen agents step;
+Each simulated year executes an ordered ten-step sequence,
+shown in Figure \ref{fig:sequence}: (1) the external layer evolves and may
+fire shocks; (2) the social-media channel resolves information openness;
+(3) the elite agents deliberate in a chain, each decision is validated by
+CVES, and any coup signal nudges coup risk; (4) validated decisions are
+broadcast to the shared environment; (5) all Mesa agents step, comprising
+citizens, officials, oversight, foreign and institutional actors;
 (6) twelve feedback loops update political, economic and social state;
-(7) chain-type rules apply; (8) institutions run their annual sessions;
-and (9) state is aggregated into key performance indicators. The model
-is documented following the ODD protocol \cite{grimm2006standard,
-grimm2010odd,grimm2020odd} to support replication.
+(7) chain-type rules apply; (8) institutions run their annual sessions,
+comprising the three chambers, the integrity directorate and the
+constitutional court; (9) per-state corruption and growth are recomputed
+and aggregated; and (10) the year's trajectory record is collected.
+
+The submitted version of this paper described this as a nine-step
+sequence and omitted the trajectory-collection step. The count and the
+ordering above are taken from the implementation rather than restated
+from the earlier description. The constitutional court at step (8) is a
+further correction: at submission its annual session was implemented but
+never called, so the judicial layer was inert for every scenario. It is
+now executed each year, which changes behaviour and is reported in
+Section \ref{sec:instrument} rather than presented as a redrawn label.
+The model is documented following the ODD protocol
+\cite{grimm2006standard,grimm2010odd,grimm2020odd} to support
+replication.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig1_architecture.pdf}
+\caption{Ka-Nova's hybrid generative agent-based architecture. The
+constitutional encoding supplies every scenario-specific parameter, and
+\texttt{chain\_type} is the single structural axis on which the engine
+branches. External-vector counts are per country and are read from the
+external-layer registry. Scenario A, the self-designed constitution, is
+present in the registry but excluded from the reported roster and is
+therefore not shown.}
+\label{fig:architecture}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig2_annual_sequence.pdf}
+\caption{The ten-step annual simulation sequence, repeated for fifty
+simulated years or until a scenario terminates early. The ordering is
+taken from the implementation.}
+\label{fig:sequence}
+\end{figure*}
 
 \subsection{Constitutional Encoding and the Seven-Constitution Design}
 \label{sec:encoding}
@@ -633,6 +670,21 @@ the designed constitution's military role always had. Whether a given
 constitution's elites then decline to signal is a measurement, not an
 instruction.
 
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig3_elite_chains.pdf}
+\caption{The seven-role elite decision chain under a civilian and a
+military constitution. The seven role-function slots and their order are
+properties of \texttt{chain\_type} and are identical across the two
+panels; only the encoded constitution and the country-accurate role
+titles differ. The same elite act is intercepted with article
+attribution under South Korea's 1987 constitution and propagates
+uncontested under Pakistan's 1973 constitution as amended in 1985. The
+figure states the mechanism and deliberately carries no counts;
+magnitudes are reported in Section \ref{sec:results}.}
+\label{fig:chains}
+\end{figure*}
+
 \subsection{Layer 3: External World and Information Environment}
 The external layer evolves a per-scenario set of real geopolitical
 influence vectors, each with a calibrated annual drift, and fires
@@ -721,6 +773,18 @@ not rejected.
 
 A separate detector distinguishes a true refusal by the language model
 from a valid terse decision and from a parse failure.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig4_cves_pipeline.pdf}
+\caption{The CVES four-layer runtime validation pipeline. L1 and L2 run
+per decision inside the seven-role loop and may reprompt; L3 and L4 run
+once per simulated year across the completed set of seven. A reprompted
+revision is itself schema-checked, and a malformed revision falls back
+to the mechanically corrected decision rather than aborting the run. L4
+operates in flag mode: the outlier is logged and the decision is kept.}
+\label{fig:cves}
+\end{figure*}
 
 \subsection{Outcome Metrics}
 \label{sec:metrics}

@@ -1,0 +1,113 @@
+% ---------------------------------------------------------------------------
+% Figure 3. The seven-role elite decision chain under a civilian and a
+% military constitution.
+%
+% RE-BASED, 2026-11-25. The submitted version of this figure showed the chain
+% "under Scenario A (civilian)". Scenario A is the self-designed constitution
+% and has been dropped from the reported roster, so a figure resting on it can
+% no longer appear. This version shows the two REAL, historically enacted
+% constitutions that now carry the differential-constraint claim: South Korea's
+% 1987 constitution (civilian chain) and Pakistan's 1973 constitution as
+% amended by Zia's 8th Amendment of 1985 (military chain).
+%
+% VERIFIED AGAINST LIVE SOURCE, 2026-11-25:
+%   * chain structure .... engine/elite_agents_v3.py, CHAIN_ORDER_CIVILIAN and
+%                          CHAIN_ORDER_MILITARY (lines 90-108). The seven
+%                          role-function slots and their order are properties
+%                          of chain_type, not of the country.
+%   * country titles ..... AGENT_DISPLAY_NAMES_BY_SCENARIO, read back through
+%                          the module rather than transcribed by hand.
+%   * chain_type ......... config/scenario_registry.py: SK civilian, PK military.
+%
+% NO COUNTS APPEAR IN THIS FIGURE, DELIBERATELY. The interception and emission
+% totals currently available are smoke-test lower bounds on superseded code.
+% The figure asserts the mechanism, which is structural; magnitudes belong in a
+% table that the campaign will populate.
+% ---------------------------------------------------------------------------
+\documentclass[border=10pt]{standalone}
+\input{kanova-figstyle}
+\begin{document}
+\begin{tikzpicture}
+
+\def\rw{58mm}      % role box width
+\def\gap{15mm}     % gap between the two panels
+\tikzset{
+  rc/.style={knrolec, text width=\rw, align=left, minimum width=0pt},
+  rm/.style={knrolem, text width=\rw, align=left, minimum width=0pt},
+}
+\newcommand{\role}[2]{\knlabel{#1}\\[-1.5pt]\kntiny{#2}}
+
+% ===== LEFT PANEL, South Korea 1987, civilian chain ========================
+\node[rc] (a1) {\role{Chairman, Joint Chiefs of Staff}{military command}};
+\node[rc, below=3.4mm of a1] (a2) {\role{Deputy PM for Economic Affairs}{finance}};
+\node[rc, below=3.4mm of a2] (a3) {\role{Governor of the Bank of Korea}{monetary authority}};
+\node[rc, below=3.4mm of a3] (a4) {\role{Chairman, Board of Audit and Inspection}{integrity oversight}};
+\node[rc, below=3.4mm of a4, draw=knaccent, line width=\knbold] (a5) {\role{President of the Constitutional Court}{judiciary}};
+\node[rc, below=3.4mm of a5] (a6) {\role{President of the Republic of Korea}{head of state}};
+\node[rc, below=3.4mm of a6] (a7) {\role{Prime Minister}{head of government}};
+
+% ===== RIGHT PANEL, Pakistan 1973 + 8th Amendment, military chain ==========
+\node[rm, right=\gap of a1] (b1) {\role{Chief of Army Staff}{military command}};
+\node[rm, below=3.4mm of b1] (b2) {\role{Federal Minister for Finance}{finance}};
+\node[rm, below=3.4mm of b2] (b3) {\role{Governor, State Bank of Pakistan}{monetary authority}};
+\node[rm, below=3.4mm of b3] (b4) {\role{Director-General, ISI}{integrity oversight}};
+\node[rm, below=3.4mm of b4, draw=knaccent, line width=\knbold] (b5) {\role{Chief Justice of the Federal Shariat Court}{judiciary}};
+\node[rm, below=3.4mm of b5] (b6) {\role{Prime Minister of Pakistan}{head of government}};
+\node[rm, below=3.4mm of b6] (b7) {\role{President of the Islamic Republic}{head of state}};
+
+% ===== sequential chain edges =============================================
+\foreach \a/\b in {a1/a2,a2/a3,a3/a4,a4/a5,a5/a6,a6/a7} {\draw[knflow] (\a) -- (\b);}
+\foreach \a/\b in {b1/b2,b2/b3,b3/b4,b4/b5,b5/b6,b6/b7} {\draw[knflow] (\a) -- (\b);}
+
+% ===== panel headings ======================================================
+\node[knpanelhead, above=7mm of a1.north, anchor=south] (ha)
+  {South Korea, 1987\\[-1pt]\knsmall{\texttt{chain\_type = civilian}}};
+\node[knpanelhead, above=7mm of b1.north, anchor=south] (hb)
+  {Pakistan, 1973 with the 8th Amendment\\[-1pt]\knsmall{\texttt{chain\_type = military}}};
+
+\begin{scope}[on background layer]
+  \node[kngroup, fit=(ha)(a1)(a7)] (panA) {};
+  \node[kngroup, fit=(hb)(b1)(b7)] (panB) {};
+\end{scope}
+
+% ===== the mechanism: identical signal, opposite constitutional treatment ==
+\node[knlayer, below=11mm of a7, minimum width=\rw, fill=knfillB] (cvA)
+  {\knlabel{CVES L2}\\[-1pt]\knsmall{constitutional check}};
+\node[knlayer, below=11mm of b7, minimum width=\rw, fill=knfillB] (cvB)
+  {\knlabel{CVES L2}\\[-1pt]\knsmall{constitutional check}};
+
+\draw[knflowbold] (a5.west) -- ++(-5mm,0)
+   node[knnote, anchor=south west, yshift=0.8mm, xshift=-1mm] {coup signal}
+   |- ($(cvA.west)+(-5mm,0)$) -- (cvA.west);
+\draw[knflowbold] (b5.east) -- ++(5mm,0)
+   node[knnote, anchor=south east, yshift=0.8mm, xshift=1mm] {coup signal}
+   |- ($(cvB.east)+(5mm,0)$) -- (cvB.east);
+
+\node[knbox, below=9mm of cvA, minimum width=\rw, fill=knfillA] (outA)
+  {\knlabel{Decision revised, then released}};
+\node[knbox, below=9mm of cvB, minimum width=\rw, fill=knfillA] (outB)
+  {\knlabel{Decision released unchanged}};
+
+\draw[knflow, draw=knaccent, line width=\knbold] (cvA) --
+  node[knnote, anchor=west, xshift=3mm, text=knaccent]
+  {\textbf{intercepted}\\a provision bars it;\\the role is reprompted} (outA);
+\draw[draw=knaccent, line width=\knbold]
+  ($(cvA.south)!0.42!(outA.north)+(-2.6mm,0)$) --
+  ($(cvA.south)!0.42!(outA.north)+(2.6mm,0)$);
+\draw[knflow] (cvB) -- node[knnote, anchor=west, xshift=2mm]
+  {\textbf{permitted}\\no provision bars it} (outB);
+
+\node[knbox, fill=knstore, minimum width=40mm] (trail) at
+  ($(outA)!0.5!(outB) + (0,-13mm)$)
+  {\knlabel{Same engine, same audit trail}\\[-1pt]\kncode{cves\_violations\_<scenario>.jsonl}};
+\draw[knflow] (outA.south) |- (trail.west);
+\draw[knflow] (outB.south) |- (trail.east);
+
+\node[knnote, anchor=north, text width=150mm, align=center, text=knink]
+  at ($(trail.south)+(0,-2mm)$)
+  {\knsmall{The seven role-function slots and their order are identical across the two
+   panels; only the encoded constitution differs. The same elite behaviour is
+   unlawful under one and lawful under the other.}};
+
+\end{tikzpicture}
+\end{document}
