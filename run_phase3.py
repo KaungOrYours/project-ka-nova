@@ -218,6 +218,7 @@ class KaNovaPhase3Runner:
         n_steps: int = 50,
         use_llm: bool = False,
         workers: int = None,
+        resume: bool = True,
     ):
         # Registry-driven (was a hardcoded `("A", "C")` tuple). Raises a
         # clear error for an unknown code, or for a known-but-not-yet-
@@ -227,6 +228,12 @@ class KaNovaPhase3Runner:
 
         self.scenario   = scenario
         self.runs       = runs
+        # Resume is ON by default. The failure it prevents (a recycled
+        # container recomputing completed runs forever) is far more likely and
+        # far more expensive than the one it risks (reusing a stale CSV), and
+        # the stale case is recoverable with --no-resume.
+        self.resume     = resume
+        self.resumed    = 0
         self.n_citizens = n_citizens
         self.n_steps    = n_steps
         self.use_llm    = use_llm
@@ -272,17 +279,70 @@ class KaNovaPhase3Runner:
         print(f"Start time:        {datetime.now().strftime('%H:%M:%S')}")
         print("=" * 60 + "\n")
 
+        # ── RESUME ────────────────────────────────────────────────────────────
+        # RunPod restarts a container on its own. startup.sh then re-runs this
+        # script from scratch, run_id 0 fires again, and every completed run is
+        # recomputed. On 2026-11-25 a South Korea LLM campaign restarted three
+        # times in 2.5 hours; it completed four runs in the first 84 minutes and
+        # then made ZERO net progress for the next 75, because each attempt
+        # needed 21 minutes per run and was recycled before finishing one. At
+        # that rate the campaign could never terminate, no matter how long it
+        # was paid for.
+        #
+        # The rename-instead-of-delete fix above made restarts non-destructive.
+        # This makes them non-wasteful: a completed run has a CSV on disk, so
+        # treat that as the unit of work and skip it.
+        #
+        # Skipping run_id 0 on resume also means the supersede block in
+        # run_single() never fires, so the JSONL audit trail keeps accumulating
+        # across restarts instead of being rotated away. That is deliberate and
+        # is the behaviour the ablation needs.
+        all_dfs = []
+        done_ids = set()
+        if self.resume:
+            for f in sorted(SCENARIO_DIRS[self.scenario].glob("run_*.csv")):
+                try:
+                    rid = int(f.stem.split("_")[1])
+                except (IndexError, ValueError):
+                    continue
+                if rid >= self.runs:
+                    continue          # left over from a larger earlier campaign
+                try:
+                    df = pd.read_csv(f)
+                except Exception as e:
+                    print(f"  resume: ignoring unreadable {f.name} ({e})")
+                    continue
+                if df.empty:
+                    print(f"  resume: ignoring empty {f.name}")
+                    continue
+                all_dfs.append(df)
+                done_ids.add(rid)
+                self.successful += 1
+                self.resumed    += 1
+
+        if done_ids:
+            lo, hi = min(done_ids), max(done_ids)
+            print(f"RESUMING: {len(done_ids)} of {self.runs} runs already on "
+                  f"disk (ids {lo}-{hi}), {self.runs - len(done_ids)} to go.")
+            print("Pass --no-resume to recompute everything from scratch.")
+            print()
+
         tasks = [
             (run_id, self.scenario, self.n_citizens, self.n_steps, self.use_llm)
             for run_id in range(self.runs)
+            if run_id not in done_ids
         ]
 
-        all_dfs = []
+        if not tasks:
+            print(f"All {self.runs} runs already complete. Nothing to do.")
+            self._finalize(all_dfs)
+            return
 
         if self.workers > 1:
             with ProcessPoolExecutor(max_workers=self.workers) as pool:
                 futures = {pool.submit(run_single, *t): t for t in tasks}
-                with tqdm(total=self.runs, desc=f"Scenario {self.scenario}", unit="run") as pbar:
+                with tqdm(total=self.runs, initial=len(done_ids),
+                          desc=f"Scenario {self.scenario}", unit="run") as pbar:
                     for future in as_completed(futures):
                         try:
                             result = future.result()
@@ -296,8 +356,12 @@ class KaNovaPhase3Runner:
                         self._process_result(result, all_dfs)
                         elapsed = time.time() - self.start_time
                         completed = self.successful + self.failed
-                        if completed > 0:
-                            eta = (self.runs - completed) * (elapsed / completed)
+                        # Resumed runs cost no wall clock this session, so
+                        # including them would divide elapsed by work that did
+                        # not happen and report an ETA far too optimistic.
+                        this_session = completed - self.resumed
+                        if this_session > 0:
+                            eta = (self.runs - completed) * (elapsed / this_session)
                             pbar.set_postfix({
                                 "ok": self.successful,
                                 "err": self.failed,
@@ -305,14 +369,16 @@ class KaNovaPhase3Runner:
                             })
                         pbar.update(1)
         else:
-            with tqdm(total=self.runs, desc=f"Scenario {self.scenario}", unit="run") as pbar:
+            with tqdm(total=self.runs, initial=len(done_ids),
+                      desc=f"Scenario {self.scenario}", unit="run") as pbar:
                 for task in tasks:
                     result = run_single(*task)
                     self._process_result(result, all_dfs)
                     elapsed = time.time() - self.start_time
                     completed = self.successful + self.failed
-                    if completed > 0:
-                        eta = (self.runs - completed) * (elapsed / completed)
+                    this_session = completed - self.resumed
+                    if this_session > 0:
+                        eta = (self.runs - completed) * (elapsed / this_session)
                         pbar.set_postfix({
                             "ok": self.successful,
                             "err": self.failed,
@@ -520,6 +586,10 @@ def parse_args():
     p.add_argument("--steps",    type=int, default=50)
     p.add_argument("--workers",  type=int, default=None)
     p.add_argument("--use-llm",  dest="use_llm", action="store_true", default=False)
+    p.add_argument("--no-resume", dest="resume", action="store_false", default=True,
+                   help="Recompute every run even if its CSV already exists. "
+                        "Default is to resume, which is what makes a recycled "
+                        "container cost one run instead of the whole campaign.")
     p.add_argument("--model",    type=str, default=None, help="Ollama model e.g. llama3.2:1b")
     return p.parse_args()
 
@@ -539,6 +609,7 @@ if __name__ == "__main__":
             n_steps=5,
             use_llm=args.use_llm,
             workers=1,
+            resume=False,   # a smoke test must never adopt a real campaign's CSVs
         )
     else:
         runner = KaNovaPhase3Runner(
@@ -548,6 +619,7 @@ if __name__ == "__main__":
             n_steps=args.steps,
             use_llm=args.use_llm,
             workers=args.workers,
+            resume=args.resume,
         )
 
     runner.run()
