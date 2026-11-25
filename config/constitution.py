@@ -115,6 +115,17 @@ class RightsConfig:
     # Sobol GSA so the mechanical contribution can be QUANTIFIED instead of
     # argued. Reviewer 2 pt.2 explicitly asks about "constitutional and
     # feedback parameters"; these are the feedback parameters.
+    #
+    # N3 (2026-11-25): closing the remaining literal inventory from the same
+    # review. MILITARY_RIGHTS_EROSION_PENALTY was a bare 0.04 inside
+    # feedback/loops.py's military fear-compliance branch (chronic
+    # low-level trust erosion when rights are violated), sitting immediately
+    # above the FEAR_COMPLIANCE_TRUST_FLOOR read. Promoted at its exact
+    # previous value; this field is inert for chain_type == "civilian"
+    # constitutions (the branch never executes), but is still defined here
+    # for disclosure and GSA-perturbability, matching UNCHECKED_CORRUPTION_
+    # DRIFT's precedent.
+    MILITARY_RIGHTS_EROSION_PENALTY: float = 0.04
     FEAR_COMPLIANCE_TRUST_FLOOR: float = 0.10
     CIVILIAN_COUP_SIGNAL_DAMPING: float = 0.05
     STABILITY_RIGHTS_BONUS: float = 0.20
@@ -443,6 +454,26 @@ class IIGConfig:
     # Maximum size
     MAX_AGENTS: int = 600  # small, elite, accountable
 
+    # ── N3 literal inventory (2026-11-25) ─────────────────────────────────────
+    # Four more bare literals, surfaced by the same review that found K2.
+    # None were reachable by the Sobol GSA because chain_type is not a
+    # sampled parameter. Promoted here at their EXACT previous values
+    # (byte-identical by construction); read via getattr with the historical
+    # literal as fallback in institutions/iig.py and feedback/loops.py, so a
+    # constitution predating these fields still runs identically.
+    #
+    # IIG_PRESENCE_FLOOR_BASE/CEILING/STEP governed institutions/iig.py's
+    # civilian-chain ramp of institutional presence before any case has been
+    # opened (this constitution has no EFFECTIVENESS_FLOOR field, so this
+    # ramp IS Scenario A's operative floor, not a fallback behind another
+    # one). MILITARY_IIG_CAP is inert here (chain_type == "civilian"), kept
+    # for disclosure and GSA-perturbability only, matching the precedent set
+    # by UNCHECKED_CORRUPTION_DRIFT above.
+    IIG_PRESENCE_FLOOR_BASE: float = 0.30
+    IIG_PRESENCE_FLOOR_CEILING: float = 0.40
+    IIG_PRESENCE_FLOOR_STEP: float = 0.01
+    MILITARY_IIG_CAP: float = 0.10
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PART VIII — FEDERAL STRUCTURE (Article 8)
@@ -563,6 +594,14 @@ class MilitaryConfig:
     MILITARY_AMNESTY: bool = False
     PROSECUTION_ORDER: str = "severity_descending"
     COOPERATION_CREDIT: bool = True  # mitigating factor only
+
+    # N3 (2026-11-25): feedback/loops.py's loop_P3_coup_probability computed
+    # this as a bare chain_type ternary (0.80 civilian / 0.25 military),
+    # unreachable by the Sobol GSA. Now a single per-constitution field;
+    # this constitution's chain_type is "civilian", so its value is the
+    # historical 0.80. The getattr fallback in loops.py reproduces the exact
+    # same ternary for a constitution predating this field.
+    CONSTITUTIONAL_COMMITMENT: float = 0.80
 
 
 # ══════════════════════════════════════════════════════════════════════════════

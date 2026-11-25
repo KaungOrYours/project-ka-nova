@@ -227,6 +227,15 @@ class RightsConfig:
     CIVILIAN_COUP_SIGNAL_DAMPING: float = 0.05
     STABILITY_RIGHTS_BONUS: float = 0.20
 
+    # N3 (2026-11-25): closes the remaining literal inventory from the
+    # same review. feedback/loops.py's military fear-compliance branch
+    # used a bare 0.04 chronic-erosion penalty, immediately above the
+    # FEAR_COMPLIANCE_TRUST_FLOOR read this field binds on the same chain.
+    # No country-differentiated source exists for this rate, so it
+    # defaults to the same 0.04 across all three guardianship
+    # constitutions, same caveat as UNCHECKED_CORRUPTION_DRIFT.
+    MILITARY_RIGHTS_EROSION_PENALTY: float = 0.04
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # NO FORMAL MERIT-EXAM SYSTEM — CREDENTIALED PROFESSIONAL SELECTION INSTEAD
@@ -666,6 +675,21 @@ class IIGConfig:
         "international_cooperation_division",
     )
 
+    # N3 (2026-11-25): closes the remaining literal inventory from the
+    # same review that found K2. MILITARY_IIG_CAP was a bare 0.10 cap in
+    # feedback/loops.py's loop_P2_iig_corruption for every military-chain
+    # scenario ("no IIG"); promoted here at its exact previous value, so
+    # the real EFFECTIVENESS_FLOOR == 0.25 set above continues to be
+    # capped down to 0.10 exactly as before (the same mechanism flagged as
+    # bug #10, still open, see the comment at loops.py). IIG_PRESENCE_
+    # FLOOR_BASE/CEILING/STEP are inert for this constitution
+    # (chain_type == "military"), present for disclosure and
+    # GSA-perturbability only.
+    MILITARY_IIG_CAP: float = 0.10
+    IIG_PRESENCE_FLOOR_BASE: float = 0.30
+    IIG_PRESENCE_FLOOR_CEILING: float = 0.40
+    IIG_PRESENCE_FLOOR_STEP: float = 0.01
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER XIV — LOCAL ADMINISTRATION (Sections 249-254)
@@ -817,6 +841,14 @@ class MilitaryConfig:
     NS_LOYALTY_BOOST: float = 0.08
     NS_ETHNIC_EXPOSURE_BOOST: float = 0.05
     NS_CIVIC_CONTRIBUTION_BOOST: float = 0.05
+
+    # N3 (2026-11-25): feedback/loops.py's loop_P3_coup_probability computed
+    # this as a bare chain_type ternary (0.80 civilian / 0.25 military),
+    # unreachable by the Sobol GSA. Now a single per-constitution field;
+    # this constitution's chain_type is "military", so its value is the
+    # historical 0.25. The getattr fallback in loops.py reproduces the
+    # exact same ternary for a constitution predating this field.
+    CONSTITUTIONAL_COMMITMENT: float = 0.25
 
 
 # ══════════════════════════════════════════════════════════════════════════════

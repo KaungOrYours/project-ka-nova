@@ -8,7 +8,7 @@ echo "============================================================"
 echo "KA-NOVA PHASE 3 — POD STARTUP"
 echo "============================================================"
 echo "Start time: $(date)"
-echo "Scenario:   ${SCENARIO:-NOT SET}"
+echo "Scenario:   ${SCENARIO:-NOT SET (fatal, see guard below)}"
 echo "Runs:       ${RUNS:-100}"
 echo "Citizens:   ${CITIZENS:-11000}"
 echo "Steps:      ${STEPS:-50}"
@@ -177,28 +177,57 @@ echo "Telegram bot PID: $BOT_PID"
 echo ""
 echo "[5/5] Launching Phase 3 simulation..."
 export WANDB_MODE=disabled
-echo "Scenario: ${SCENARIO:-A}"
+
+# SCENARIO is REQUIRED. It used to default to "A", which is now the single
+# worst default available: Scenario A is the self-designed constitution and
+# was dropped from the reported roster on 2026-11-24. A pod booted without
+# SCENARIO set would therefore spend real GPU money producing the one
+# scenario the paper does not report, and would look like a successful run
+# while doing it. Fail loudly at boot instead, before Ollama is warmed and
+# before a single billed second is spent.
+if [ -z "${SCENARIO:-}" ]; then
+    echo ""
+    echo "============================================================"
+    echo "FATAL: SCENARIO is not set."
+    echo ""
+    echo "Reported roster:  SK  TH  PK  CL  DE  C"
+    echo "In the registry but NOT reported:  A"
+    echo ""
+    echo "Set it explicitly, for example:"
+    echo "  SCENARIO=SK"
+    echo "  SCENARIO=SK,C"
+    echo "============================================================"
+    if [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
+        curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          -d chat_id="${TELEGRAM_CHAT_ID:-1096527379}" \
+          -d text="Ka-Nova FATAL: pod booted with no SCENARIO set. Nothing was run. Terminate the pod." \
+          > /dev/null
+    fi
+    exit 1
+fi
+
+echo "Scenario: ${SCENARIO}"
 
 mkdir -p logs
 
-IFS=',' read -ra SCENARIO_LIST <<< "${SCENARIO:-A}"
+IFS=',' read -ra SCENARIO_LIST <<< "${SCENARIO}"
 
 if [ "$JOB" = "benchmark" ]; then
     # Real-LLM-path throughput benchmark, run BEFORE costing/launching a real
     # scenario. Wall-clock-capped by BENCH_BUDGET_SECONDS (default 900 = 15
     # min), never by a fixed call count. Writes its own throwaway results
     # dir (BENCH_RESULTS_DIR), never results_phase3/. Scenario list reuses
-    # $SCENARIO (default A,C — one civilian, one military chain, per the
-    # design constraint); survival-year/runs-plan/hourly-rate assumptions
+    # $SCENARIO, which is required at boot (see the guard above);
+    # survival-year/runs-plan/hourly-rate assumptions
     # are documented defaults inside the script, overridable via
     # BENCH_SURVIVAL_YEARS / BENCH_RUNS_PLAN / BENCH_HOURLY_RATES (each a
     # JSON string / comma-list matching the script's own --survival-years /
     # --runs-plan / --hourly-rates flags) if you want to override them here
     # instead of editing the script.
-    echo "Running LLM throughput benchmark: scenarios=${SCENARIO:-A,C} budget=${BENCH_BUDGET_SECONDS:-900}s"
+    echo "Running LLM throughput benchmark: scenarios=${SCENARIO} budget=${BENCH_BUDGET_SECONDS:-900}s"
     BENCH_ARGS=(
         --budget-seconds "${BENCH_BUDGET_SECONDS:-900}"
-        --scenarios "${SCENARIO:-A,C}"
+        --scenarios "${SCENARIO}"
         --citizens "${CITIZENS:-11000}"
         --model "${LLM_MODEL:-llama3.2:3b}"
         --results-dir "${BENCH_RESULTS_DIR:-/workspace/project-ka-nova/results_benchmark}"

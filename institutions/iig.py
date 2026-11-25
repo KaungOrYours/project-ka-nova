@@ -298,8 +298,23 @@ class IIGSystem:
         elif self.model.chain_type == "civilian":
             # IIG exists and is operational even before cases open
             # Floor rises slowly to reflect institutional presence
-            current = self.model.shared_data.get("iig_effectiveness", 0.30)
-            target = min(0.40, current + 0.01)
+            #
+            # N3 (2026-11-25): the pre-case baseline (0.30), the ramp
+            # ceiling (0.40) and the ramp step (0.01) were three bare
+            # literals here, unreachable by the Sobol GSA since chain_type
+            # is not a sampled parameter. Promoted to IIGConfig at their
+            # exact previous values via getattr with the historical literal
+            # as fallback, so a constitution predating these fields still
+            # runs identically. Distinct from EFFECTIVENESS_FLOOR above:
+            # that field floors effectiveness computed FROM case outcomes;
+            # these three govern the separate ramp used only while no case
+            # has yet been opened.
+            iig_cfg = self.model.CONSTITUTION.iig
+            presence_base = getattr(iig_cfg, "IIG_PRESENCE_FLOOR_BASE", 0.30)
+            presence_ceiling = getattr(iig_cfg, "IIG_PRESENCE_FLOOR_CEILING", 0.40)
+            presence_step = getattr(iig_cfg, "IIG_PRESENCE_FLOOR_STEP", 0.01)
+            current = self.model.shared_data.get("iig_effectiveness", presence_base)
+            target = min(presence_ceiling, current + presence_step)
             if floor is not None:
                 target = max(floor, target)
             self.model.shared_data["iig_effectiveness"] = target

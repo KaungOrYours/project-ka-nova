@@ -292,6 +292,15 @@ class RightsConfig:
     CIVILIAN_COUP_SIGNAL_DAMPING: float = 0.05
     STABILITY_RIGHTS_BONUS: float = 0.20
 
+    # N3 (2026-11-25): MILITARY_RIGHTS_EROSION_PENALTY closes the remaining
+    # literal inventory from the same review. Same Ka-Nova modelling
+    # caveat as the three fields above: inert on this civilian chain,
+    # present so the GSA can perturb it on the military-chain scenarios
+    # that actually read it. No country-differentiated source exists for
+    # this chronic-erosion rate, so it defaults to the same 0.04
+    # everywhere.
+    MILITARY_RIGHTS_EROSION_PENALTY: float = 0.04
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ARTICLE 33(2) — "BESTENAUSLESE" (BEST-QUALIFIED PRINCIPLE)
@@ -734,6 +743,19 @@ class IIGConfig:
         "whistleblower_intake_division",
     )
 
+    # N3 (2026-11-25): closes the remaining literal inventory from the
+    # same review that found K2. IIG_PRESENCE_FLOOR_BASE/CEILING/STEP were
+    # bare literals governing institutions/iig.py's civilian-chain ramp of
+    # institutional presence before any case has been opened; this
+    # constitution's chain_type is "civilian" so the ramp is live here,
+    # promoted at its exact previous value. MILITARY_IIG_CAP is inert here
+    # (chain_type != "military"), present for disclosure and
+    # GSA-perturbability only.
+    IIG_PRESENCE_FLOOR_BASE: float = 0.30
+    IIG_PRESENCE_FLOOR_CEILING: float = 0.40
+    IIG_PRESENCE_FLOOR_STEP: float = 0.01
+    MILITARY_IIG_CAP: float = 0.10
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ARTICLES 30, 70-74, 83-87, 106-107 — FEDERAL STRUCTURE
@@ -893,6 +915,14 @@ class MilitaryConfig:
     # a real, documented civic-contribution effect, between Myanmar's
     # coercive 0.02 and MFU's own 0.10.
     NS_CIVIC_CONTRIBUTION_BOOST: float = 0.08
+
+    # N3 (2026-11-25): feedback/loops.py's loop_P3_coup_probability computed
+    # this as a bare chain_type ternary (0.80 civilian / 0.25 military),
+    # unreachable by the Sobol GSA. Now a single per-constitution field;
+    # this constitution's chain_type is "civilian", so its value is the
+    # historical 0.80. The getattr fallback in loops.py reproduces the
+    # exact same ternary for a constitution predating this field.
+    CONSTITUTIONAL_COMMITMENT: float = 0.80
 
 
 # ══════════════════════════════════════════════════════════════════════════════

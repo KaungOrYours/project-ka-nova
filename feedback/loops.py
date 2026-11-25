@@ -132,7 +132,14 @@ class FeedbackEngine:
         # is the baseline — penalty is smaller and a floor enforces
         # fear-compliance trust.
         if m.chain_type == "military":
-            rights_penalty = 0.0 if rights_ok else 0.04   # chronic low-level erosion
+            # N3 (2026-11-25): was a hardcoded 0.04 chronic low-level erosion
+            # penalty. Now read from the active constitution so it is
+            # disclosable, per-scenario, and perturbable by the Sobol GSA.
+            # Default preserves the published value exactly.
+            rights_erosion = getattr(
+                m.CONSTITUTION.rights, "MILITARY_RIGHTS_EROSION_PENALTY", 0.04
+            )
+            rights_penalty = 0.0 if rights_ok else rights_erosion
             # Opening 1: was a hardcoded 0.10. Now read from the active
             # constitution so it is disclosable, per-scenario, and perturbable
             # by the Sobol GSA. Default preserves the published value exactly.
@@ -264,7 +271,16 @@ class FeedbackEngine:
         # apply to Thailand/Pakistan (both chain_type="military") exactly
         # as it does to Scenario C, pending bug #10's real fix.
         if m.chain_type == "military":
-            new_effectiveness = min(0.10, new_effectiveness)  # no IIG
+            # N3 (2026-11-25): the 0.10 cap itself was a bare literal, now
+            # read from the active constitution so it is disclosable and
+            # perturbable by the Sobol GSA. Default preserves the exact
+            # value documented above. This does NOT touch bug #10 itself
+            # (institutions/iig.py's unconditional overwrite running right
+            # after this, same step() call), which remains open.
+            military_iig_cap = getattr(
+                m.CONSTITUTION.iig, "MILITARY_IIG_CAP", 0.10
+            )
+            new_effectiveness = min(military_iig_cap, new_effectiveness)  # no IIG
 
         new_effectiveness = max(0.0, min(1.0, new_effectiveness))
         m.shared_data["iig_effectiveness"] = new_effectiveness
@@ -337,7 +353,18 @@ class FeedbackEngine:
         # legacy and unreachable via the live scenario registry (not a
         # registered chain_type), dropped rather than migrated. Values
         # unchanged for A (civilian, 0.80) / C (military, 0.25).
-        const_commitment = 0.80 if m.chain_type == "civilian" else 0.25
+        #
+        # N3 (2026-11-25): that fix still left a chain_type ternary of bare
+        # literals, unreachable by the Sobol GSA. This is a single
+        # per-constitution scalar, so it is now ONE field read from the
+        # active constitution rather than a civilian/military ternary. The
+        # getattr fallback below reproduces the exact historical ternary
+        # (0.80 civilian / 0.25 military) for a constitution predating the
+        # field, so behaviour for any such constitution is unchanged.
+        const_commitment = getattr(
+            m.CONSTITUTION.military, "CONSTITUTIONAL_COMMITMENT",
+            0.80 if m.chain_type == "civilian" else 0.25
+        )
 
         # Trust feeds military loyalty
         trust = m.shared_data.get("trust_index", 0.22)

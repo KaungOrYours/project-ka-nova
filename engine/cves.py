@@ -368,7 +368,14 @@ class CVES:
                     "coup_signal":   corrected.get("coup_signal"),
                     "budget_weight": round(corrected.get("budget_weight", 0.5), 4),
                 },
-                "article_injected": viol["article"],
+                # Renamed from "article_injected" 2026-11-25. The old name
+                # implied the article text was injected into a prompt, which
+                # is not what this field records. It records which provision
+                # of the ACTIVE constitution the violation was attributed to.
+                # Audit trails shipped before this date carry the old key;
+                # the campaign regenerates every file, so no reader needs to
+                # support both.
+                "article_attributed": viol["article"],
                 "reason":           viol["reason"],
             }, self.scenario)
             logger.warning(

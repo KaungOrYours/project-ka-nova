@@ -152,6 +152,15 @@ class RightsConfig:
     # Sobol GSA so the mechanical contribution can be QUANTIFIED instead of
     # argued. Reviewer 2 pt.2 explicitly asks about "constitutional and
     # feedback parameters"; these are the feedback parameters.
+    #
+    # N3 (2026-11-25): MILITARY_RIGHTS_EROSION_PENALTY closes the remaining
+    # literal inventory from the same review — was a bare 0.04 inside
+    # feedback/loops.py's military fear-compliance branch, immediately above
+    # the FEAR_COMPLIANCE_TRUST_FLOOR read. No country-differentiated source
+    # exists for this chronic-erosion rate, so it defaults to the same 0.04
+    # across all three guardianship constitutions, same caveat as
+    # UNCHECKED_CORRUPTION_DRIFT.
+    MILITARY_RIGHTS_EROSION_PENALTY: float = 0.04
     FEAR_COMPLIANCE_TRUST_FLOOR: float = 0.10
     CIVILIAN_COUP_SIGNAL_DAMPING: float = 0.05
     STABILITY_RIGHTS_BONUS: float = 0.20
@@ -480,6 +489,20 @@ class IIGConfig:
         "censorship_division",
     )
 
+    # N3 (2026-11-25): MILITARY_IIG_CAP closes the remaining literal
+    # inventory from the same review that found K2. feedback/loops.py's
+    # loop_P2_iig_corruption capped effectiveness at a bare 0.10 for every
+    # military-chain scenario ("no IIG"); promoted here at its exact
+    # previous value. IIG_PRESENCE_FLOOR_BASE/CEILING/STEP are inert for
+    # this constitution (chain_type == "military", so institutions/iig.py's
+    # civilian-chain ramp branch never executes) but are defined here for
+    # disclosure and GSA-perturbability, matching UNCHECKED_CORRUPTION_
+    # DRIFT's precedent.
+    MILITARY_IIG_CAP: float = 0.10
+    IIG_PRESENCE_FLOOR_BASE: float = 0.30
+    IIG_PRESENCE_FLOOR_CEILING: float = 0.40
+    IIG_PRESENCE_FLOOR_STEP: float = 0.01
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAPTER II — STATE STRUCTURE / FEDERAL STRUCTURE (Sections 49–56)
@@ -600,6 +623,14 @@ class MilitaryConfig:
     NS_ETHNIC_EXPOSURE_BOOST: float = 0.02       # vs MFU 0.20 — coercive conscription
                                                   # does not build cross-ethnic trust
     NS_CIVIC_CONTRIBUTION_BOOST: float = 0.02    # vs MFU 0.10
+
+    # N3 (2026-11-25): feedback/loops.py's loop_P3_coup_probability computed
+    # this as a bare chain_type ternary (0.80 civilian / 0.25 military),
+    # unreachable by the Sobol GSA. Now a single per-constitution field;
+    # this constitution's chain_type is "military", so its value is the
+    # historical 0.25. The getattr fallback in loops.py reproduces the
+    # exact same ternary for a constitution predating this field.
+    CONSTITUTIONAL_COMMITMENT: float = 0.25
 
 
 # ══════════════════════════════════════════════════════════════════════════════
