@@ -443,12 +443,45 @@ class KaNovaPhase3Runner:
             "gini_coefficient", "north_star_progress", "iig_effectiveness",
             "vpn_floor", "social_media_openness", "china_influence"
         ]
+        # SURVIVOR-BIAS FIX, 2026-11-25. This used to slice at the maximum
+        # year reached by ANY run:
+        #
+        #     final_year = combined["year"].max()
+        #     final_df   = combined[combined["year"] == final_year]
+        #
+        # For a scenario that terminates early, only the longest-surviving
+        # runs are present at that year, so the summary silently reported a
+        # survivor subsample. Measured on the 2026-11-25 campaign, runs
+        # reaching the maximum year were PK 3/100, C 4/100 and TH 1/100, and
+        # the distortion was material: Thailand's coup probability printed
+        # 0.9000 from a single run against 0.7362 +/- 0.0309 across all 100,
+        # and its IIG effectiveness 0.9091 against 0.7186. Scenario C's
+        # corruption printed as 1.0000 with zero variance, which read as a
+        # ceiling clamp but was an n=4 artifact.
+        #
+        # Each run is now summarised at ITS OWN final year, so every run
+        # contributes exactly once and the sample is the full cohort. For a
+        # scenario where every run survives the full horizon this is
+        # identical to the old behaviour.
+        #
+        # NOTE FOR ANALYSIS: this is a terminal-state summary, so it is NOT
+        # horizon-matched across scenarios. Comparing a survivor at year 49
+        # against a collapse at year 15 is a different quantity from
+        # comparing both at year 15. For cross-scenario comparison, slice the
+        # per-run CSVs at a common year instead of using this table.
+        final_df   = combined.loc[combined.groupby("run_id")["year"].idxmax()]
         final_year = combined["year"].max()
-        final_df   = combined[combined["year"] == final_year]
+        n_runs     = len(final_df)
+        yr_lo, yr_hi = int(final_df["year"].min()), int(final_df["year"].max())
+        span = f"YEAR {yr_lo}" if yr_lo == yr_hi else f"YEARS {yr_lo}-{yr_hi}"
 
         print(f"\n{'=' * 65}")
-        print(f"PHASE 3 RESULTS — SCENARIO {self.scenario} — YEAR {final_year}")
+        print(f"PHASE 3 RESULTS — SCENARIO {self.scenario} — {span}")
         print(f"{'=' * 65}")
+        print(f"Each run at its own final year, n={n_runs} runs.")
+        if yr_lo != yr_hi:
+            print("Terminal state, not horizon matched. Do not compare across")
+            print("scenarios without slicing the per-run CSVs at a common year.")
         print(f"{'KPI':<30} {'Mean':>10} {'SD':>8} {'Min':>8} {'Max':>8}")
         print(f"{'-' * 65}")
 
