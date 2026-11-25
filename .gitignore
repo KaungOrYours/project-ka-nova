@@ -16,13 +16,14 @@ results_phase2/
 results_phase2.zip
 .env
 wandb/
+# Live run output. Nothing here is tracked; the frozen submitted
+# snapshot lives in published/ so a run cannot dirty a tracked file.
 results_phase3/
 __pycache__/
 logs/
 *.pyc
 
 .env.pod
-results_phase3/progress.json
 monitor/telegram_bot.py.bak
 
 # Claude Code project config/memory, local only, never tracked
